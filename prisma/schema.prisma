@@ -66,6 +66,7 @@ model Team {
   players     Player[]
   homeMatches Match[]  @relation("HomeTeam")
   awayMatches Match[]  @relation("AwayTeam")
+  finances    Finance[] 
 }
 
 model Player {
@@ -153,26 +154,42 @@ model PlayerStat {
 
 // ─── ÁRBITROS ────────────────────────────────────
 model Referee {
-  id       String @id @default(cuid())
-  name     String
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  tenantId String
+  id          String   @id @default(cuid())
+  name        String
+  phone       String?
+  email       String?
+  payPerMatch Float    @default(0)
+  notes       String?
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  tenantId    String
 
   matches Match[]
 }
 
 // ─── FINANZAS ────────────────────────────────────
 model Finance {
-  id          String      @id @default(cuid())
+  id          String          @id @default(cuid())
   type        FinanceType
+  category    FinanceCategory @default(OTRO)
   amount      Float
   description String?
-  date        DateTime    @default(now())
-  tenant      Tenant      @relation(fields: [tenantId], references: [id])
+  date        DateTime        @default(now())
+  team        Team?           @relation(fields: [teamId], references: [id])
+  teamId      String?
+  tenant      Tenant          @relation(fields: [tenantId], references: [id])
   tenantId    String
 }
-
 enum FinanceType {
   INCOME
   EXPENSE
+}
+
+enum FinanceCategory {
+  CUOTA_EQUIPO
+  PAGO_ARBITRO
+  GASTO_CANCHA
+  GASTO_TROFEOS
+  GASTO_GENERAL
+  PREMIO
+  OTRO
 }
