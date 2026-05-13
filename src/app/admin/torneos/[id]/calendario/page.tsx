@@ -2,8 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import CalendarioClient from "./CalendarioClient.tsx";
-
+import CalendarioClient from "./CalendarioClient";
 export default async function CalendarioAdminPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user) redirect("/login");
