@@ -4,13 +4,18 @@ import { prisma } from "./prisma";
 export async function getTenant() {
   const headersList = await headers();
 
+  // Intentar desde header del middleware
   let slug = headersList.get("x-tenant-slug");
 
+  // Fallback: leer directamente del host
   if (!slug) {
-    const host = headersList.get("host") || "";
-    const hostname = host.split(":")[0];
-    const parts = hostname.split(".");
-    if (parts.length >= 2 && parts[0] !== "localhost" && parts[0] !== "www") {
+    const host = (headersList.get("host") || "").split(":")[0];
+    const parts = host.split(".");
+
+    const isLocalhost = parts.length === 2 && parts[1] === "localhost";
+    const isLvh = parts.length === 3 && parts[1] === "lvh" && parts[2] === "me";
+
+    if (isLocalhost || isLvh) {
       slug = parts[0];
     }
   }
@@ -20,6 +25,7 @@ export async function getTenant() {
     slug = process.env.DEV_TENANT_SLUG || null;
   }
 
+  console.log("SLUG FINAL:", slug);
   if (!slug) return null;
 
   return await prisma.tenant.findUnique({

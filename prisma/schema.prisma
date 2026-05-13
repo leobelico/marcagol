@@ -21,6 +21,20 @@ model Tenant {
   matchDuration Int       @default(90)
   roundTrip     Boolean   @default(false)
 
+  // Flyer / Landing
+  description   String?
+  endDate       DateTime?
+  maxTeams      Int?
+  inscriptionFee Float?
+  contactName   String?
+  contactPhone  String?
+  contactEmail  String?
+  instagram     String?
+  facebook      String?
+  whatsapp      String?
+  bannerUrl     String?
+  published     Boolean  @default(false)
+
   teams     Team[]
   matches   Match[]
   rounds    Round[]
@@ -60,13 +74,15 @@ model Team {
   id       String  @id @default(cuid())
   name     String
   logo     String?
+  phone    String?   // ← WhatsApp del capitán
+  captain  String?   // ← Nombre del capitán
   tenant   Tenant  @relation(fields: [tenantId], references: [id])
   tenantId String
 
   players     Player[]
-  homeMatches Match[]  @relation("HomeTeam")
-  awayMatches Match[]  @relation("AwayTeam")
-  finances    Finance[] 
+  homeMatches Match[]   @relation("HomeTeam")
+  awayMatches Match[]   @relation("AwayTeam")
+  finances    Finance[]
 }
 
 model Player {

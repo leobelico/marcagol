@@ -13,6 +13,8 @@ type Player = {
 type Team = {
   id: string;
   name: string;
+  captain: string | null;
+  phone: string | null;
   players: Player[];
   _count: { players: number };
 };
@@ -27,25 +29,27 @@ export default function EquiposClient({ torneo }: { torneo: Torneo }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  // Estados para nuevo equipo
   const [showNuevoEquipo, setShowNuevoEquipo] = useState(false);
-  const [nuevoEquipo, setNuevoEquipo] = useState("");
+  const [nuevoEquipo, setNuevoEquipo] = useState({ name: "", captain: "", phone: "" });
 
-  // Estados para nuevo jugador
   const [equipoSeleccionado, setEquipoSeleccionado] = useState<string | null>(null);
   const [nuevoJugador, setNuevoJugador] = useState({ name: "", number: "", position: "" });
 
   const POSICIONES = ["Portero", "Defensa", "Mediocampista", "Delantero"];
 
   async function crearEquipo() {
-    if (!nuevoEquipo.trim()) return;
+    if (!nuevoEquipo.name.trim()) return;
     setLoading(true);
     await fetch(`/api/admin/torneos/${torneo.id}/equipos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: nuevoEquipo }),
+      body: JSON.stringify({
+        name: nuevoEquipo.name,
+        captain: nuevoEquipo.captain || null,
+        phone: nuevoEquipo.phone || null,
+      }),
     });
-    setNuevoEquipo("");
+    setNuevoEquipo({ name: "", captain: "", phone: "" });
     setShowNuevoEquipo(false);
     setLoading(false);
     router.refresh();
@@ -94,8 +98,7 @@ export default function EquiposClient({ torneo }: { torneo: Torneo }) {
           <h2 className="text-2xl font-black text-white">Equipos</h2>
           <p className="text-gray-500 text-sm mt-1">{torneo.teams.length} equipos registrados</p>
         </div>
-        <button
-          onClick={() => setShowNuevoEquipo(true)}
+        <button onClick={() => setShowNuevoEquipo(true)}
           className="bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
           + Agregar Equipo
         </button>
@@ -105,21 +108,36 @@ export default function EquiposClient({ torneo }: { torneo: Torneo }) {
       {showNuevoEquipo && (
         <div className="bg-gray-900 border border-green-800 rounded-2xl p-5">
           <h3 className="text-sm font-bold text-white mb-4">Nuevo Equipo</h3>
-          <div className="flex gap-3">
+          <div className="grid grid-cols-3 gap-3 mb-3">
             <input
               type="text"
-              placeholder="Nombre del equipo"
-              value={nuevoEquipo}
-              onChange={(e) => setNuevoEquipo(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && crearEquipo()}
-              className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-green-500 transition"
+              placeholder="Nombre del equipo *"
+              value={nuevoEquipo.name}
+              onChange={(e) => setNuevoEquipo({ ...nuevoEquipo, name: e.target.value })}
+              className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-green-500 transition text-sm"
             />
+            <input
+              type="text"
+              placeholder="Nombre del capitán"
+              value={nuevoEquipo.captain}
+              onChange={(e) => setNuevoEquipo({ ...nuevoEquipo, captain: e.target.value })}
+              className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-green-500 transition text-sm"
+            />
+            <input
+              type="text"
+              placeholder="WhatsApp (+52...)"
+              value={nuevoEquipo.phone}
+              onChange={(e) => setNuevoEquipo({ ...nuevoEquipo, phone: e.target.value })}
+              className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-green-500 transition text-sm"
+            />
+          </div>
+          <div className="flex gap-3">
             <button onClick={crearEquipo} disabled={loading}
-              className="bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-3 rounded-xl transition">
+              className="bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-3 rounded-xl transition text-sm">
               Crear
             </button>
             <button onClick={() => setShowNuevoEquipo(false)}
-              className="bg-gray-800 hover:bg-gray-700 text-gray-400 font-bold px-5 py-3 rounded-xl transition">
+              className="bg-gray-800 hover:bg-gray-700 text-gray-400 font-bold px-5 py-3 rounded-xl transition text-sm">
               Cancelar
             </button>
           </div>
@@ -142,7 +160,11 @@ export default function EquiposClient({ torneo }: { torneo: Torneo }) {
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
                 <div>
                   <h3 className="text-white font-bold text-lg">{team.name}</h3>
-                  <p className="text-gray-500 text-sm">{team._count.players} jugadores</p>
+                  <div className="flex gap-3 text-xs text-gray-500 mt-0.5">
+                    <span>{team._count.players} jugadores</span>
+                    {team.captain && <span>👤 {team.captain}</span>}
+                    {team.phone && <span>📱 {team.phone}</span>}
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <button

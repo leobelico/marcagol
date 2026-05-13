@@ -1,21 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { notificarCalendario } from "@/lib/notificaciones";
+
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const { id } = await params;
-  const { name, captain, phone } = await req.json();
+  const { tipo } = await req.json();
 
-  const team = await prisma.team.create({
-    data: {
-      name,
-      captain: captain || null,
-      phone: phone || null,
-      tenantId: id,
-    },
-  });
+  if (tipo === "calendario") {
+    const resultados = await notificarCalendario(id);
+    return NextResponse.json({ ok: true, resultados });
+  }
 
-  return NextResponse.json(team);
+  return NextResponse.json({ error: "Tipo no válido" }, { status: 400 });
 }

@@ -41,6 +41,7 @@ export default async function AdminPage() {
             className="bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
             + Nuevo Torneo
           </Link>
+          
         </div>
 
         {torneos.length === 0 ? (
@@ -73,6 +74,7 @@ export default async function AdminPage() {
                   <span className="text-gray-400"><span className="text-white font-bold">{t._count.matches}</span> partidos</span>
                 </div>
               </Link>
+              
             ))}
           </div>
         )}

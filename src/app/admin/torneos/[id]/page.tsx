@@ -94,6 +94,7 @@ export default async function TorneoAdminPage({ params }: { params: Promise<{ id
             { href: `/admin/torneos/${id}/resultados`, icon: "⚽", title: "Resultados", desc: `${torneo._count.matches} partidos`, color: "hover:border-purple-700" },
             { href: `/admin/torneos/${id}/arbitros`, icon: "🟨", title: "Árbitros", desc: "Gestionar árbitros", color: "hover:border-yellow-700" },
             { href: `/admin/torneos/${id}/finanzas`, icon: "💰", title: "Finanzas", desc: "Ingresos y egresos", color: "hover:border-emerald-700" },
+            { href: `/admin/torneos/${id}/landing`, icon: "🎨", title: "Flyer / Landing", desc: torneo.published ? "✓ Publicado" : "No publicado", color: "hover:border-pink-700" },
           ].map((a) => (
             <Link key={a.href} href={a.href}
               className={`bg-gray-900 border border-gray-800 ${a.color} rounded-2xl p-6 transition group`}>

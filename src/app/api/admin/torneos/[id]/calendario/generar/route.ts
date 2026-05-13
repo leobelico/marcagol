@@ -60,8 +60,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (torneo.matchDays.length === 0) return NextResponse.json({ error: "No hay días de juego configurados" }, { status: 400 });
 
   // Eliminar calendario anterior
-  await prisma.match.deleteMany({ where: { tenantId: id } });
-  await prisma.round.deleteMany({ where: { tenantId: id } });
+await prisma.matchEvent.deleteMany({ where: { match: { tenantId: id } } });
+await prisma.match.deleteMany({ where: { tenantId: id } });
+await prisma.round.deleteMany({ where: { tenantId: id } });
 
   // Generar fixture
   const fixture = generateRoundRobin(torneo.teams);

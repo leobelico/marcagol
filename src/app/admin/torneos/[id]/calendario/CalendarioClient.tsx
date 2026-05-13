@@ -32,7 +32,8 @@ export default function CalendarioClient({ torneo }: { torneo: Torneo }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [confirmar, setConfirmar] = useState(false);
-
+  const [enviando, setEnviando] = useState(false);        // ← aquí adentro
+  const [notifResult, setNotifResult] = useState(""); 
   const tieneCalendario = torneo.rounds.length > 0;
   const puedeGenerar = torneo.teams.length >= 2 && torneo.matchDays.length > 0 && torneo.startDate;
 
@@ -72,6 +73,19 @@ export default function CalendarioClient({ torneo }: { torneo: Torneo }) {
     router.refresh();
   }
 
+  async function enviarNotificaciones() {
+  setEnviando(true);
+  const res = await fetch(`/api/admin/torneos/${torneo.id}/notificar`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tipo: "calendario" }),
+  });
+  const json = await res.json();
+  const enviados = json.resultados?.filter((r: any) => r.ok).length ?? 0;
+  setNotifResult(`✓ ${enviados} equipos notificados`);
+  setEnviando(false);
+}
+
   return (
     <div className="space-y-6">
 
@@ -96,6 +110,13 @@ export default function CalendarioClient({ torneo }: { torneo: Torneo }) {
               {tieneCalendario ? "Regenerar calendario" : "Generar calendario"}
             </button>
           )}
+          {tieneCalendario && (
+            <button onClick={enviarNotificaciones} disabled={enviando}
+                className="bg-blue-700 hover:bg-blue-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
+                {enviando ? "Enviando..." : "📱 Notificar equipos"}
+            </button>
+            )}
+            {notifResult && <p className="text-green-400 text-sm">{notifResult}</p>}
         </div>
       </div>
 

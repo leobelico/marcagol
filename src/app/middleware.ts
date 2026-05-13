@@ -6,10 +6,15 @@ export async function middleware(req: NextRequest) {
   const host = hostname.split(":")[0];
   const parts = host.split(".");
 
-  // Detectar tenant por subdominio
-  const isSubdomain = parts.length >= 2 && parts[0] !== "localhost" && parts[0] !== "www";
-  if (isSubdomain) {
+  console.log("MIDDLEWARE HOST:", host, "PARTS:", parts);
+
+  // Detectar subdominio en .localhost o .lvh.me
+  const isLocalhost = parts.length === 2 && parts[1] === "localhost";
+  const isLvh = parts.length === 3 && parts[1] === "lvh" && parts[2] === "me";
+
+  if (isLocalhost || isLvh) {
     const slug = parts[0];
+    console.log("SLUG DETECTADO:", slug);
     const res = NextResponse.next();
     res.headers.set("x-tenant-slug", slug);
     return res;
