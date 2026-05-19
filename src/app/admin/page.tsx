@@ -7,12 +7,32 @@ export default async function AdminPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const torneos = await prisma.tenant.findMany({
-    include: {
-      _count: { select: { teams: true, matches: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const isSuperAdmin = (session.user as any).isSuperAdmin;
+
+  // Si no es super admin ni tiene ligas asignadas, fuera
+  if (!isSuperAdmin) {
+    const tenantUser = await prisma.tenantUser.findFirst({
+      where: { userId: session.user.id, role: "ADMIN" },
+    });
+    if (!tenantUser) redirect("/login");
+  }
+
+  const torneos = isSuperAdmin
+    ? await prisma.tenant.findMany({
+        include: { _count: { select: { teams: true, matches: true } } },
+        orderBy: { createdAt: "desc" },
+      })
+    : await prisma.tenant.findMany({
+        where: {
+          users: {
+            some: { userId: session.user.id, role: "ADMIN" },
+          },
+        },
+        include: { _count: { select: { teams: true, matches: true } } },
+        orderBy: { createdAt: "desc" },
+      });
+
+  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || "marcagol.site";
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
@@ -20,7 +40,9 @@ export default async function AdminPage() {
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
             <p className="text-xs text-gray-500 uppercase tracking-widest">Panel de Control</p>
-            <h1 className="text-lg font-black text-white">⚽ Super Admin</h1>
+            <h1 className="text-lg font-black text-white">
+              {isSuperAdmin ? "⚽ Super Admin" : "⚽ Admin de Liga"}
+            </h1>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-400">{session.user?.email}</span>
@@ -34,14 +56,23 @@ export default async function AdminPage() {
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-black text-white">Torneos</h2>
+            <h2 className="text-2xl font-black text-white">
+              {isSuperAdmin ? "Todos los Torneos" : "Mis Ligas"}
+            </h2>
             <p className="text-gray-500 text-sm mt-1">{torneos.length} torneos registrados</p>
           </div>
-          <Link href="/admin/torneos/nuevo"
-            className="bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
-            + Nuevo Torneo
-          </Link>
-          
+          {isSuperAdmin && (
+            <div className="flex gap-3">
+              <Link href="/admin/subadmins"
+                className="bg-gray-700 hover:bg-gray-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
+                👥 Sub Admins
+              </Link>
+              <Link href="/admin/torneos/nuevo"
+                className="bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
+                + Nuevo Torneo
+              </Link>
+            </div>
+          )}
         </div>
 
         {torneos.length === 0 ? (
@@ -49,10 +80,12 @@ export default async function AdminPage() {
             <p className="text-4xl mb-4">⚽</p>
             <p className="text-gray-400 font-medium">No hay torneos aún</p>
             <p className="text-gray-600 text-sm mt-1">Crea tu primer torneo para empezar</p>
-            <Link href="/admin/torneos/nuevo"
-              className="inline-block mt-6 bg-green-600 hover:bg-green-500 text-white font-bold px-6 py-3 rounded-xl transition text-sm">
-              Crear Torneo
-            </Link>
+            {isSuperAdmin && (
+              <Link href="/admin/torneos/nuevo"
+                className="inline-block mt-6 bg-green-600 hover:bg-green-500 text-white font-bold px-6 py-3 rounded-xl transition text-sm">
+                Crear Torneo
+              </Link>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -68,13 +101,12 @@ export default async function AdminPage() {
                   </span>
                 </div>
                 <h3 className="text-white font-bold text-lg group-hover:text-green-400 transition">{t.name}</h3>
-                <p className="text-gray-500 text-sm mb-4">{t.slug}.tuapp.com</p>
+                <p className="text-gray-500 text-sm mb-4">{t.slug}.{appDomain}</p>
                 <div className="flex gap-4 text-sm">
                   <span className="text-gray-400"><span className="text-white font-bold">{t._count.teams}</span> equipos</span>
                   <span className="text-gray-400"><span className="text-white font-bold">{t._count.matches}</span> partidos</span>
                 </div>
               </Link>
-              
             ))}
           </div>
         )}

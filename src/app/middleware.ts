@@ -6,15 +6,17 @@ export async function middleware(req: NextRequest) {
   const host = hostname.split(":")[0];
   const parts = host.split(".");
 
-  console.log("MIDDLEWARE HOST:", host, "PARTS:", parts);
+  const appDomain = (process.env.NEXT_PUBLIC_APP_DOMAIN || "").replace(/:\d+$/, "");
 
-  // Detectar subdominio en .localhost o .lvh.me
+  // Localhost: liga-rinos.localhost
   const isLocalhost = parts.length === 2 && parts[1] === "localhost";
+  // lvh.me: liga-rinos.lvh.me
   const isLvh = parts.length === 3 && parts[1] === "lvh" && parts[2] === "me";
+  // Producción: liga-rinos.marcagol.site
+  const isProduction = appDomain && host.endsWith(`.${appDomain}`) && host !== appDomain;
 
-  if (isLocalhost || isLvh) {
+  if (isLocalhost || isLvh || isProduction) {
     const slug = parts[0];
-    console.log("SLUG DETECTADO:", slug);
     const res = NextResponse.next();
     res.headers.set("x-tenant-slug", slug);
     return res;

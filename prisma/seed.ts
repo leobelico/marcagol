@@ -10,28 +10,34 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   // 1. Limpiar en orden correcto
-  await prisma.matchEvent.deleteMany();
-  await prisma.match.deleteMany();
-  await prisma.playerStat.deleteMany();
-  await prisma.player.deleteMany();
-  await prisma.team.deleteMany();
-  await prisma.tenantUser.deleteMany();
-  await prisma.tenant.deleteMany();
-  await prisma.user.deleteMany();
+// 1. Limpiar en orden correcto
+await prisma.matchEvent.deleteMany();
+await prisma.match.deleteMany();
+await prisma.playerStat.deleteMany();
+await prisma.player.deleteMany();
+await prisma.referee.deleteMany();  // ← agregar esto antes de team y tenant
+await prisma.team.deleteMany();
+await prisma.tenantUser.deleteMany();
+await prisma.finance.deleteMany();  // ← también este por si acaso
+await prisma.round.deleteMany();    // ← y este
+await prisma.tenant.deleteMany();
+await prisma.user.deleteMany();
 
   console.log("✅ Base de datos limpia");
 
   // 2. Crear superadmin
-  const hashedPassword = await bcrypt.hash("admin123", 10);
-  const superAdmin = await prisma.user.upsert({
-    where: { email: "admin@futbol.com" },
-    update: {},
-    create: {
-      email: "admin@futbol.com",
-      name: "Super Admin",
-      password: hashedPassword,
-    },
-  });
+ // 2. Crear superadmin
+const hashedPassword = await bcrypt.hash("admin123", 10);
+const superAdmin = await prisma.user.upsert({
+  where: { email: "admin@futbol.com" },
+  update: { isSuperAdmin: true }, // ← agregar
+  create: {
+    email: "admin@futbol.com",
+    name: "Super Admin",
+    password: hashedPassword,
+    isSuperAdmin: true, // ← agregar
+  },
+});
   console.log("✅ Superadmin creado:", superAdmin.email);
 
   // 3. Crear tenant

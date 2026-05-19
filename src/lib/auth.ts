@@ -12,14 +12,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as any).role;
+        token.isSuperAdmin = (user as any).isSuperAdmin; // ← cambiar
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
-        (session.user as any).role = token.role;
+        (session.user as any).isSuperAdmin = token.isSuperAdmin; // ← cambiar
       }
       return session;
     },
@@ -46,7 +46,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!valid) return null;
 
-        return { id: user.id, email: user.email, name: user.name };
+        return { 
+          id: user.id, 
+          email: user.email, 
+          name: user.name,
+          isSuperAdmin: user.isSuperAdmin, // ← agregar
+        };
       },
     }),
   ],
