@@ -71,6 +71,10 @@ export default async function AdminPage() {
                 className="bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
                 + Nuevo Torneo
               </Link>
+              <Link href="/admin/importar"
+                className="bg-blue-700 hover:bg-blue-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
+                 Importar
+              </Link>
             </div>
           )}
         </div>
