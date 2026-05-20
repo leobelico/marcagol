@@ -15,7 +15,7 @@ export async function middleware(req: NextRequest) {
   if (isLocalhost || isLvh || isProduction) {
     const slug = parts[0];
     const url = req.nextUrl.clone();
-    url.pathname = `/_tenant${url.pathname}`;
+    url.pathname = `/sitio${url.pathname === "/" ? "" : url.pathname}`;
     const res = NextResponse.rewrite(url);
     res.headers.set("x-tenant-slug", slug);
     return res;
@@ -23,7 +23,7 @@ export async function middleware(req: NextRequest) {
 
   // Proteger rutas /admin con getToken (liviano, no importa Prisma)
   if (req.nextUrl.pathname.startsWith("/admin")) {
-    const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (!token) {
       return NextResponse.redirect(new URL("/login", req.url));
     }
