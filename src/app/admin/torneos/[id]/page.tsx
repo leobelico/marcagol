@@ -33,7 +33,7 @@ export default async function TorneoAdminPage({ params }: { params: Promise<{ id
             <p className="text-xs text-gray-500 uppercase tracking-widest">Admin</p>
             <h1 className="text-lg font-black text-white">{torneo.name}</h1>
           </div>
-          <Link href={`http://${torneo.slug}.marcagol.site`} target="_blank"
+          <Link href={`https://${torneo.slug}.marcagol.site`} target="_blank"
             className="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-2 rounded-lg transition">
             Ver sitio →
           </Link>
