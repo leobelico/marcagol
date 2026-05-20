@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getToken } from "next-auth/jwt";
 
 export async function middleware(req: NextRequest) {
   const hostname = req.headers.get("host") || "";
@@ -8,14 +8,6 @@ export async function middleware(req: NextRequest) {
 
   const appDomain = (process.env.NEXT_PUBLIC_APP_DOMAIN || "").replace(/:\d+$/, "");
 
-  console.log("=== MIDDLEWARE DEBUG ===");
-  console.log("hostname:", hostname);
-  console.log("host:", host);
-  console.log("parts:", parts);
-  console.log("appDomain:", appDomain);
-  console.log("endsWith:", host.endsWith(`.${appDomain}`));
-  console.log("host !== appDomain:", host !== appDomain);
-  console.log("=======================");
   const isLocalhost = parts.length === 2 && parts[1] === "localhost";
   const isLvh = parts.length === 3 && parts[1] === "lvh" && parts[2] === "me";
   const isProduction = appDomain && host.endsWith(`.${appDomain}`) && host !== appDomain;
@@ -23,25 +15,16 @@ export async function middleware(req: NextRequest) {
   if (isLocalhost || isLvh || isProduction) {
     const slug = parts[0];
     const url = req.nextUrl.clone();
-
-    // Reescribir rutas del subdominio al grupo (public)
-    // / → /(public)/
-    // /calendario → /(public)/calendario
-    // etc.
-    const pathname = url.pathname;
-
-    // Mapear la ruta actual al equivalente en (public)
-    url.pathname = `/_tenant${pathname}`;
-
+    url.pathname = `/_tenant${url.pathname}`;
     const res = NextResponse.rewrite(url);
     res.headers.set("x-tenant-slug", slug);
     return res;
   }
 
-  // Proteger rutas /admin
+  // Proteger rutas /admin con getToken (liviano, no importa Prisma)
   if (req.nextUrl.pathname.startsWith("/admin")) {
-    const session = await auth();
-    if (!session) {
+    const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+    if (!token) {
       return NextResponse.redirect(new URL("/login", req.url));
     }
   }
