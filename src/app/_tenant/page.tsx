@@ -5,8 +5,10 @@ import Link from "next/link";
 
 export default async function PosicionesPage() {
   const tenant = await getTenant();
-  if (!tenant) notFound();
-
+  if (!tenant) {
+  console.log("TENANT NOT FOUND - slug buscado desde header");
+  notFound();
+}
   const teams = await prisma.team.findMany({
     where: { tenantId: tenant.id },
     include: {

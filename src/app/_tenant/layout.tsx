@@ -4,7 +4,10 @@ import Link from "next/link";
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   const tenant = await getTenant();
-  if (!tenant) notFound();
+  if (!tenant) {
+  console.log("TENANT NOT FOUND - slug buscado desde header");
+  notFound();
+}
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
