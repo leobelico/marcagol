@@ -8,16 +8,24 @@ export async function middleware(req: NextRequest) {
 
   const appDomain = (process.env.NEXT_PUBLIC_APP_DOMAIN || "").replace(/:\d+$/, "");
 
-  // Localhost: liga-rinos.localhost
   const isLocalhost = parts.length === 2 && parts[1] === "localhost";
-  // lvh.me: liga-rinos.lvh.me
   const isLvh = parts.length === 3 && parts[1] === "lvh" && parts[2] === "me";
-  // Producción: liga-rinos.marcagol.site
   const isProduction = appDomain && host.endsWith(`.${appDomain}`) && host !== appDomain;
 
   if (isLocalhost || isLvh || isProduction) {
     const slug = parts[0];
-    const res = NextResponse.next();
+    const url = req.nextUrl.clone();
+
+    // Reescribir rutas del subdominio al grupo (public)
+    // / → /(public)/
+    // /calendario → /(public)/calendario
+    // etc.
+    const pathname = url.pathname;
+
+    // Mapear la ruta actual al equivalente en (public)
+    url.pathname = `/_tenant${pathname}`;
+
+    const res = NextResponse.rewrite(url);
     res.headers.set("x-tenant-slug", slug);
     return res;
   }
