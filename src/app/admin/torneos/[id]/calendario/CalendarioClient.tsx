@@ -64,7 +64,101 @@ export default function CalendarioClient({ torneo }: { torneo: Torneo }) {
     setLoading(false);
     router.refresh();
   }
+async function generarCedula(match: Match) {
+  const { jsPDF } = await import("jspdf");
 
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+  });
+
+  const home = match.homeTeam.name;
+  const away = match.awayTeam.name;
+
+  const pageW = doc.internal.pageSize.getWidth();
+
+  // ───────────────── HEADER ─────────────────
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.text("CÉDULA ARBITRAL - TERRITORIO RINOS", pageW / 2, 15, {
+    align: "center",
+  });
+
+  // Logo (si quieres después puedes meter base64 o URL)
+  doc.setFontSize(10);
+
+  // ───────────────── DATOS GENERALES ─────────────────
+  doc.setFont("helvetica", "normal");
+  doc.text("Árbitro: ____________________", 20, 30);
+  doc.text("Categoría: ____________________", 110, 30);
+  doc.text("Rama: ____________________", 20, 38);
+
+  doc.text("Día: ____________________", 20, 46);
+  doc.text("Hora: ____________________", 110, 46);
+  doc.text("Año: ____________________", 20, 54);
+
+  // ───────────────── EQUIPO A ─────────────────
+  doc.setFillColor(0, 80, 0);
+  doc.rect(20, 62, 80, 6, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.text(`Equipo: ${home}`, 22, 66);
+
+  doc.setTextColor(0, 0, 0);
+  doc.setFont("helvetica", "normal");
+
+  let yA = 72;
+  for (let i = 0; i < 10; i++) {
+    doc.text(`# ___   Jugador ________________   G ____   E ____`, 20, yA);
+    yA += 6;
+  }
+
+  // ───────────────── EQUIPO B ─────────────────
+  doc.setFillColor(0, 80, 0);
+  doc.rect(110, 62, 80, 6, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.text(`Equipo: ${away}`, 112, 66);
+
+  doc.setTextColor(0, 0, 0);
+  doc.setFont("helvetica", "normal");
+
+  let yB = 72;
+  for (let i = 0; i < 10; i++) {
+    doc.text(`# ____   Jugador __________________   G ____   E ____`, 110, yB);
+    yB += 6;
+  }
+
+  // ───────────────── MARCADOR FINAL ─────────────────
+  doc.setFillColor(0, 80, 0);
+  doc.rect(10, 140, 190, 8, "F");
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.text("MARCADOR FINAL", pageW / 2, 146, { align: "center" });
+
+  doc.setTextColor(0, 0, 0);
+  doc.setFont("helvetica", "normal");
+
+  doc.text("Equipo A: ____________", 20, 158);
+  doc.text("Equipo B: ____________", 120, 158);
+
+  // ───────────────── TARJETAS ─────────────────
+  doc.text("Equipo A - Amarillas: ____________", 20, 170);
+  doc.text("Equipo B - Amarillas: ____________", 20, 178);
+
+  doc.text("Tarjetas Rojas: ____________", 20, 190);
+  doc.text("Autogoles: ____________", 20, 198);
+
+  // ───────────────── CAPITANES Y FIRMA ─────────────────
+  doc.text("Capitán Equipo A: ____________________", 20, 212);
+  doc.text("Capitán Equipo B: ____________________", 20, 220);
+
+  doc.text("Firma Árbitro: ____________________", 20, 235);
+
+  doc.save(`Cedula_${home}_vs_${away}.pdf`);
+}
   async function eliminarCalendario() {
     if (!confirm("¿Eliminar todo el calendario? Esta acción no se puede deshacer.")) return;
     setLoading(true);
@@ -210,11 +304,18 @@ export default function CalendarioClient({ torneo }: { torneo: Torneo }) {
               </div>
               <div className="divide-y divide-gray-800">
                 {round.matches.map((m) => (
+                  
                   <div key={m.id} className="px-6 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-4 flex-1">
                       <span className="text-white font-semibold text-sm text-right flex-1">{m.homeTeam.name}</span>
                       <span className="text-gray-500 text-xs bg-gray-800 px-3 py-1 rounded font-bold">VS</span>
                       <span className="text-white font-semibold text-sm flex-1">{m.awayTeam.name}</span>
+                      <button
+                      onClick={() => generarCedula(m)}
+                      className="text-xs bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 font-bold px-3 py-1 rounded-lg transition"
+                    >
+                      📄 Cédula
+                    </button>
                     </div>
                     <span className="text-gray-500 text-xs ml-4">
                       {new Date(m.date).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" })}
