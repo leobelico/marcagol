@@ -23,9 +23,12 @@ export async function middleware(req: NextRequest) {
 
   // Proteger rutas /admin con getToken (liviano, no importa Prisma)
   if (req.nextUrl.pathname.startsWith("/admin")) {
-    const token = await getToken({ 
+const token = await getToken({ 
       req, 
-      secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET 
+      secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+      cookieName: process.env.NODE_ENV === "production" 
+        ? "__Secure-authjs.session-token" 
+        : "authjs.session-token",
     });
     if (!token) {
       return NextResponse.redirect(new URL("/login", req.url));
