@@ -115,6 +115,7 @@ model Round {
 model Match {
   id         String      @id @default(cuid())
   date       DateTime
+  cancha     Int?  
   homeScore  Int?
   awayScore  Int?
   status     MatchStatus @default(SCHEDULED)

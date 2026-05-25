@@ -15,10 +15,10 @@ export default async function CalendarioAdminPage({ params }: { params: Promise<
       teams: { orderBy: { name: "asc" } },
       rounds: {
         include: {
-          matches: {
-            include: { homeTeam: true, awayTeam: true },
-            orderBy: { date: "asc" },
-          },
+        matches: {
+          include: { homeTeam: true, awayTeam: true },
+          orderBy: { date: "asc" },
+        },
         },
         orderBy: { number: "asc" },
       },
