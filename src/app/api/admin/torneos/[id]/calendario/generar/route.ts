@@ -120,6 +120,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   const { id } = await params;
 
+  await prisma.matchEvent.deleteMany({ where: { match: { tenantId: id } } });
   await prisma.match.deleteMany({ where: { tenantId: id } });
   await prisma.round.deleteMany({ where: { tenantId: id } });
 
