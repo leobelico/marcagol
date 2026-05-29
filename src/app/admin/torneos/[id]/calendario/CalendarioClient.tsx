@@ -467,24 +467,61 @@ if (!res.ok) {
                 <span className="text-xs text-gray-500">{round.matches.length} partidos</span>
               </div>
               <div className="divide-y divide-gray-800">
-                {round.matches.map((m) => (
-                  <div key={m.id} className="px-6 py-3 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4 flex-1">
-                      <span className="text-white font-semibold text-sm text-right flex-1">{m.homeTeam.name}</span>
-                      <span className="text-gray-500 text-xs bg-gray-800 px-3 py-1 rounded font-bold">VS</span>
-                      <span className="text-white font-semibold text-sm flex-1">{m.awayTeam.name}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      {m.cancha && <span className="bg-gray-800 px-2 py-1 rounded">C{m.cancha}</span>}
-                      <span>{new Date(m.date).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" })}</span>
-                      <span>{new Date(m.date).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}</span>
-                      <button onClick={() => generarCedula(m)}
-                        className="bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 font-bold px-3 py-1 rounded-lg transition">
-                        📄 Cédula
-                      </button>
-                    </div>
-                  </div>
-                ))}
+          {round.matches.map((m) => (
+              <div key={m.id} className="px-6 py-3 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4 flex-1">
+                  <span className="text-white font-semibold text-sm text-right flex-1">{m.homeTeam.name}</span>
+                  <span className="text-gray-500 text-xs bg-gray-800 px-3 py-1 rounded font-bold">VS</span>
+                  <span className="text-white font-semibold text-sm flex-1">{m.awayTeam.name}</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  {m.cancha && <span className="bg-gray-800 px-2 py-1 rounded">C{m.cancha}</span>}
+                  <span>{new Date(m.date).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" })}</span>
+                  <span>{new Date(m.date).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}</span>
+                  <button onClick={() => generarCedula(m)}
+                    className="bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 font-bold px-3 py-1 rounded-lg transition">
+                    📄 Cédula
+                  </button>
+
+                  {/* NUEVO: Mover jornada */}
+                  <select
+                    defaultValue=""
+                    onChange={async (e) => {
+                      const targetRoundId = e.target.value;
+                      if (!targetRoundId) return;
+                      const res = await fetch(`/api/admin/torneos/${torneo.id}/calendario/${m.id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ targetRoundId }),
+                      });
+                      const json = await res.json();
+                      if (!res.ok) alert(json.error);
+                      else router.refresh();
+                      e.target.value = "";
+                    }}
+                    className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-gray-400 text-xs focus:outline-none"
+                  >
+                    <option value="">↕ Mover a...</option>
+                    {torneo.rounds
+                      .filter((r) => r.id !== round.id)
+                      .map((r) => (
+                        <option key={r.id} value={r.id}>{r.name ?? `Jornada ${r.number}`}</option>
+                      ))}
+                  </select>
+
+                  {/* NUEVO: Eliminar partido */}
+                  <button
+                    onClick={async () => {
+                      if (!confirm(`¿Eliminar ${m.homeTeam.name} vs ${m.awayTeam.name}?`)) return;
+                      await fetch(`/api/admin/torneos/${torneo.id}/calendario/${m.id}`, { method: "DELETE" });
+                      router.refresh();
+                    }}
+                    className="bg-red-900/30 hover:bg-red-900/50 text-red-400 font-bold px-3 py-1 rounded-lg transition">
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            ))}
               </div>
             </div>
           ))}
