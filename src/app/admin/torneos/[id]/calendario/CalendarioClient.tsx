@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-type Team = { id: string; name: string };
-type Match = { id: string; date: Date; homeTeam: Team; awayTeam: Team; status: string; cancha?: number | null;  };
+type Player = { id: string; name: string; number: number | null; position: string | null; };
+type Team = { id: string; name: string; players: Player[] };  // ← agrega players aquí
+type Match = { id: string; date: Date; homeTeam: Team; awayTeam: Team; status: string; cancha?: number | null; };
 type Round = { id: string; number: number; name: string | null; matches: Match[] };
 type Torneo = {
   id: string;
@@ -15,9 +15,7 @@ type Torneo = {
   matchDays: string[];
   matchesPerDay: number;
   roundTrip: boolean;
-  
 };
-
 const DIAS_LABEL: Record<string, string> = {
   MONDAY: "Lunes", TUESDAY: "Martes", WEDNESDAY: "Miércoles",
   THURSDAY: "Jueves", FRIDAY: "Viernes", SATURDAY: "Sábado", SUNDAY: "Domingo",
@@ -234,41 +232,141 @@ if (!res.ok) {
     setAgregando(false);
   }
 
-  async function generarCedula(match: Match) {
-    const { jsPDF } = await import("jspdf");
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-    const home = match.homeTeam.name;
-    const away = match.awayTeam.name;
-    const pageW = doc.internal.pageSize.getWidth();
+async function generarCedula(match: Match) {
+  const { jsPDF } = await import("jspdf");
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+  const home = match.homeTeam.name;
+  const away = match.awayTeam.name;
+  const homePlayers = match.homeTeam.players ?? [];
+  const awayPlayers = match.awayTeam.players ?? [];
+  const pageW = doc.internal.pageSize.getWidth();
+
+  // Encabezado
+  doc.setFillColor(0, 80, 0);
+  doc.rect(0, 0, pageW, 22, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.text("CÉDULA ARBITRAL", pageW / 2, 10, { align: "center" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.text(`Fecha: ${new Date(match.date).toLocaleDateString("es-MX", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}`, pageW / 2, 17, { align: "center" });
+
+  // Info partido
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(9);
+  doc.text(`Árbitro: ____________________`, 15, 30);
+  doc.text(`Cancha: ${match.cancha ?? "___"}`, 120, 30);
+  doc.text(`Hora: ${new Date(match.date).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}`, 165, 30);
+
+  // Línea divisoria
+  doc.setDrawColor(200, 200, 200);
+  doc.line(15, 34, pageW - 15, 34);
+
+  // Columnas de equipos
+  const colLeft = 15;
+  const colRight = pageW / 2 + 5;
+  const colWidth = pageW / 2 - 20;
+
+  function dibujarEquipo(nombre: string, jugadores: Player[], x: number, startY: number) {
+    // Header equipo
+    doc.setFillColor(0, 80, 0);
+    doc.rect(x, startY, colWidth, 8, "F");
+    doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("CÉDULA ARBITRAL", pageW / 2, 15, { align: "center" });
-    doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-    doc.text("Árbitro: ____________________", 20, 30);
-    doc.text(`Cancha: ${match.cancha ?? "___"}`, 110, 30);
-    doc.text(`Fecha: ${new Date(match.date).toLocaleDateString("es-MX")}`, 20, 38);
-    doc.setFillColor(0, 80, 0);
-    doc.rect(20, 46, 80, 6, "F");
-    doc.setTextColor(255, 255, 255);
+    doc.text(nombre.toUpperCase(), x + colWidth / 2, startY + 5.5, { align: "center" });
+
+    // Cabecera tabla
+    let y = startY + 12;
+    doc.setTextColor(80, 80, 80);
     doc.setFont("helvetica", "bold");
-    doc.text(`Equipo: ${home}`, 22, 50);
-    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(7);
+    doc.text("#", x + 2, y);
+    doc.text("Nombre", x + 10, y);
+    doc.text("Pos", x + colWidth - 22, y);
+    doc.text("G", x + colWidth - 10, y);
+    doc.text("TA", x + colWidth - 5, y);
+
+    doc.setDrawColor(220, 220, 220);
+    doc.line(x, y + 2, x + colWidth, y + 2);
+    y += 6;
+
+    // Filas de jugadores registrados
     doc.setFont("helvetica", "normal");
-    let yA = 56;
-    for (let i = 0; i < 10; i++) { doc.text(`# ___   Jugador ________________   G ____   E ____`, 20, yA); yA += 6; }
-    doc.setFillColor(0, 80, 0);
-    doc.rect(110, 46, 80, 6, "F");
-    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.setTextColor(0, 0, 0);
+
+    const maxJugadores = 15;
+    const jugadoresOrdenados = [...jugadores].sort((a, b) => (a.number ?? 99) - (b.number ?? 99));
+
+    for (let i = 0; i < maxJugadores; i++) {
+      const j = jugadoresOrdenados[i];
+      const rowY = y + i * 7;
+
+      // Fondo alterno
+      if (i % 2 === 0) {
+        doc.setFillColor(245, 245, 245);
+        doc.rect(x, rowY - 4, colWidth, 7, "F");
+      }
+
+      if (j) {
+        doc.setTextColor(0, 0, 0);
+        doc.text(j.number !== null ? String(j.number) : "-", x + 2, rowY);
+        const nombreCorto = j.name.length > 22 ? j.name.substring(0, 20) + "…" : j.name;
+        doc.text(nombreCorto, x + 10, rowY);
+        if (j.position) {
+          const posCorta = j.position === "Portero" ? "POR" : j.position === "Defensa" ? "DEF" : j.position === "Mediocampista" ? "MED" : "DEL";
+          doc.text(posCorta, x + colWidth - 22, rowY);
+        }
+      } else {
+        // Fila vacía para anotar en papel
+        doc.setTextColor(180, 180, 180);
+        doc.text("___", x + 2, rowY);
+        doc.text("_______________________", x + 10, rowY);
+      }
+
+      // Casillas G y TA siempre vacías para llenar a mano
+      doc.setTextColor(0, 0, 0);
+      doc.text("__", x + colWidth - 10, rowY);
+      doc.text("__", x + colWidth - 5, rowY);
+    }
+
+    const finalY = y + maxJugadores * 7;
+
+    // Resultado
+    doc.setFillColor(240, 240, 240);
+    doc.rect(x, finalY, colWidth, 10, "F");
+    doc.setDrawColor(180, 180, 180);
+    doc.rect(x, finalY, colWidth, 10);
+    doc.setTextColor(0, 0, 0);
     doc.setFont("helvetica", "bold");
-    doc.text(`Equipo: ${away}`, 112, 50);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont("helvetica", "normal");
-    let yB = 56;
-    for (let i = 0; i < 10; i++) { doc.text(`# ____   Jugador __________________   G ____   E ____`, 110, yB); yB += 6; }
-    doc.save(`Cedula_${home}_vs_${away}.pdf`);
+    doc.setFontSize(9);
+    doc.text("GOLES:", x + 3, finalY + 6.5);
+    doc.text("_____", x + 22, finalY + 6.5);
+
+    return finalY + 14;
   }
 
+  const endY = dibujarEquipo(home, homePlayers, colLeft, 38);
+  dibujarEquipo(away, awayPlayers, colRight, 38);
+
+  // Línea central vertical
+  doc.setDrawColor(220, 220, 220);
+  doc.line(pageW / 2, 38, pageW / 2, endY - 14);
+
+  // Firma árbitro al final
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  doc.line(15, endY + 5, 85, endY + 5);
+  doc.text("Firma árbitro", 50, endY + 10, { align: "center" });
+  doc.line(pageW - 85, endY + 5, pageW - 15, endY + 5);
+  doc.text("Firma árbitro visitante", pageW - 50, endY + 10, { align: "center" });
+
+  doc.save(`Cedula_${home}_vs_${away}.pdf`);
+}
   return (
     <div className="space-y-6">
 

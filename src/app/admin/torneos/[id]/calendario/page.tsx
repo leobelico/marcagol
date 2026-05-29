@@ -9,21 +9,27 @@ export default async function CalendarioAdminPage({ params }: { params: Promise<
 
   const { id } = await params;
 
-  const torneo = await prisma.tenant.findUnique({
-    where: { id },
-    include: {
-      teams: { orderBy: { name: "asc" } },
-      rounds: {
-        include: {
+const torneo = await prisma.tenant.findUnique({
+  where: { id },
+  include: {
+    teams: { 
+      orderBy: { name: "asc" },
+      include: { players: true },  // ← aquí
+    },
+    rounds: {
+      include: {
         matches: {
-          include: { homeTeam: true, awayTeam: true },
+          include: {
+            homeTeam: { include: { players: true } },
+            awayTeam: { include: { players: true } },
+          },
           orderBy: { date: "asc" },
         },
-        },
-        orderBy: { number: "asc" },
       },
+      orderBy: { number: "asc" },
     },
-  });
+  },
+});
 
   if (!torneo) notFound();
 
