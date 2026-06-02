@@ -14,3 +14,19 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   return NextResponse.json({ ok: true });
 }
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string; teamId: string }> }) {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+  const { teamId } = await params;
+  const { name } = await req.json();
+
+  if (!name?.trim()) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
+
+  const team = await prisma.team.update({
+    where: { id: teamId },
+    data: { name: name.trim() },
+  });
+
+  return NextResponse.json({ ok: true, team });
+}
