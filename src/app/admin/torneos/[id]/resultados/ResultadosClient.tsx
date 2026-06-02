@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 
 type Player = { id: string; name: string; number: number | null };
 type Team = { id: string; name: string; players?: Player[] };
-type MatchEvent = { id: string; type: string; minute: number; player: { player: { name: string } } };
+type MatchEvent = { 
+  id: string; 
+  type: string; 
+  minute: number; 
+  suspensionGames?: number | null;
+  player: { player: { id: string; name: string } } 
+};
 type Match = {
   id: string;
   date: Date;
@@ -28,7 +34,13 @@ export default function ResultadosClient({ torneo }: { torneo: Torneo }) {
   const [modalPartido, setModalPartido] = useState<Match | null>(null);
   const [jugadores, setJugadores] = useState<{ homeTeam: Team; awayTeam: Team } | null>(null);
   const [eventos, setEventos] = useState<MatchEvent[]>([]);
-  const [nuevoEvento, setNuevoEvento] = useState({ type: "GOAL", minute: "", playerId: "", assistPlayerId: "" });
+  const [nuevoEvento, setNuevoEvento] = useState({ 
+  type: "GOAL", 
+  minute: "", 
+  playerId: "", 
+  assistPlayerId: "",
+  suspensionGames: "1"
+});
   const [loadingModal, setLoadingModal] = useState(false);
 
   function iniciarEdicion(match: Match) {
@@ -101,12 +113,15 @@ export default function ResultadosClient({ torneo }: { torneo: Torneo }) {
     await fetch(`/api/admin/partidos/${modalPartido.id}/eventos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(nuevoEvento),
+      body: JSON.stringify({
+  ...nuevoEvento,
+      suspensionGames: nuevoEvento.type === "RED_CARD" ? Number(nuevoEvento.suspensionGames) : null,
+    }),
     });
     // Recargar eventos
     const evRes = await fetch(`/api/admin/partidos/${modalPartido.id}/eventos`).then(r => r.json());
     setEventos(evRes);
-    setNuevoEvento({ type: "GOAL", minute: "", playerId: "", assistPlayerId: "" });
+    setNuevoEvento({ type: "GOAL", minute: "", playerId: "", assistPlayerId: "", suspensionGames: "1" });
     setLoadingModal(false);
     router.refresh();
   }
@@ -287,7 +302,9 @@ export default function ResultadosClient({ torneo }: { torneo: Torneo }) {
                         onChange={(e) => setNuevoEvento({ ...nuevoEvento, type: e.target.value })}
                         className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-green-500">
                         <option value="GOAL">⚽ Gol</option>
-                        <option value="SUBSTITUTION">🔄 Asistencia</option>
+                        <option value="SUBSTITUTION">🅰️ Asistencia</option>
+                        <option value="YELLOW_CARD">🟨 Tarjeta Amarilla</option>
+                        <option value="RED_CARD">🟥 Tarjeta Roja</option>
                       </select>
                     </div>
                     <div>
@@ -342,7 +359,27 @@ export default function ResultadosClient({ torneo }: { torneo: Torneo }) {
                       </select>
                     </div>
                   )}
-
+                    {nuevoEvento.type === "RED_CARD" && (
+                    <div>
+                      <label className="text-xs text-gray-500 block mb-1">Juegos de suspensión</label>
+                      <div className="flex gap-2">
+                        {[1, 2, 3, 4, 5].map(n => (
+                          <button
+                            key={n}
+                            onClick={() => setNuevoEvento({ ...nuevoEvento, suspensionGames: String(n) })}
+                            className={`flex-1 py-2 rounded-xl font-bold text-sm transition border ${
+                              nuevoEvento.suspensionGames === String(n)
+                                ? "bg-red-600 border-red-600 text-white"
+                                : "bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500"
+                            }`}
+                          >
+                            {n}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-600 mt-1">El jugador no podrá jugar los próximos {nuevoEvento.suspensionGames} partido(s)</p>
+                    </div>
+                  )}
                   <button onClick={agregarEvento} disabled={loadingModal || !nuevoEvento.playerId || !nuevoEvento.minute}
                     className="w-full bg-green-600 hover:bg-green-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold py-3 rounded-xl transition text-sm">
                     Agregar evento
@@ -359,17 +396,26 @@ export default function ResultadosClient({ torneo }: { torneo: Torneo }) {
                   <p className="text-gray-600 text-sm text-center py-4">Sin eventos registrados</p>
                 ) : (
                   <div className="space-y-2">
-                    {eventos.map((ev) => (
-                      <div key={ev.id} className="flex items-center justify-between bg-gray-800 rounded-xl px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg">{ev.type === "GOAL" ? "⚽" : "🅰️"}</span>
-                          <div>
-                            <p className="text-white text-sm font-medium">{ev.player.player.name}</p>
-                            <p className="text-gray-500 text-xs">
-                              {ev.type === "GOAL" ? "Gol" : "Asistencia"} · min {ev.minute}
-                            </p>
-                          </div>
+                  {eventos.map((ev) => (
+                    <div key={ev.id} className={`flex items-center justify-between rounded-xl px-4 py-3 ${
+                      ev.type === "RED_CARD" ? "bg-red-950/40 border border-red-900/50" :
+                      ev.type === "YELLOW_CARD" ? "bg-yellow-950/40 border border-yellow-900/50" :
+                      "bg-gray-800"
+                    }`}>
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">
+                          {ev.type === "GOAL" ? "⚽" : ev.type === "SUBSTITUTION" ? "🅰️" : ev.type === "YELLOW_CARD" ? "🟨" : "🟥"}
+                        </span>
+                        <div>
+                          <p className="text-white text-sm font-medium">{ev.player.player.name}</p>
+                          <p className="text-gray-500 text-xs">
+                            {ev.type === "GOAL" ? "Gol" : ev.type === "SUBSTITUTION" ? "Asistencia" : ev.type === "YELLOW_CARD" ? "Tarjeta Amarilla" : "Tarjeta Roja"} · min {ev.minute}
+                          </p>
+                          {ev.type === "RED_CARD" && ev.suspensionGames && (
+                            <p className="text-red-400 text-xs font-bold mt-0.5">🚫 Suspendido {ev.suspensionGames} partido(s)</p>
+                          )}
                         </div>
+                      </div>
                         <button onClick={() => eliminarEvento(ev.id)}
                           className="text-xs text-red-400 hover:text-red-300 transition">
                           Eliminar

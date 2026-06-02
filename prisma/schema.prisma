@@ -141,13 +141,14 @@ enum MatchStatus {
 }
 
 model MatchEvent {
-  id       String    @id @default(cuid())
-  type     EventType
-  minute   Int
-  match    Match     @relation(fields: [matchId], references: [id])
-  matchId  String
-  player   PlayerStat @relation(fields: [playerId], references: [id])
-  playerId String
+  id              String    @id @default(cuid())
+  type            EventType
+  minute          Int
+  suspensionGames Int?      // ← agrega esta línea
+  match           Match     @relation(fields: [matchId], references: [id])
+  matchId         String
+  player          PlayerStat @relation(fields: [playerId], references: [id])
+  playerId        String
 }
 
 enum EventType {
