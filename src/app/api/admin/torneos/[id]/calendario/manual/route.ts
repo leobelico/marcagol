@@ -18,13 +18,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const matchDate = new Date(date);
-  const matchEnd = new Date(matchDate.getTime() + 90 * 60 * 1000);
+const matchEnd = new Date(matchDate.getTime() + 60 * 60 * 1000); // ← aquí
 
-  // Todos los partidos del torneo
-  const existingMatches = await prisma.match.findMany({
-    where: { tenantId, status: { not: "CANCELLED" } },
-    include: { homeTeam: true, awayTeam: true },
-  });
+const existingMatches = await prisma.match.findMany({
+  where: { tenantId, status: { not: "CANCELLED" } },
+  include: { homeTeam: true, awayTeam: true },
+});
 
   // 1. ¿Ya se enfrentaron?
   const yaJugaron = existingMatches.find(m =>
@@ -38,12 +37,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   // 2. ¿Cancha ocupada en ese horario?
-  const canchaOcupada = existingMatches.find(m => {
-    if ((m as any).cancha !== cancha) return false;
-    const mStart = new Date(m.date);
-    const mEnd = new Date(mStart.getTime() + 90 * 60 * 1000);
-    return matchDate < mEnd && matchEnd > mStart;
-  });
+ const canchaOcupada = existingMatches.find(m => {
+  if ((m as any).cancha !== cancha) return false;
+  const mStart = new Date(m.date);
+  const mEnd = new Date(mStart.getTime() + 60 * 60 * 1000); // ← aquí
+  return matchDate < mEnd && matchEnd > mStart;
+});
   if (canchaOcupada) {
     return NextResponse.json({
       error: `La cancha ${cancha} ya tiene un partido a esa hora: ${canchaOcupada.homeTeam.name} vs ${canchaOcupada.awayTeam.name}`
@@ -52,12 +51,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   // 3. ¿Algún equipo ya juega en ese horario?
   const equipoOcupado = existingMatches.find(m => {
-    const equiposEnPartido = [m.homeTeamId, m.awayTeamId];
-    if (!equiposEnPartido.includes(homeTeamId) && !equiposEnPartido.includes(awayTeamId)) return false;
-    const mStart = new Date(m.date);
-    const mEnd = new Date(mStart.getTime() + 90 * 60 * 1000);
-    return matchDate < mEnd && matchEnd > mStart;
-  });
+  const equiposEnPartido = [m.homeTeamId, m.awayTeamId];
+  if (!equiposEnPartido.includes(homeTeamId) && !equiposEnPartido.includes(awayTeamId)) return false;
+  const mStart = new Date(m.date);
+  const mEnd = new Date(mStart.getTime() + 60 * 60 * 1000); // ← aquí
+  return matchDate < mEnd && matchEnd > mStart;
+});
   if (equipoOcupado) {
     const equipoNombre = [equipoOcupado.homeTeamId, equipoOcupado.awayTeamId].includes(homeTeamId)
       ? existingMatches.find(m => m.id === equipoOcupado.id)?.homeTeam.name
