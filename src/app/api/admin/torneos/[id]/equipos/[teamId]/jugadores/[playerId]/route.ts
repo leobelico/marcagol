@@ -8,7 +8,13 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
 
   const { playerId } = await params;
 
-  await prisma.playerStat.deleteMany({ where: { playerId } });
+  // Primero borrar eventos del jugador
+  const stat = await prisma.playerStat.findUnique({ where: { playerId } });
+  if (stat) {
+    await prisma.matchEvent.deleteMany({ where: { playerId: stat.id } });
+    await prisma.playerStat.delete({ where: { playerId } });
+  }
+
   await prisma.player.delete({ where: { id: playerId } });
 
   return NextResponse.json({ ok: true });
