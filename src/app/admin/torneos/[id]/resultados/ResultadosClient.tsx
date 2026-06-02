@@ -239,7 +239,7 @@ export default function ResultadosClient({ torneo }: { torneo: Torneo }) {
                           {m.status === "FINISHED" && (
                             <button onClick={() => abrirEventos(m)}
                               className="text-xs bg-yellow-900/40 hover:bg-yellow-900/60 text-yellow-400 font-bold px-3 py-1.5 rounded-lg transition">
-                              ⚽ Goles
+                              Eventos
                             </button>
                           )}
                           {m.status !== "CANCELLED" && (
