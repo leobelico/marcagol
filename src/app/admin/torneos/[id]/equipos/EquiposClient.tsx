@@ -35,7 +35,10 @@ export default function EquiposClient({ torneo }: { torneo: Torneo }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [generandoPDF, setGenerandoPDF] = useState<string | null>(null);
-
+  const [editandoEquipo, setEditandoEquipo] = useState<string | null>(null);
+  const [nombreEquipoEdit, setNombreEquipoEdit] = useState("");
+  const [editandoJugador, setEditandoJugador] = useState<string | null>(null);
+  const [jugadorEdit, setJugadorEdit] = useState({ name: "", number: "", position: "" });
   const [showNuevoEquipo, setShowNuevoEquipo] = useState(false);
   const [nuevoEquipo, setNuevoEquipo] = useState({ name: "", captain: "", phone: "" });
 
@@ -281,7 +284,35 @@ async function handleFotoChange(
     doc.save(`Credenciales_${team.name.replace(/\s+/g, "_")}.pdf`);
     setGenerandoPDF(null);
   }
+async function guardarNombreEquipo(teamId: string) {
+  if (!nombreEquipoEdit.trim()) return;
+  setLoading(true);
+  await fetch(`/api/admin/torneos/${torneo.id}/equipos/${teamId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: nombreEquipoEdit.trim() }),
+  });
+  setEditandoEquipo(null);
+  setLoading(false);
+  router.refresh();
+}
 
+async function guardarJugador(teamId: string, playerId: string) {
+  if (!jugadorEdit.name.trim()) return;
+  setLoading(true);
+  await fetch(`/api/admin/torneos/${torneo.id}/equipos/${teamId}/jugadores/${playerId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: jugadorEdit.name.trim(),
+      number: jugadorEdit.number ? Number(jugadorEdit.number) : null,
+      position: jugadorEdit.position || null,
+    }),
+  });
+  setEditandoJugador(null);
+  setLoading(false);
+  router.refresh();
+}
   // ─── CRUD ─────────────────────────────────────────────────────────
   async function crearEquipo() {
     if (!nuevoEquipo.name.trim()) return;
@@ -432,9 +463,32 @@ async function handleFotoChange(
                     )}
                   </div>
 
-                  <h3 className="text-white font-bold text-lg">
-                    {team.name}
-                  </h3>
+                 {editandoEquipo === team.id ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        autoFocus
+                        value={nombreEquipoEdit}
+                        onChange={e => setNombreEquipoEdit(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") guardarNombreEquipo(team.id);
+                          if (e.key === "Escape") setEditandoEquipo(null);
+                        }}
+                        className="bg-gray-800 border border-green-600 rounded-lg px-3 py-1 text-white text-sm focus:outline-none w-48"
+                      />
+                      <button onClick={() => guardarNombreEquipo(team.id)} disabled={loading}
+                        className="text-green-400 hover:text-green-300 text-xs font-bold">✓</button>
+                      <button onClick={() => setEditandoEquipo(null)}
+                        className="text-gray-500 hover:text-gray-300 text-xs">✕</button>
+                    </div>
+                  ) : (
+                    <h3
+                      onClick={() => { setEditandoEquipo(team.id); setNombreEquipoEdit(team.name); }}
+                      className="text-white font-bold text-lg cursor-pointer hover:text-green-400 transition"
+                      title="Clic para editar"
+                    >
+                      {team.name} <span className="text-gray-600 text-xs font-normal">✏️</span>
+                    </h3>
+                  )}
 
                 </div>
                     <div className="flex gap-3 text-xs text-gray-500 mt-0.5">
@@ -548,65 +602,71 @@ async function handleFotoChange(
                 ) : (
                   team.players.map((p) => (
                     <div key={p.id} className="flex items-center justify-between px-6 py-3">
-                      <div className="flex items-center gap-3">
-                        {/* Miniatura de foto */}
+                      <div className="flex items-center gap-3 flex-1">
                         <div className="relative w-9 h-9 rounded-lg overflow-hidden bg-gray-800 border border-gray-700 flex-shrink-0">
                           {fotos[p.id] || p.photo ? (
-                            <img
-                              src={fotos[p.id] || p.photo!}
-                              alt={p.name}
-                              className="w-full h-full object-cover"
-                            />
+                            <img src={fotos[p.id] || p.photo!} alt={p.name} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">
-                              👤
-                            </div>
+                            <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">👤</div>
                           )}
                         </div>
 
-                        <span className="text-gray-600 text-sm w-6 text-center font-mono">
-                          {p.number ?? "-"}
-                        </span>
-                        <div>
-                          <p className="text-white text-sm font-medium">{p.name}</p>
-                          <p className="text-gray-500 text-xs">{p.position ?? "Sin posición"}</p>
-                        </div>
+                        {editandoJugador === p.id ? (
+                          <div className="flex items-center gap-2 flex-1">
+                            <input
+                              autoFocus
+                              value={jugadorEdit.name}
+                              onChange={e => setJugadorEdit({ ...jugadorEdit, name: e.target.value })}
+                              placeholder="Nombre"
+                              className="bg-gray-800 border border-blue-600 rounded-lg px-3 py-1 text-white text-sm focus:outline-none w-36"
+                            />
+                            <input
+                              type="number"
+                              value={jugadorEdit.number}
+                              onChange={e => setJugadorEdit({ ...jugadorEdit, number: e.target.value })}
+                              placeholder="#"
+                              className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-white text-sm focus:outline-none w-14"
+                            />
+                            <select
+                              value={jugadorEdit.position}
+                              onChange={e => setJugadorEdit({ ...jugadorEdit, position: e.target.value })}
+                              className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-white text-sm focus:outline-none"
+                            >
+                              <option value="">Sin posición</option>
+                              {POSICIONES.map(pos => <option key={pos} value={pos}>{pos}</option>)}
+                            </select>
+                            <button onClick={() => guardarJugador(team.id, p.id)} disabled={loading}
+                              className="text-green-400 hover:text-green-300 text-xs font-bold">✓</button>
+                            <button onClick={() => setEditandoJugador(null)}
+                              className="text-gray-500 hover:text-gray-300 text-xs">✕</button>
+                          </div>
+                        ) : (
+                          <>
+                            <span className="text-gray-600 text-sm w-6 text-center font-mono">{p.number ?? "-"}</span>
+                            <div
+                              onClick={() => { setEditandoJugador(p.id); setJugadorEdit({ name: p.name, number: p.number?.toString() ?? "", position: p.position ?? "" }); }}
+                              className="cursor-pointer hover:text-green-400 transition"
+                              title="Clic para editar"
+                            >
+                              <p className="text-white text-sm font-medium">{p.name} <span className="text-gray-600 text-xs font-normal">✏️</span></p>
+                              <p className="text-gray-500 text-xs">{p.position ?? "Sin posición"}</p>
+                            </div>
+                          </>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2">
-                        {/* ── NUEVO: Botón subir foto ── */}
-                        <button
-                          onClick={() => handleFotoClick(p.id)}
-                          title="Subir foto del jugador"
-                          className="text-xs bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1"
-                        >
+                        <button onClick={() => handleFotoClick(p.id)}
+                          className="text-xs bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1">
                           📷 {fotos[p.id] || p.photo ? "Cambiar foto" : "Subir foto"}
                         </button>
-
-                        {/* Input oculto para la foto */}
-                      <input
-                        ref={(el) => {
-                          fileInputRefs.current[p.id] = el;
-                        }}
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-
-                          if (file) {
-                            handleFotoChange(p.id, team.id, file);
-                          }
-
-                          e.target.value = "";
-                        }}
-                      />
-
-                        <button
-                          onClick={() => eliminarJugador(team.id, p.id)}
-                          className="text-xs text-red-400 hover:text-red-300 transition"
-                        >
+                        <input
+                          ref={(el) => { fileInputRefs.current[p.id] = el; }}
+                          type="file" accept="image/*" capture="environment" className="hidden"
+                          onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFotoChange(p.id, team.id, file); e.target.value = ""; }}
+                        />
+                        <button onClick={() => eliminarJugador(team.id, p.id)}
+                          className="text-xs text-red-400 hover:text-red-300 transition">
                           Eliminar
                         </button>
                       </div>
