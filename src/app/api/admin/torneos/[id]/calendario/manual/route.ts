@@ -18,7 +18,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const matchDate = new Date(date);
-const matchEnd = new Date(matchDate.getTime() + 60 * 60 * 1000); // ← aquí
+const matchEnd = new Date(matchDate.getTime() + 49 * 60 * 1000); // ← aquí
 
 const existingMatches = await prisma.match.findMany({
   where: { tenantId, status: { not: "CANCELLED" } },
@@ -40,7 +40,7 @@ const existingMatches = await prisma.match.findMany({
  const canchaOcupada = existingMatches.find(m => {
   if ((m as any).cancha !== cancha) return false;
   const mStart = new Date(m.date);
-  const mEnd = new Date(mStart.getTime() + 60 * 60 * 1000); // ← aquí
+  const mEnd = new Date(mStart.getTime() + 49 * 60 * 1000); // ← aquí
   return matchDate < mEnd && matchEnd > mStart;
 });
   if (canchaOcupada) {
@@ -54,7 +54,7 @@ const existingMatches = await prisma.match.findMany({
   const equiposEnPartido = [m.homeTeamId, m.awayTeamId];
   if (!equiposEnPartido.includes(homeTeamId) && !equiposEnPartido.includes(awayTeamId)) return false;
   const mStart = new Date(m.date);
-  const mEnd = new Date(mStart.getTime() + 60 * 60 * 1000); // ← aquí
+  const mEnd = new Date(mStart.getTime() + 49 * 60 * 1000); // ← aquí
   return matchDate < mEnd && matchEnd > mStart;
 });
   if (equipoOcupado) {
