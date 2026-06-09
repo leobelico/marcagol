@@ -6,10 +6,10 @@ import Link from "next/link";
 export default async function RolAdminPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
-
+console.log("SESSION USER:", JSON.stringify(session.user));
   const isSuperAdmin = (session.user as any).isSuperAdmin;
 if (!session?.user) redirect("/login");
-
+console.log("SESSION USER:", JSON.stringify(session.user));
   const partidos = await prisma.match.findMany({
     where: { status: "SCHEDULED" },
     include: {
