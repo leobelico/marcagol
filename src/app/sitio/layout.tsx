@@ -17,7 +17,8 @@ export default async function PublicLayout({ children }: { children: React.React
             ⚽ {tenant.name}
           </Link>
           <div className="flex gap-6 text-sm text-gray-400">
-            <Link href="/" className="hover:text-white transition">Inicio</Link>
+            <Link href="/" className="hover:text-blue-400 transition">Inicio</Link>
+            <Link href="/rol-semanal" className="hover:text-white transition">ROL semanal</Link>
             <Link href="/goleadores" className="hover:text-white transition">Goleadores</Link>
             <Link href="/calendario" className="hover:text-white transition">Calendario</Link>
           </div>
