@@ -63,6 +63,10 @@ export default async function AdminPage() {
           </div>
           {isSuperAdmin && (
             <div className="flex gap-3">
+               <Link href="/admin/subadmins"
+                className="bg-red-700 hover:bg-gray-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
+                 ROL ADMINISTRATIVO
+              </Link>
               <Link href="/admin/subadmins"
                 className="bg-gray-700 hover:bg-gray-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
                 👥 Sub Admins
