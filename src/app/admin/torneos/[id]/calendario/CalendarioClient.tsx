@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-type Player = { id: string; name: string; number: number | null; position: string | null; };
+type Player = { id: string; name: string; number: number | null; position: string | null; suspendedUntil?: number | null; };
 type Team = { id: string; name: string; players: Player[] };  // ← agrega players aquí
 type Match = { id: string; date: Date; homeTeam: Team; awayTeam: Team; status: string; cancha?: number | null; };
 type Round = { id: string; number: number; name: string | null; matches: Match[] };
@@ -391,12 +391,6 @@ async function generarCedula(match: Match) {
             </button>
           </div>
 
-          {tieneCalendario && (
-            <button onClick={eliminarCalendario} disabled={loading}
-              className="text-sm bg-red-900/30 hover:bg-red-900/50 text-red-400 font-bold px-4 py-2.5 rounded-xl transition">
-              Eliminar todo
-            </button>
-          )}
           {tieneCalendario && (
             <button onClick={enviarNotificaciones} disabled={enviando}
               className="bg-blue-700 hover:bg-blue-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
