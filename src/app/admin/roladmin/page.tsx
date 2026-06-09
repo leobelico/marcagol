@@ -8,7 +8,7 @@ export default async function RolAdminPage() {
   if (!session?.user) redirect("/login");
 
   const isSuperAdmin = (session.user as any).isSuperAdmin;
-  if (!isSuperAdmin) redirect("/admin");
+if (!session?.user) redirect("/login");
 
   const partidos = await prisma.match.findMany({
     where: { status: "SCHEDULED" },
