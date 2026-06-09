@@ -6,10 +6,10 @@ import Link from "next/link";
 export default async function RolAdminPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
-console.log("SESSION USER:", JSON.stringify(session.user));
+
   const isSuperAdmin = (session.user as any).isSuperAdmin;
 if (!session?.user) redirect("/login");
-console.log("SESSION USER:", JSON.stringify(session.user));
+
   const partidos = await prisma.match.findMany({
     where: { status: "SCHEDULED" },
     include: {
@@ -81,8 +81,8 @@ console.log("SESSION USER:", JSON.stringify(session.user));
                         </div>
                         <div className="text-right text-xs text-gray-500 space-y-0.5">
                           <p>{m.round?.name ?? `Jornada ${m.round?.number}`}</p>
-                          <p>{new Date(m.date).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" })}</p>
-                          <p>{new Date(m.date).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
+                          <p>{new Date(m.date).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short", timeZone: "America/Mexico_City" })}</p>
+                        <p>{new Date(m.date).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", timeZone: "America/Mexico_City" })}
                             {m.cancha ? ` · C${m.cancha}` : ""}
                           </p>
                         </div>

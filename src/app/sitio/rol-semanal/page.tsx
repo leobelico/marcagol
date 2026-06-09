@@ -54,9 +54,9 @@ export default async function RolSemanalPage() {
                     <div className="text-center">
                       <span className="bg-gray-800 text-gray-400 text-xs font-black px-3 py-1 rounded">VS</span>
                       <p className="text-gray-600 text-xs mt-1">
-                        {new Date(m.date).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" })}
+                       {new Date(m.date).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short", timeZone: "America/Mexico_City" })}
                         {" · "}
-                        {new Date(m.date).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(m.date).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", timeZone: "America/Mexico_City" })}
                         {m.cancha ? ` · C${m.cancha}` : ""}
                       </p>
                     </div>
