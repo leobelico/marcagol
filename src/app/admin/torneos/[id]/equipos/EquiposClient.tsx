@@ -203,7 +203,7 @@ async function generarCredenciales(team: Team) {
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(6.5);
-    doc.text(torneo.name.toUpperCase(), x + 3, y + 5.2);
+    doc.text(`${torneo.name.toUpperCase()} - TERRITORIO RINOS`, x + 3, y + 5.2);
 
     // Foto del jugador
     const fotoSize = 22;
