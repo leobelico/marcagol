@@ -59,7 +59,9 @@ export default function EquiposClient({ torneo }: { torneo: Torneo }) {
   function handleFotoClick(playerId: string) {
     fileInputRefs.current[playerId]?.click();
   }
-
+function handleLogoClick(teamId: string) {
+  logoInputRefs.current[teamId]?.click();
+}
   async function handleLogoChange(teamId: string, file: File) {
   const formData = new FormData();
   formData.append("logo", file);
@@ -141,150 +143,145 @@ async function handleFotoChange(
   }
 }
 
-  function handleLogoClick(teamId: string) {
-  logoInputRefs.current[teamId]?.click();
-}
-  // ─── Generar PDF de credenciales ──────────────────────────────────
-  async function generarCredenciales(team: Team) {
-    setGenerandoPDF(team.id);
+async function generarCredenciales(team: Team) {
+  setGenerandoPDF(team.id);
+  const { jsPDF } = await import("jspdf");
 
-    // Importar jsPDF dinámicamente (debe estar instalada: npm i jspdf)
-    const { jsPDF } = await import("jspdf");
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-    const doc = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4",
+  const LOGO_URL = "https://res.cloudinary.com/dap5vi5js/image/upload/WhatsApp_Image_2026-06-18_at_4_29_10_PM_gtbfkb";
+  let logoData: string | null = null;
+  try {
+    const res = await fetch(LOGO_URL);
+    const blob = await res.blob();
+    logoData = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
     });
-
-    const pageWidth = doc.internal.pageSize.getWidth();   // 210
-    const pageHeight = doc.internal.pageSize.getHeight(); // 297
-
-    // Credencial: 85.6 × 54 mm (tamaño ID estándar)
-    const cardW = 85.6;
-    const cardH = 54;
-    const marginX = 10;
-    const marginY = 15;
-    const cols = 2;
-    const gapX = (pageWidth - marginX * 2 - cardW * cols) / (cols - 1);
-    const gapY = 8;
-
-    const players = team.players;
-    let col = 0;
-    let row = 0;
-
-    for (let i = 0; i < players.length; i++) {
-      const player = players[i];
-      const x = marginX + col * (cardW + gapX);
-      const y = marginY + row * (cardH + gapY);
-
-      // Fondo de la credencial
-      doc.setFillColor(15, 23, 42); // slate-900
-      doc.roundedRect(x, y, cardW, cardH, 3, 3, "F");
-
-      // Barra superior verde
-      doc.setFillColor(22, 163, 74); // green-600
-      doc.rect(x, y, cardW, 7, "F");
-
-      // Nombre del torneo
-      doc.setTextColor(255, 255, 255);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(6.5);
-      doc.text(torneo.name.toUpperCase(), x + cardW / 2, y + 4.8, { align: "center" });
-
-      // Foto del jugador
-      const fotoSize = 22;
-      const fotoX = x + 5;
-      const fotoY = y + 10;
-
-      const fotoData = fotos[player.id] || player.photo;
-      if (fotoData) {
-        try {
-          // Detectar formato
-          const fmt = fotoData.startsWith("data:image/png") ? "PNG" : "JPEG";
-          doc.addImage(fotoData, fmt, fotoX, fotoY, fotoSize, fotoSize);
-          // Borde foto
-          doc.setDrawColor(22, 163, 74);
-          doc.setLineWidth(0.5);
-          doc.rect(fotoX, fotoY, fotoSize, fotoSize);
-        } catch {
-          // Si falla la imagen, dibujar placeholder
-          doc.setFillColor(31, 41, 55);
-          doc.rect(fotoX, fotoY, fotoSize, fotoSize, "F");
-          doc.setTextColor(107, 114, 128);
-          doc.setFontSize(8);
-          doc.text("FOTO", fotoX + fotoSize / 2, fotoY + fotoSize / 2, { align: "center" });
-        }
-      } else {
-        // Placeholder
-        doc.setFillColor(31, 41, 55);
-        doc.roundedRect(fotoX, fotoY, fotoSize, fotoSize, 2, 2, "F");
-        doc.setTextColor(75, 85, 99);
-        doc.setFontSize(7);
-        doc.text("SIN", fotoX + fotoSize / 2, fotoY + fotoSize / 2 - 1, { align: "center" });
-        doc.text("FOTO", fotoX + fotoSize / 2, fotoY + fotoSize / 2 + 3, { align: "center" });
-      }
-
-      // Datos del jugador
-      const dataX = fotoX + fotoSize + 4;
-      const dataW = cardW - fotoSize - 14;
-
-      // Número grande
-      if (player.number !== null) {
-        doc.setTextColor(22, 163, 74);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(22);
-        doc.text(`#${player.number}`, dataX, fotoY + 10);
-      }
-
-      // Nombre
-      doc.setTextColor(255, 255, 255);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(9);
-      const nombreLines = doc.splitTextToSize(player.name.toUpperCase(), dataW);
-      doc.text(nombreLines.slice(0, 2), dataX, fotoY + (player.number !== null ? 17 : 8));
-
-      // Posición
-      if (player.position) {
-        doc.setTextColor(34, 197, 94);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(7);
-        doc.text(player.position.toUpperCase(), dataX, fotoY + (player.number !== null ? 24 : 16));
-      }
-
-      // Nombre del equipo en la parte inferior
-      doc.setFillColor(31, 41, 55);
-      doc.rect(x, y + cardH - 9, cardW, 9, "F");
-      doc.setTextColor(156, 163, 175);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(6.5);
-      doc.text(team.name.toUpperCase(), x + cardW / 2, y + cardH - 3.5, { align: "center" });
-
-      // Avanzar posición
-      col++;
-      if (col >= cols) {
-        col = 0;
-        row++;
-        // Nueva página si no caben más filas
-        const maxRows = Math.floor((pageHeight - marginY * 2) / (cardH + gapY));
-        if (row >= maxRows && i < players.length - 1) {
-          doc.addPage();
-          row = 0;
-        }
-      }
-    }
-
-    // Si no hay jugadores
-    if (players.length === 0) {
-      doc.setTextColor(156, 163, 175);
-      doc.setFontSize(12);
-      doc.text("Este equipo no tiene jugadores registrados.", pageWidth / 2, pageHeight / 2, { align: "center" });
-    }
-
-    doc.save(`Credenciales_${team.name.replace(/\s+/g, "_")}.pdf`);
-    setGenerandoPDF(null);
+  } catch {
+    console.warn("No se pudo cargar el logo");
   }
-async function guardarNombreEquipo(teamId: string) {
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const cardW = 85.6;
+  const cardH = 54;
+  const marginX = 10;
+  const marginY = 15;
+  const cols = 2;
+  const gapX = (pageWidth - marginX * 2 - cardW * cols) / (cols - 1);
+  const gapY = 8;
+  const players = team.players;
+  let col = 0;
+  let row = 0;
+
+  for (let i = 0; i < players.length; i++) {
+    const player = players[i];
+    const x = marginX + col * (cardW + gapX);
+    const y = marginY + row * (cardH + gapY);
+
+    // Fondo blanco
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(x, y, cardW, cardH, 3, 3, "F");
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(x, y, cardW, cardH, 3, 3, "S");
+
+    // Barra superior verde
+    doc.setFillColor(22, 163, 74);
+    doc.rect(x, y, cardW, 8, "F");
+
+    // Logo en barra superior derecha
+    if (logoData) {
+      try {
+        doc.addImage(logoData, "JPEG", x + cardW - 20, y + 0.5, 19, 7);
+      } catch { /* ignorar */ }
+    }
+
+    // Nombre del torneo en barra
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(6.5);
+    doc.text(torneo.name.toUpperCase(), x + 3, y + 5.2);
+
+    // Foto del jugador
+    const fotoSize = 22;
+    const fotoX = x + 5;
+    const fotoY = y + 11;
+    const fotoData = fotos[player.id] || player.photo;
+    if (fotoData) {
+      try {
+        const fmt = fotoData.startsWith("data:image/png") ? "PNG" : "JPEG";
+        doc.addImage(fotoData, fmt, fotoX, fotoY, fotoSize, fotoSize);
+        doc.setDrawColor(22, 163, 74);
+        doc.setLineWidth(0.5);
+        doc.rect(fotoX, fotoY, fotoSize, fotoSize);
+      } catch {
+        doc.setFillColor(240, 240, 240);
+        doc.rect(fotoX, fotoY, fotoSize, fotoSize, "F");
+      }
+    } else {
+      doc.setFillColor(240, 240, 240);
+      doc.roundedRect(fotoX, fotoY, fotoSize, fotoSize, 2, 2, "F");
+      doc.setTextColor(150, 150, 150);
+      doc.setFontSize(7);
+      doc.text("SIN FOTO", fotoX + fotoSize / 2, fotoY + fotoSize / 2, { align: "center" });
+    }
+
+    // Datos del jugador
+    const dataX = fotoX + fotoSize + 4;
+    const dataW = cardW - fotoSize - 14;
+
+    if (player.number !== null) {
+      doc.setTextColor(22, 163, 74);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(22);
+      doc.text(`#${player.number}`, dataX, fotoY + 10);
+    }
+
+    doc.setTextColor(15, 23, 42);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    const nombreLines = doc.splitTextToSize(player.name.toUpperCase(), dataW);
+    doc.text(nombreLines.slice(0, 2), dataX, fotoY + (player.number !== null ? 17 : 8));
+
+    if (player.position) {
+      doc.setTextColor(22, 163, 74);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7);
+      doc.text(player.position.toUpperCase(), dataX, fotoY + (player.number !== null ? 24 : 16));
+    }
+
+    // Pie del equipo
+    doc.setFillColor(240, 240, 240);
+    doc.rect(x, y + cardH - 9, cardW, 9, "F");
+    doc.setTextColor(75, 85, 99);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(6.5);
+    doc.text(team.name.toUpperCase(), x + cardW / 2, y + cardH - 3.5, { align: "center" });
+
+    col++;
+    if (col >= cols) {
+      col = 0;
+      row++;
+      const maxRows = Math.floor((pageHeight - marginY * 2) / (cardH + gapY));
+      if (row >= maxRows && i < players.length - 1) {
+        doc.addPage();
+        row = 0;
+      }
+    }
+  }
+
+  if (players.length === 0) {
+    doc.setTextColor(150, 150, 150);
+    doc.setFontSize(12);
+    doc.text("Sin jugadores registrados.", pageWidth / 2, pageHeight / 2, { align: "center" });
+  }
+
+  doc.save(`Credenciales_${team.name.replace(/\s+/g, "_")}.pdf`);
+  setGenerandoPDF(null);
+}async function guardarNombreEquipo(teamId: string) {
   if (!nombreEquipoEdit.trim()) return;
   setLoading(true);
   await fetch(`/api/admin/torneos/${torneo.id}/equipos/${teamId}`, {

@@ -171,8 +171,6 @@ model PlayerStat {
   events MatchEvent[]
 }
 
-// ─── ÁRBITROS ────────────────────────────────────
-model Referee {
   id          String   @id @default(cuid())
   name        String
   phone       String?

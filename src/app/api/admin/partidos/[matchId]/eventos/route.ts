@@ -22,7 +22,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ mat
   if (!session?.user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const { matchId } = await params;
-  const { type, minute, playerId, assistPlayerId } = await req.json();
+  const { type, minute, playerId, assistPlayerId, suspensionGames } = await req.json();
 
   // Buscar o crear el PlayerStat del jugador
   let playerStat = await prisma.playerStat.findUnique({ where: { playerId } });
@@ -32,9 +32,27 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ mat
 
   // Crear el evento
   const event = await prisma.matchEvent.create({
-    data: { type, minute: Number(minute), matchId, playerId: playerStat.id },
+  data: { 
+    type, 
+    minute: Number(minute), 
+    matchId, 
+    playerId: playerStat.id,
+    suspensionGames: suspensionGames ?? null,
+  },
+});
+if (type === "YELLOW_CARD") {
+  await prisma.playerStat.update({
+    where: { playerId },
+    data: { yellow: { increment: 1 } },
   });
+}
 
+if (type === "RED_CARD") {
+  await prisma.playerStat.update({
+    where: { playerId },
+    data: { red: { increment: 1 } },
+  });
+}
   // Actualizar estadísticas del goleador
   if (type === "GOAL") {
     await prisma.playerStat.update({
@@ -79,7 +97,19 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ m
       data: { goals: { decrement: 1 } },
     });
   }
+if (event.type === "YELLOW_CARD") {
+  await prisma.playerStat.update({
+    where: { id: event.playerId },
+    data: { yellow: { decrement: 1 } },
+  });
+}
 
+if (event.type === "RED_CARD") {
+  await prisma.playerStat.update({
+    where: { id: event.playerId },
+    data: { red: { decrement: 1 } },
+  });
+}
   await prisma.matchEvent.delete({ where: { id: eventId } });
 
   return NextResponse.json({ ok: true });
