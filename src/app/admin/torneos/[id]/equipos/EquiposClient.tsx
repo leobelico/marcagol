@@ -149,7 +149,7 @@ async function generarCredenciales(team: Team) {
 
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-  const LOGO_URL = "https://res.cloudinary.com/dap5vi5js/image/upload/WhatsApp_Image_2026-06-18_at_4_29_10_PM_gtbfkb";
+  const LOGO_URL = "https://res-console.cloudinary.com/dap5vi5js/thumbnails/transform/v1/image/upload/Y19maWxsLGhfMjAwLHdfMjAw/v1/V2hhdHNBcHBfSW1hZ2VfMjAyNi0wNi0xOF9hdF80LjI5LjEwX1BNX2kzYnN3ZQ==/template_primary";
   let logoData: string | null = null;
   try {
     const res = await fetch(LOGO_URL);
