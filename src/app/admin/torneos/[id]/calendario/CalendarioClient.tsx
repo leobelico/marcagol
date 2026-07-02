@@ -235,6 +235,7 @@ if (!res.ok) {
 
 async function generarCedula(match: Match) {
   const { jsPDF } = await import("jspdf");
+
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "mm",
@@ -242,52 +243,34 @@ async function generarCedula(match: Match) {
   });
 
   const home = match.homeTeam.name;
-  const away = match.awayTeam.name;
+  const away = match.homeTeam.name;
   const homePlayers = match.homeTeam.players ?? [];
   const awayPlayers = match.awayTeam.players ?? [];
   const pageW = doc.internal.pageSize.getWidth();
 
   // =========================
-  // LOGO DEL TORNEO
+  // CARGAR LOGO DEL TORNEO
   // =========================
-  console.log("Logo:", torneo.logo);
+  let logoData: string | null = null;
+  let logoFormato: "JPEG" | "PNG" = "JPEG";
+
   if (torneo.logo) {
     try {
-      const logoUrl = torneo.logo.startsWith("http")
-        ? torneo.logo
-        : `${window.location.origin}${torneo.logo}`;
-console.log("logoUrl:", logoUrl);
-      const response = await fetch(logoUrl);
-console.log("Status:", response.status);
-console.log("Content-Type:", response.headers.get("content-type"));
+      const response = await fetch(torneo.logo);
+
       if (response.ok) {
         const blob = await response.blob();
 
-        const imgData = await new Promise<string>((resolve) => {
+        logoFormato = blob.type === "image/png" ? "PNG" : "JPEG";
+
+        logoData = await new Promise<string>((resolve) => {
           const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
+          reader.onloadend = () => resolve(reader.result as string);
           reader.readAsDataURL(blob);
         });
-
-        const formato =
-          blob.type === "image/jpeg" || blob.type === "image/jpg"
-            ? "JPEG"
-            : "PNG";
-console.log(imgData.substring(0, 50));
-doc.setDrawColor(255, 0, 0);
-doc.rect(4, 3, 16, 16);
-doc.addImage(imgData, formato, 4, 3, 16, 16);
-              try {
-        doc.addImage(imgData, formato, 4, 3, 16, 16);
-        console.log("✅ Logo agregado");
-      } catch (e) {
-        console.error("❌ Error en addImage:", e);
-      }
-      } else {
-        console.error("No se pudo cargar el logo:", response.status);
       }
     } catch (err) {
-      console.error("Error cargando el logo:", err);
+      console.error(err);
     }
   }
 
@@ -297,10 +280,17 @@ doc.addImage(imgData, formato, 4, 3, 16, 16);
   doc.setFillColor(0, 80, 0);
   doc.rect(0, 0, pageW, 22, "F");
 
+  // Logo
+  if (logoData) {
+    doc.addImage(logoData, logoFormato, 4, 3, 16, 16);
+  }
+
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.text("CÉDULA ARBITRAL", pageW / 2, 10, { align: "center" });
+  doc.text("CÉDULA ARBITRAL", pageW / 2, 10, {
+    align: "center",
+  });
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
@@ -313,9 +303,10 @@ doc.addImage(imgData, formato, 4, 3, 16, 16);
     })}`,
     pageW / 2,
     17,
-    { align: "center" }
+    {
+      align: "center",
+    }
   );
-
   // =========================
   // INFO PARTIDO
   // =========================
