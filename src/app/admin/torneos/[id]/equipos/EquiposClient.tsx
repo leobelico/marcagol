@@ -25,7 +25,7 @@ type Torneo = {
   id: string;
   name: string;
   teams: Team[];
-  logo?: string;
+  logo?: string | null;
 };
 // Fotos en memoria (por jugadorId → base64).
 // En producción deberías subirlas a tu API/storage y persistirlas en BD.
