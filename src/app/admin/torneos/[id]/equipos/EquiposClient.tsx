@@ -25,6 +25,7 @@ type Torneo = {
   id: string;
   name: string;
   teams: Team[];
+  logo?: string;
 };
 
 // Fotos en memoria (por jugadorId → base64).
@@ -149,20 +150,29 @@ async function generarCredenciales(team: Team) {
 
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-  const LOGO_URL = "https://res-console.cloudinary.com/dap5vi5js/thumbnails/transform/v1/image/upload/Y19maWxsLGhfMjAwLHdfMjAw/v1/V2hhdHNBcHBfSW1hZ2VfMjAyNi0wNi0xOF9hdF80LjI5LjEwX1BNX2kzYnN3ZQ==/template_primary";
   let logoData: string | null = null;
-  try {
-    const res = await fetch(LOGO_URL);
-    const blob = await res.blob();
-    logoData = await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    console.warn("No se pudo cargar el logo");
-  }
+let logoFormato: "JPEG" | "PNG" = "JPEG";
 
+if (torneo.logo) {
+  try {
+    const response = await fetch(torneo.logo);
+
+    if (response.ok) {
+      const blob = await response.blob();
+      logoFormato = blob.type === "image/png" ? "PNG" : "JPEG";
+
+      logoData = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    } else {
+      console.error("Fetch del logo falló con status:", response.status);
+    }
+  } catch (err) {
+    console.error("Error cargando logo:", err);
+  }
+}
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const cardW = 85.6;
@@ -194,11 +204,10 @@ async function generarCredenciales(team: Team) {
 
    let logoFormato: "JPEG" | "PNG" = "JPEG";
 
-    if (logoData) {
-      logoFormato = logoData.startsWith("data:image/png") ? "PNG" : "JPEG";
-      doc.addImage(logoData, logoFormato, x + cardW - 20, y + 0.5, 19, 7);
-    }
-
+   if (logoData) {
+  logoFormato = logoData.startsWith("data:image/png") ? "PNG" : "JPEG"; // esto también lo puedes quitar, ya viene bien desde blob.type
+  doc.addImage(logoData, logoFormato, x + cardW - 20, y + 0.5, 19, 7);
+}
     // Nombre del torneo en barra
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
