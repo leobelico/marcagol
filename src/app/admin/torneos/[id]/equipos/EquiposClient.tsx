@@ -192,11 +192,11 @@ async function generarCredenciales(team: Team) {
     doc.setFillColor(22, 163, 74);
     doc.rect(x, y, cardW, 8, "F");
 
-    // Logo en barra superior derecha
+   let logoFormato: "JPEG" | "PNG" = "JPEG";
+
     if (logoData) {
-      try {
-        doc.addImage(logoData, "JPEG", x + cardW - 20, y + 0.5, 19, 7);
-      } catch { /* ignorar */ }
+      logoFormato = logoData.startsWith("data:image/png") ? "PNG" : "JPEG";
+      doc.addImage(logoData, logoFormato, x + cardW - 20, y + 0.5, 19, 7);
     }
 
     // Nombre del torneo en barra
