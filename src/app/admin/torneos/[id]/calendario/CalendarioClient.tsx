@@ -298,8 +298,8 @@ async function generarCedula(match: Match) {
     doc.setFontSize(8);
     doc.setTextColor(0, 0, 0);
 
-    const maxJugadores = 15;
-    const jugadoresOrdenados = [...jugadores].sort((a, b) => (a.number ?? 99) - (b.number ?? 99));
+   const jugadoresOrdenados = [...jugadores].sort((a, b) => (a.number ?? 99) - (b.number ?? 99));
+const maxJugadores = Math.max(jugadoresOrdenados.length, 15); // mínimo 15 filas vacías si hay menos
 
     for (let i = 0; i < maxJugadores; i++) {
       const j = jugadoresOrdenados[i];
@@ -360,10 +360,14 @@ async function generarCedula(match: Match) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
-  doc.line(15, endY + 5, 85, endY + 5);
-  doc.text("Firma árbitro", 50, endY + 10, { align: "center" });
-  doc.line(pageW - 85, endY + 5, pageW - 15, endY + 5);
-  doc.text("Firma árbitro visitante", pageW - 50, endY + 10, { align: "center" });
+doc.line(15, endY + 5, 85, endY + 5);
+doc.text("Firma equipo local", 50, endY + 10, { align: "center" });
+doc.line(pageW - 85, endY + 5, pageW - 15, endY + 5);
+doc.text("Firma equipo visitante", pageW - 50, endY + 10, { align: "center" });
+
+// Firma árbitro centrada abajo
+doc.line(pageW / 2 - 35, endY + 20, pageW / 2 + 35, endY + 20);
+doc.text("Firma árbitro", pageW / 2, endY + 25, { align: "center" });
 
   doc.save(`Cedula_${home}_vs_${away}.pdf`);
 }
