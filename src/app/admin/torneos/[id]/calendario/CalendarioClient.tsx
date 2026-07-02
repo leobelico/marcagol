@@ -258,7 +258,8 @@ async function generarCedula(match: Match) {
         : `${window.location.origin}${torneo.logo}`;
 console.log("logoUrl:", logoUrl);
       const response = await fetch(logoUrl);
-
+console.log("Status:", response.status);
+console.log("Content-Type:", response.headers.get("content-type"));
       if (response.ok) {
         const blob = await response.blob();
 
