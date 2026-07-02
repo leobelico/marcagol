@@ -274,7 +274,15 @@ console.log("Content-Type:", response.headers.get("content-type"));
             ? "JPEG"
             : "PNG";
 console.log(imgData.substring(0, 50));
+doc.setDrawColor(255, 0, 0);
+doc.rect(4, 3, 16, 16);
+doc.addImage(imgData, formato, 4, 3, 16, 16);
+              try {
         doc.addImage(imgData, formato, 4, 3, 16, 16);
+        console.log("✅ Logo agregado");
+      } catch (e) {
+        console.error("❌ Error en addImage:", e);
+      }
       } else {
         console.error("No se pudo cargar el logo:", response.status);
       }
