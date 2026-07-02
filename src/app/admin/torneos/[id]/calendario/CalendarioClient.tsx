@@ -15,6 +15,7 @@ type Torneo = {
   matchDays: string[];
   matchesPerDay: number;
   roundTrip: boolean;
+   logo?: string | null;
 };
 const DIAS_LABEL: Record<string, string> = {
   MONDAY: "Lunes", TUESDAY: "Martes", WEDNESDAY: "Miércoles",
@@ -241,7 +242,16 @@ async function generarCedula(match: Match) {
   const homePlayers = match.homeTeam.players ?? [];
   const awayPlayers = match.awayTeam.players ?? [];
   const pageW = doc.internal.pageSize.getWidth();
-
+  if (torneo.logo) {
+    const imgData = await fetch(torneo.logo)
+      .then(r => r.blob())
+      .then(blob => new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      }));
+    doc.addImage(imgData, "PNG", 4, 3, 16, 16);
+  }
   // Encabezado
   doc.setFillColor(0, 80, 0);
   doc.rect(0, 0, pageW, 22, "F");

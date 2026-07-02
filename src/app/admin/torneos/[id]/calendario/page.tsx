@@ -14,7 +14,7 @@ const torneo = await prisma.tenant.findUnique({
   include: {
     teams: { 
       orderBy: { name: "asc" },
-      include: { players: true },  // ← aquí
+      include: { players: true },
     },
     rounds: {
       include: {

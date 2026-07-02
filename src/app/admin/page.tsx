@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-
+import LogoUploader from "./torneos/[id]/LogoUploader";
 export default async function AdminPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
@@ -101,8 +101,11 @@ export default async function AdminPage() {
               <Link key={t.id} href={`/admin/torneos/${t.id}`}
                 className="bg-gray-900 border border-gray-800 hover:border-gray-600 rounded-2xl p-6 transition group">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 bg-green-900/40 rounded-xl flex items-center justify-center text-2xl">
-                    ⚽
+                  <div className="w-12 h-12 bg-green-900/40 rounded-xl flex items-center justify-center overflow-hidden">
+                    {t.logo
+                      ? <img src={t.logo} className="w-full h-full object-cover rounded-xl" />
+                      : <span className="text-2xl">⚽</span>
+                    }
                   </div>
                   <span className="text-xs bg-green-900/30 text-green-400 px-2 py-1 rounded-full font-bold">
                     Activo
@@ -110,6 +113,11 @@ export default async function AdminPage() {
                 </div>
                 <h3 className="text-white font-bold text-lg group-hover:text-green-400 transition">{t.name}</h3>
                 <p className="text-gray-500 text-sm mb-4">{t.slug}.{appDomain}</p>
+                {isSuperAdmin && (
+                <div onClick={e => e.preventDefault()}>
+                  <LogoUploader torneoId={t.id} logoActual={t.logo} />
+                </div>
+              )}
                 <div className="flex gap-4 text-sm">
                   <span className="text-gray-400"><span className="text-white font-bold">{t._count.teams}</span> equipos</span>
                   <span className="text-gray-400"><span className="text-white font-bold">{t._count.matches}</span> partidos</span>
