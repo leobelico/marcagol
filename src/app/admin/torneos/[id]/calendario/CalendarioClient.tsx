@@ -273,7 +273,7 @@ console.log("Content-Type:", response.headers.get("content-type"));
           blob.type === "image/jpeg" || blob.type === "image/jpg"
             ? "JPEG"
             : "PNG";
-
+console.log(imgData.substring(0, 50));
         doc.addImage(imgData, formato, 4, 3, 16, 16);
       } else {
         console.error("No se pudo cargar el logo:", response.status);
