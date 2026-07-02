@@ -250,12 +250,13 @@ async function generarCedula(match: Match) {
   // =========================
   // LOGO DEL TORNEO
   // =========================
+  console.log("Logo:", torneo.logo);
   if (torneo.logo) {
     try {
       const logoUrl = torneo.logo.startsWith("http")
         ? torneo.logo
         : `${window.location.origin}${torneo.logo}`;
-
+console.log("logoUrl:", logoUrl);
       const response = await fetch(logoUrl);
 
       if (response.ok) {
