@@ -243,7 +243,7 @@ async function generarCedula(match: Match) {
   });
 
   const home = match.homeTeam.name;
-  const away = match.homeTeam.name;
+const away = match.awayTeam.name;
   const homePlayers = match.homeTeam.players ?? [];
   const awayPlayers = match.awayTeam.players ?? [];
   const pageW = doc.internal.pageSize.getWidth();
