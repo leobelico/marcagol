@@ -94,9 +94,16 @@ export default async function PosicionesPage() {
                           {i + 1}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                    <td className="px-4 py-3">
                         <Link href={`/equipos/${s.team.id}`} className="font-semibold text-white hover:text-green-400 transition flex items-center gap-2">
                           {i === 0 && <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded font-bold">LÍDER</span>}
+                          <span className="w-6 h-6 rounded-full overflow-hidden bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0">
+                            {s.team.logo ? (
+                              <img src={s.team.logo} alt={s.team.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-[10px]">⚽</span>
+                            )}
+                          </span>
                           {s.team.name}
                         </Link>
                       </td>
