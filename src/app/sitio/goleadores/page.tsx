@@ -34,7 +34,18 @@ export default async function GoleadoresPage() {
             {sorted.map((p, i) => (
               <tr key={p.id} className="border-t border-gray-800 hover:bg-gray-900 transition">
                 <td className="px-4 py-3 text-gray-500">{i + 1}</td>
-                <td className="px-4 py-3 font-medium text-white">{p.name}</td>
+                <td className="px-4 py-3 font-medium text-white">
+                <div className="flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-full overflow-hidden bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0">
+                    {p.photo ? (
+                      <img src={p.photo} alt={p.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-xs text-gray-500">👤</span>
+                    )}
+                  </span>
+                  {p.name}
+                </div>
+              </td>
                 <td className="px-4 py-3 text-gray-400">{p.team.name}</td>
                 <td className="px-4 py-3 text-center font-bold text-green-400">{p.stats[0]?.goals ?? 0}</td>
                 <td className="px-4 py-3 text-center text-gray-400">{p.stats[0]?.assists ?? 0}</td>
