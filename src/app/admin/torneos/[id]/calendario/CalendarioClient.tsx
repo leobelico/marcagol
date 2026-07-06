@@ -647,11 +647,13 @@ const away = match.awayTeam.name;
                   <span className="text-gray-500 text-xs bg-gray-800 px-3 py-1 rounded font-bold">VS</span>
                   <span className="text-white font-semibold text-sm flex-1">{m.awayTeam.name}</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  {m.cancha && <span className="bg-gray-800 px-2 py-1 rounded">C{m.cancha}</span>}
-                  <span>{new Date(m.date).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" })}</span>
-                  <span>{new Date(m.date).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}</span>
-                  <button onClick={() => generarCedula(m)}
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+            {m.cancha && <span className="bg-gray-800 px-2 py-1 rounded">C{m.cancha}</span>}
+            <span>{new Date(m.date).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" })}</span>
+            <span className="bg-green-900/40 border border-green-700 text-green-300 font-bold text-sm px-2.5 py-1 rounded-lg tracking-wide">
+              🕒 {new Date(m.date).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+            <button onClick={() => generarCedula(m)}
                     className="bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 font-bold px-3 py-1 rounded-lg transition">
                     📄 Cédula
                   </button>
