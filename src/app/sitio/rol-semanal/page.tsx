@@ -50,18 +50,36 @@ export default async function RolSemanalPage() {
               <div className="divide-y divide-gray-800">
                 {matches.map((m) => (
                   <div key={m.id} className="px-6 py-4 flex items-center justify-between gap-4">
-                    <span className="text-white font-semibold text-sm text-right flex-1">{m.homeTeam.name}</span>
-                    <div className="text-center">
-                      <span className="bg-gray-800 text-gray-400 text-xs font-black px-3 py-1 rounded">VS</span>
-                      <p className="text-gray-600 text-xs mt-1">
-                       {new Date(m.date).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short", timeZone: "America/Mexico_City" })}
-                        {" · "}
-                        {new Date(m.date).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", timeZone: "America/Mexico_City" })}
-                        {m.cancha ? ` · C${m.cancha}` : ""}
-                      </p>
-                    </div>
-                    <span className="text-white font-semibold text-sm flex-1">{m.awayTeam.name}</span>
-                  </div>
+  <span className="text-white font-semibold text-sm text-right flex-1 flex items-center justify-end gap-2">
+    {m.homeTeam.name}
+    <span className="w-6 h-6 rounded-full overflow-hidden bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0">
+      {m.homeTeam.logo ? (
+        <img src={m.homeTeam.logo} alt={m.homeTeam.name} className="w-full h-full object-cover" />
+      ) : (
+        <span className="text-[10px]">⚽</span>
+      )}
+    </span>
+  </span>
+        <div className="text-center flex-shrink-0">
+          <span className="bg-gray-800 text-gray-400 text-xs font-black px-3 py-1 rounded">VS</span>
+          <p className="text-gray-600 text-xs mt-1">
+          {new Date(m.date).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short", timeZone: "America/Mexico_City" })}
+            {" · "}
+            {new Date(m.date).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", timeZone: "America/Mexico_City" })}
+            {m.cancha ? ` · C${m.cancha}` : ""}
+          </p>
+        </div>
+        <span className="text-white font-semibold text-sm flex-1 flex items-center gap-2">
+          <span className="w-6 h-6 rounded-full overflow-hidden bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0">
+            {m.awayTeam.logo ? (
+              <img src={m.awayTeam.logo} alt={m.awayTeam.name} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-[10px]">⚽</span>
+            )}
+          </span>
+          {m.awayTeam.name}
+        </span>
+      </div>
                 ))}
               </div>
             </div>
