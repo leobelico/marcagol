@@ -26,11 +26,13 @@ export default async function CalendarioPage() {
         {matches.map((m) => {
           const st = statusLabel[m.status];
           const fecha = new Date(m.date).toLocaleDateString("es-MX", {
-            weekday: "long", day: "numeric", month: "long",
-          });
-          const hora = new Date(m.date).toLocaleTimeString("es-MX", {
-            hour: "2-digit", minute: "2-digit",
-          });
+                  weekday: "long", day: "numeric", month: "long",
+                  timeZone: "America/Mexico_City",
+                });
+                const hora = new Date(m.date).toLocaleTimeString("es-MX", {
+                  hour: "2-digit", minute: "2-digit",
+                  timeZone: "America/Mexico_City",
+                });
 
           return (
             <div key={m.id} className="bg-gray-900 border border-gray-800 rounded-xl px-6 py-4">
