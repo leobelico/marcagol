@@ -207,8 +207,16 @@ if (!res.ok) {
     setNotifResult(`✓ ${enviados} equipos notificados`);
     setEnviando(false);
   }
-
-  async function agregarPartidoManual() {
+function existeCruce(teamAId: string, teamBId: string): boolean {
+    return torneo.rounds.some((r) =>
+      r.matches.some(
+        (m) =>
+          (m.homeTeam.id === teamAId && m.awayTeam.id === teamBId) ||
+          (m.homeTeam.id === teamBId && m.awayTeam.id === teamAId)
+      )
+    );
+  }
+async function agregarPartidoManual() {
     setErrorManual("");
     setSuccessManual("");
     if (!homeTeamId || !awayTeamId || !fecha || !hora) {
@@ -219,6 +227,16 @@ if (!res.ok) {
       setErrorManual("Selecciona dos equipos diferentes");
       return;
     }
+
+    if (existeCruce(homeTeamId, awayTeamId)) {
+      const nombreHome = torneo.teams.find((t) => t.id === homeTeamId)?.name;
+      const nombreAway = torneo.teams.find((t) => t.id === awayTeamId)?.name;
+      const confirmado = window.confirm(
+        `${nombreHome} ya se enfrentó antes a ${nombreAway}. ¿Seguro que quieres generar otro partido entre ellos?`
+      );
+      if (!confirmado) return;
+    }
+
     setAgregando(true);
     const dateTime = new Date(`${fecha}T${hora}:00`);
     const res = await fetch(`/api/admin/torneos/${torneo.id}/calendario/manual`, {
