@@ -46,7 +46,7 @@ export default async function PosicionesPage() {
       else l++;
     });
     return { team, pts, pj: w + d + l, w, d, l, gf, ga, dif: gf - ga };
-  }).sort((a, b) => b.pts - a.pts || b.dif - a.dif);
+}).sort((a, b) => b.pts - a.pts || b.dif - a.dif || b.gf - a.gf);
 
   return (
     <div className="space-y-8">
