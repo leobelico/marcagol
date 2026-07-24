@@ -7,7 +7,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!session?.user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const { id: tenantId } = await params;
-  const { homeTeamId, awayTeamId, date, cancha, roundId } = await req.json();
+  const { homeTeamId, awayTeamId, date, cancha, roundId, confirmarRepetido } = await req.json();
 
   if (!homeTeamId || !awayTeamId || !date || !cancha) {
     return NextResponse.json({ error: "Faltan campos" }, { status: 400 });
@@ -26,14 +26,16 @@ const existingMatches = await prisma.match.findMany({
 });
 
   // 1. ¿Ya se enfrentaron?
+// 1. ¿Ya se enfrentaron?
   const yaJugaron = existingMatches.find(m =>
     (m.homeTeamId === homeTeamId && m.awayTeamId === awayTeamId) ||
     (m.homeTeamId === awayTeamId && m.awayTeamId === homeTeamId)
   );
-  if (yaJugaron) {
+  if (yaJugaron && !confirmarRepetido) {
     return NextResponse.json({
-      error: `Estos equipos ya se enfrentaron el ${new Date(yaJugaron.date).toLocaleDateString("es-MX")}`
-    }, { status: 400 });
+      error: `Estos equipos ya se enfrentaron el ${new Date(yaJugaron.date).toLocaleDateString("es-MX")}`,
+      requiereConfirmacion: true,
+    }, { status: 409 });
   }
 
   // 2. ¿Cancha ocupada en ese horario?

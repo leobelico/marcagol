@@ -216,7 +216,7 @@ function existeCruce(teamAId: string, teamBId: string): boolean {
       )
     );
   }
-async function agregarPartidoManual() {
+async function agregarPartidoManual(forzar = false) {
     setErrorManual("");
     setSuccessManual("");
     if (!homeTeamId || !awayTeamId || !fecha || !hora) {
@@ -228,24 +228,27 @@ async function agregarPartidoManual() {
       return;
     }
 
-    if (existeCruce(homeTeamId, awayTeamId)) {
-      const nombreHome = torneo.teams.find((t) => t.id === homeTeamId)?.name;
-      const nombreAway = torneo.teams.find((t) => t.id === awayTeamId)?.name;
-      const confirmado = window.confirm(
-        `${nombreHome} ya se enfrentó antes a ${nombreAway}. ¿Seguro que quieres generar otro partido entre ellos?`
-      );
-      if (!confirmado) return;
-    }
-
     setAgregando(true);
     const dateTime = new Date(`${fecha}T${hora}:00`);
     const res = await fetch(`/api/admin/torneos/${torneo.id}/calendario/manual`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ homeTeamId, awayTeamId, date: dateTime, cancha, roundId: roundId || null }),
+      body: JSON.stringify({
+        homeTeamId, awayTeamId, date: dateTime, cancha, roundId: roundId || null,
+        confirmarRepetido: forzar,
+      }),
     });
     const json = await res.json();
+
     if (!res.ok) {
+      if (json.requiereConfirmacion) {
+        setAgregando(false);
+        const confirmado = window.confirm(`${json.error} ¿Seguro que quieres generar otro partido entre ellos?`);
+        if (confirmado) {
+          agregarPartidoManual(true); // reintenta ya confirmado
+        }
+        return;
+      }
       setErrorManual(json.error || "Error al agregar partido");
     } else {
       setSuccessManual("✅ Partido agregado correctamente");
@@ -259,7 +262,6 @@ async function agregarPartidoManual() {
     }
     setAgregando(false);
   }
-
   function calcularStandings() {
     const stats: Record<string, { team: Team; pts: number; gf: number; ga: number }> = {};
     torneo.teams.forEach((t) => { stats[t.id] = { team: t, pts: 0, gf: 0, ga: 0 }; });
@@ -725,7 +727,7 @@ const away = match.awayTeam.name;
           {errorManual && <div className="bg-red-900/20 border border-red-800 rounded-xl px-4 py-3 text-red-400 text-sm">{errorManual}</div>}
           {successManual && <div className="bg-green-900/20 border border-green-800 rounded-xl px-4 py-3 text-green-400 text-sm">{successManual}</div>}
 
-          <button onClick={agregarPartidoManual} disabled={agregando}
+          <button onClick={() => agregarPartidoManual()} disabled={agregando}
             className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold px-6 py-2.5 rounded-xl transition text-sm">
             {agregando ? "Agregando..." : "➕ Agregar partido"}
           </button>
