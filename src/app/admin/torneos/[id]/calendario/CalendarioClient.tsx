@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 type Player = { id: string; name: string; number: number | null; position: string | null; suspendedUntil?: number | null; };
 type Team = { id: string; name: string; players: Player[] };  // ← agrega players aquí
-type Match = { id: string; date: Date; homeTeam: Team; awayTeam: Team; status: string; cancha?: number | null; };
+type Match = { id: string; date: Date; homeTeam: Team; awayTeam: Team; status: string; cancha?: number | null; homeScore?: number | null; awayScore?: number | null; };
 type Round = { id: string; number: number; name: string | null; matches: Match[] };
 type Torneo = {
   id: string;
@@ -46,6 +46,15 @@ export default function CalendarioClient({ torneo }: { torneo: Torneo }) {
   const [agregando, setAgregando] = useState(false);
   const [errorManual, setErrorManual] = useState("");
   const [successManual, setSuccessManual] = useState("");
+  // Estado liguilla
+  const [showLiguilla, setShowLiguilla] = useState(false);
+  const [numLiguilla, setNumLiguilla] = useState<number>(4);
+  const [liguillaPares, setLiguillaPares] = useState<
+    { homeTeamId: string; awayTeamId: string; homeTeamName: string; awayTeamName: string; fecha: string; hora: string; cancha: 1 | 2 }[]
+  >([]);
+  const [creandoLiguilla, setCreandoLiguilla] = useState(false);
+  const [errorLiguilla, setErrorLiguilla] = useState("");
+  const [successLiguilla, setSuccessLiguilla] = useState("");
 
   const tieneCalendario = torneo.rounds.length > 0;
   const puedeGenerar = torneo.teams.length >= 2 && torneo.matchDays.length > 0 && torneo.startDate;
@@ -231,6 +240,103 @@ if (!res.ok) {
       router.refresh();
     }
     setAgregando(false);
+  }
+
+  function calcularStandings() {
+    const stats: Record<string, { team: Team; pts: number; gf: number; ga: number }> = {};
+    torneo.teams.forEach((t) => { stats[t.id] = { team: t, pts: 0, gf: 0, ga: 0 }; });
+
+    torneo.rounds.forEach((r) => {
+      r.matches.forEach((m) => {
+        if (m.status !== "FINISHED") return;
+        const hs = m.homeScore ?? 0;
+        const as = m.awayScore ?? 0;
+        if (stats[m.homeTeam.id]) {
+          stats[m.homeTeam.id].gf += hs;
+          stats[m.homeTeam.id].ga += as;
+          stats[m.homeTeam.id].pts += hs > as ? 3 : hs === as ? 1 : 0;
+        }
+        if (stats[m.awayTeam.id]) {
+          stats[m.awayTeam.id].gf += as;
+          stats[m.awayTeam.id].ga += hs;
+          stats[m.awayTeam.id].pts += as > hs ? 3 : hs === as ? 1 : 0;
+        }
+      });
+    });
+
+    return Object.values(stats).sort(
+      (a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf
+    );
+  }
+
+  function generarLiguilla() {
+    setErrorLiguilla("");
+    const standings = calcularStandings();
+    const clasificados = standings.slice(0, numLiguilla).map((s) => s.team);
+
+    if (clasificados.length < 2) {
+      setErrorLiguilla("Necesitas al menos 2 equipos clasificados");
+      return;
+    }
+
+    const pares = [];
+    const mitad = Math.floor(clasificados.length / 2);
+    for (let i = 0; i < mitad; i++) {
+      const home = clasificados[i];
+      const away = clasificados[clasificados.length - 1 - i];
+      pares.push({
+        homeTeamId: home.id,
+        awayTeamId: away.id,
+        homeTeamName: home.name,
+        awayTeamName: away.name,
+        fecha: "",
+        hora: "",
+        cancha: 1 as 1 | 2,
+      });
+    }
+    setLiguillaPares(pares);
+  }
+
+  function actualizarParLiguilla(i: number, campo: "fecha" | "hora" | "cancha", valor: any) {
+    setLiguillaPares((prev) => prev.map((p, idx) => (idx === i ? { ...p, [campo]: valor } : p)));
+  }
+
+  async function crearLiguilla() {
+    setErrorLiguilla("");
+    setSuccessLiguilla("");
+    const incompletos = liguillaPares.filter((p) => !p.fecha || !p.hora);
+    if (incompletos.length > 0) {
+      setErrorLiguilla("Completa fecha y hora de todos los cruces");
+      return;
+    }
+
+    setCreandoLiguilla(true);
+    let creados = 0;
+    for (const p of liguillaPares) {
+      const dateTime = new Date(`${p.fecha}T${p.hora}:00`);
+      const res = await fetch(`/api/admin/torneos/${torneo.id}/calendario/manual`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          homeTeamId: p.homeTeamId,
+          awayTeamId: p.awayTeamId,
+          date: dateTime,
+          cancha: p.cancha,
+          roundId: null,
+        }),
+      });
+      if (res.ok) creados++;
+    }
+    setCreandoLiguilla(false);
+
+    if (creados === liguillaPares.length) {
+      setSuccessLiguilla(`✅ ${creados} partidos de liguilla creados`);
+      setLiguillaPares([]);
+      setShowLiguilla(false);
+      router.refresh();
+    } else {
+      setErrorLiguilla(`Solo se crearon ${creados} de ${liguillaPares.length} partidos`);
+    }
   }
 
 async function generarCedula(match: Match) {
@@ -483,7 +589,11 @@ const away = match.awayTeam.name;
             <button onClick={() => setShowImport(true)}
               className="bg-purple-700 hover:bg-purple-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
               📊 Importar Excel
-            </button> 
+            </button>
+            <button onClick={() => setShowLiguilla(true)}
+              className="bg-yellow-700 hover:bg-yellow-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
+              🏆 Crear Liguilla
+            </button>
         </div>
         
       </div>
@@ -657,7 +767,7 @@ const away = match.awayTeam.name;
                     className="bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 font-bold px-3 py-1 rounded-lg transition">
                     📄 Cédula
                   </button>
-
+            
                   {/* NUEVO: Mover jornada */}
                   <select
                     defaultValue=""
@@ -702,112 +812,187 @@ const away = match.awayTeam.name;
           ))}
         </div>
       )}
-    {showImport && (
-  <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4 overflow-y-auto py-8">
-    <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-2xl w-full space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-black text-white">📊 Importar Jornadas desde Excel</h3>
-        <button onClick={() => { setShowImport(false); setImportRows([]); setImportMappings({}); }}
-          className="text-gray-500 hover:text-white text-2xl">×</button>
-      </div>
 
-      {/* Upload */}
-      {importRows.length === 0 && (
-        <div className="space-y-4">
-          <p className="text-gray-400 text-sm">
-            El Excel debe tener las columnas: <span className="text-white font-mono">jornada, equipo_local, equipo_visitante, fecha, hora, cancha</span>
-          </p>
-          <input type="file" accept=".xlsx,.xls,.csv" onChange={handleImportFile}
-            className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-purple-700 file:text-white file:font-bold hover:file:bg-purple-600 cursor-pointer" />
-        </div>
-      )}
-
-      {/* Preview y mapeo */}
-      {importRows.length > 0 && (
-        <div className="space-y-6">
-          <p className="text-gray-400 text-sm">{importRows.length} partidos detectados</p>
-
-          {/* Mapeo de equipos */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Verificar equipos</h4>
-            {Object.entries(importMappings).map(([nombre, teamId]) => {
-              const reconocido = !!teamId;
-              return (
-                <div key={nombre} className={`flex items-center gap-3 p-3 rounded-xl border ${reconocido ? "border-green-800 bg-green-900/10" : "border-red-800 bg-red-900/10"}`}>
-                  <span className="text-sm flex-1 text-white">{nombre}</span>
-                  {reconocido ? (
-                    <div className="flex items-center gap-2">
-                      <span className="text-green-400 text-xs">✓ {torneo.teams.find(t => t.id === teamId)?.name}</span>
-                      <button onClick={() => setImportMappings(prev => ({ ...prev, [nombre]: "" }))}
-                        className="text-gray-500 hover:text-red-400 text-xs">cambiar</button>
-                    </div>
-                  ) : (
-                    <select
-                      value={teamId}
-                      onChange={e => setImportMappings(prev => ({ ...prev, [nombre]: e.target.value }))}
-                      className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-red-500"
-                    >
-                      <option value="">— Selecciona equipo —</option>
-                      {torneo.teams.map(t => (
-                        <option key={t.id} value={t.id}>{t.name}</option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Preview tabla */}
-          <div>
-            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Vista previa (primeros 5)</h4>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left">
-                <thead>
-                  <tr className="text-gray-500 border-b border-gray-800">
-                    <th className="pb-2 pr-3">Jornada</th>
-                    <th className="pb-2 pr-3">Local</th>
-                    <th className="pb-2 pr-3">Visitante</th>
-                    <th className="pb-2 pr-3">Fecha</th>
-                    <th className="pb-2 pr-3">Hora</th>
-                    <th className="pb-2">Cancha</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {importRows.slice(0, 5).map((r, i) => (
-                    <tr key={i} className="border-b border-gray-800/50 text-gray-300">
-                      <td className="py-1.5 pr-3">{r.jornada}</td>
-                      <td className="py-1.5 pr-3">{r.equipo_local}</td>
-                      <td className="py-1.5 pr-3">{r.equipo_visitante}</td>
-                      <td className="py-1.5 pr-3">{r.fecha}</td>
-                      <td className="py-1.5 pr-3">{r.hora}</td>
-                      <td className="py-1.5">{r.cancha}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {importRows.length > 5 && <p className="text-gray-600 text-xs mt-2">... y {importRows.length - 5} más</p>}
+      {/* Modal Crear Liguilla - independiente */}
+      {showLiguilla && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4 overflow-y-auto py-8">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-2xl w-full space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-black text-white">🏆 Crear Liguilla</h3>
+              <button onClick={() => { setShowLiguilla(false); setLiguillaPares([]); setErrorLiguilla(""); }}
+                className="text-gray-500 hover:text-white text-2xl">×</button>
             </div>
-          </div>
 
-          {importError && <div className="bg-red-900/20 border border-red-800 rounded-xl px-4 py-3 text-red-400 text-sm">{importError}</div>}
-          {importSuccess && <div className="bg-green-900/20 border border-green-800 rounded-xl px-4 py-3 text-green-400 text-sm">{importSuccess}</div>}
+            {liguillaPares.length === 0 && (
+              <div className="space-y-4">
+                <label className="text-xs text-gray-400 uppercase tracking-widest block mb-1">
+                  ¿Cuántos equipos entran a la liguilla?
+                </label>
+                <input type="number" min={2} max={torneo.teams.length} value={numLiguilla}
+                  onChange={(e) => setNumLiguilla(Number(e.target.value))}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-yellow-500" />
+                <p className="text-gray-500 text-xs">
+                  Se tomarán los primeros {numLiguilla} lugares de la tabla actual y se enfrentarán 1° vs último, 2° vs penúltimo, etc.
+                </p>
+                {errorLiguilla && <div className="bg-red-900/20 border border-red-800 rounded-xl px-4 py-3 text-red-400 text-sm">{errorLiguilla}</div>}
+                <button onClick={generarLiguilla}
+                  className="bg-yellow-600 hover:bg-yellow-500 text-white font-bold px-6 py-2.5 rounded-xl transition text-sm">
+                  Generar cruces
+                </button>
+              </div>
+            )}
 
-          <div className="flex gap-3">
-            <button onClick={confirmarImportacion} disabled={importando}
-              className="flex-1 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition">
-              {importando ? "Importando..." : "⬆️ Importar todo"}
-            </button>
-            <button onClick={() => { setImportRows([]); setImportMappings({}); }}
-              className="bg-gray-800 hover:bg-gray-700 text-gray-400 font-bold px-6 py-3 rounded-xl transition">
-              Cambiar archivo
-            </button>
+            {liguillaPares.length > 0 && (
+              <div className="space-y-4">
+                <p className="text-gray-400 text-sm">Define fecha, hora y cancha de cada cruce:</p>
+                {liguillaPares.map((p, i) => (
+                  <div key={i} className="bg-gray-800/50 border border-gray-800 rounded-xl p-4 space-y-3">
+                    <p className="text-white font-semibold text-sm text-center">
+                      {p.homeTeamName} <span className="text-gray-500">vs</span> {p.awayTeamName}
+                    </p>
+                    <div className="grid grid-cols-3 gap-3">
+                      <input type="date" value={p.fecha}
+                        onChange={(e) => actualizarParLiguilla(i, "fecha", e.target.value)}
+                        className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-500" />
+                      <input type="time" value={p.hora}
+                        onChange={(e) => actualizarParLiguilla(i, "hora", e.target.value)}
+                        className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-500" />
+                      <select value={p.cancha}
+                        onChange={(e) => actualizarParLiguilla(i, "cancha", Number(e.target.value) as 1 | 2)}
+                        className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-500">
+                        <option value={1}>Cancha 1</option>
+                        <option value={2}>Cancha 2</option>
+                      </select>
+                    </div>
+                  </div>
+                ))}
+
+                {errorLiguilla && <div className="bg-red-900/20 border border-red-800 rounded-xl px-4 py-3 text-red-400 text-sm">{errorLiguilla}</div>}
+                {successLiguilla && <div className="bg-green-900/20 border border-green-800 rounded-xl px-4 py-3 text-green-400 text-sm">{successLiguilla}</div>}
+
+                <div className="flex gap-3">
+                  <button onClick={crearLiguilla} disabled={creandoLiguilla}
+                    className="flex-1 bg-yellow-600 hover:bg-yellow-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition">
+                    {creandoLiguilla ? "Creando..." : "Crear partidos de liguilla"}
+                  </button>
+                  <button onClick={() => setLiguillaPares([])}
+                    className="bg-gray-800 hover:bg-gray-700 text-gray-400 font-bold px-6 py-3 rounded-xl transition">
+                    Volver
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
-    </div>
-  </div>
-)}
+
+      {/* Modal Importar Excel - independiente */}
+      {showImport && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4 overflow-y-auto py-8">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-2xl w-full space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-black text-white">📊 Importar Jornadas desde Excel</h3>
+              <button onClick={() => { setShowImport(false); setImportRows([]); setImportMappings({}); }}
+                className="text-gray-500 hover:text-white text-2xl">×</button>
+            </div>
+
+            {/* Upload */}
+            {importRows.length === 0 && (
+              <div className="space-y-4">
+                <p className="text-gray-400 text-sm">
+                  El Excel debe tener las columnas: <span className="text-white font-mono">jornada, equipo_local, equipo_visitante, fecha, hora, cancha</span>
+                </p>
+                <input type="file" accept=".xlsx,.xls,.csv" onChange={handleImportFile}
+                  className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-purple-700 file:text-white file:font-bold hover:file:bg-purple-600 cursor-pointer" />
+              </div>
+            )}
+
+            {/* Preview y mapeo */}
+            {importRows.length > 0 && (
+              <div className="space-y-6">
+                <p className="text-gray-400 text-sm">{importRows.length} partidos detectados</p>
+
+                {/* Mapeo de equipos */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Verificar equipos</h4>
+                  {Object.entries(importMappings).map(([nombre, teamId]) => {
+                    const reconocido = !!teamId;
+                    return (
+                      <div key={nombre} className={`flex items-center gap-3 p-3 rounded-xl border ${reconocido ? "border-green-800 bg-green-900/10" : "border-red-800 bg-red-900/10"}`}>
+                        <span className="text-sm flex-1 text-white">{nombre}</span>
+                        {reconocido ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-green-400 text-xs">✓ {torneo.teams.find(t => t.id === teamId)?.name}</span>
+                            <button onClick={() => setImportMappings(prev => ({ ...prev, [nombre]: "" }))}
+                              className="text-gray-500 hover:text-red-400 text-xs">cambiar</button>
+                          </div>
+                        ) : (
+                          <select
+                            value={teamId}
+                            onChange={e => setImportMappings(prev => ({ ...prev, [nombre]: e.target.value }))}
+                            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-red-500"
+                          >
+                            <option value="">— Selecciona equipo —</option>
+                            {torneo.teams.map(t => (
+                              <option key={t.id} value={t.id}>{t.name}</option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Preview tabla */}
+                <div>
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Vista previa (primeros 5)</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left">
+                      <thead>
+                        <tr className="text-gray-500 border-b border-gray-800">
+                          <th className="pb-2 pr-3">Jornada</th>
+                          <th className="pb-2 pr-3">Local</th>
+                          <th className="pb-2 pr-3">Visitante</th>
+                          <th className="pb-2 pr-3">Fecha</th>
+                          <th className="pb-2 pr-3">Hora</th>
+                          <th className="pb-2">Cancha</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importRows.slice(0, 5).map((r, i) => (
+                          <tr key={i} className="border-b border-gray-800/50 text-gray-300">
+                            <td className="py-1.5 pr-3">{r.jornada}</td>
+                            <td className="py-1.5 pr-3">{r.equipo_local}</td>
+                            <td className="py-1.5 pr-3">{r.equipo_visitante}</td>
+                            <td className="py-1.5 pr-3">{r.fecha}</td>
+                            <td className="py-1.5 pr-3">{r.hora}</td>
+                            <td className="py-1.5">{r.cancha}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {importRows.length > 5 && <p className="text-gray-600 text-xs mt-2">... y {importRows.length - 5} más</p>}
+                  </div>
+                </div>
+
+                {importError && <div className="bg-red-900/20 border border-red-800 rounded-xl px-4 py-3 text-red-400 text-sm">{importError}</div>}
+                {importSuccess && <div className="bg-green-900/20 border border-green-800 rounded-xl px-4 py-3 text-green-400 text-sm">{importSuccess}</div>}
+
+                <div className="flex gap-3">
+                  <button onClick={confirmarImportacion} disabled={importando}
+                    className="flex-1 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition">
+                    {importando ? "Importando..." : "⬆️ Importar todo"}
+                  </button>
+                  <button onClick={() => { setImportRows([]); setImportMappings({}); }}
+                    className="bg-gray-800 hover:bg-gray-700 text-gray-400 font-bold px-6 py-3 rounded-xl transition">
+                    Cambiar archivo
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
