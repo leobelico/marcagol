@@ -41,7 +41,7 @@ export default function CalendarioClient({ torneo }: { torneo: Torneo }) {
   const [awayTeamId, setAwayTeamId] = useState("");
   const [fecha, setFecha] = useState("");
   const [hora, setHora] = useState("");
-  const [cancha, setCancha] = useState<1 | 2>(1);
+const [cancha, setCancha] = useState<1 | 2 | 3>(1);
   const [roundId, setRoundId] = useState("");
   const [agregando, setAgregando] = useState(false);
   const [errorManual, setErrorManual] = useState("");
@@ -51,7 +51,7 @@ export default function CalendarioClient({ torneo }: { torneo: Torneo }) {
 const [numLiguilla, setNumLiguilla] = useState<number>(4);
   const [bracketLabel, setBracketLabel] = useState("Cuartos de Final");
 const [liguillaPares, setLiguillaPares] = useState <
-    { homeTeamId: string; awayTeamId: string; homeTeamName: string; awayTeamName: string; fecha: string; hora: string; cancha: 1 | 2; yaExiste: boolean }[]
+    { homeTeamId: string; awayTeamId: string; homeTeamName: string; awayTeamName: string; fecha: string; hora: string; cancha: 1 | 2 | 3; yaExiste: boolean }[]
   >([]);
   const [creandoLiguilla, setCreandoLiguilla] = useState(false);
   const [errorLiguilla, setErrorLiguilla] = useState("");
@@ -312,7 +312,7 @@ async function agregarPartidoManual(forzar = false) {
         awayTeamName: away.name,
         fecha: "",
         hora: "",
-        cancha: 1 as 1 | 2,
+        cancha: 1 as 1 | 2 | 3,
         yaExiste: existeCruce(home.id, away.id),
       });
     }
@@ -704,9 +704,9 @@ const away = match.awayTeam.name;
 
             <div>
               <label className="text-xs text-gray-400 uppercase tracking-widest block mb-1">Cancha</label>
-              <div className="flex gap-3">
-                {[1, 2].map(c => (
-                  <button key={c} onClick={() => setCancha(c as 1 | 2)}
+          <div className="flex gap-3">
+                {[1, 2, 3].map(c => (
+                  <button key={c} onClick={() => setCancha(c as 1 | 2 | 3)}
                     className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition border ${cancha === c ? "bg-green-600 border-green-600 text-white" : "bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500"}`}>
                     Cancha {c}
                   </button>
