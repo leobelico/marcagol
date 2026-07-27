@@ -30,7 +30,16 @@ export default async function PosicionesPage() {
     orderBy: { date: "desc" },
     take: 5,
   });
-
+const bracketRounds = await prisma.round.findMany({
+    where: { tenantId: tenant.id, bracketStage: { not: null } },
+    include: {
+      matches: {
+        include: { homeTeam: true, awayTeam: true },
+        orderBy: { bracketOrder: "asc" },
+      },
+    },
+    orderBy: { bracketStage: "asc" },
+  });
   const standings = teams.map((team) => {
     let pts = 0, w = 0, d = 0, l = 0, gf = 0, ga = 0;
     team.homeMatches.forEach((m) => {
@@ -203,7 +212,45 @@ export default async function PosicionesPage() {
           </div>
         </div>
 
-      </div>
+</div>
+
+      {/* Liguilla / Bracket */}
+      {bracketRounds.length > 0 && (
+        <div>
+          <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">🏆 Liguilla</h2>
+          <div className="flex gap-10 overflow-x-auto pb-4">
+            {bracketRounds.map((round) => (
+              <div key={round.id} className="flex flex-col justify-around gap-6 min-w-[240px]">
+                <h3 className="text-center text-xs font-bold text-yellow-400 uppercase tracking-widest">
+                  {round.bracketLabel ?? `Ronda ${round.bracketStage}`}
+                </h3>
+                {round.matches.map((m) => {
+                  const finished = m.status === "FINISHED";
+                  const homeWins = finished && (m.homeScore ?? 0) > (m.awayScore ?? 0);
+                  const awayWins = finished && (m.awayScore ?? 0) > (m.homeScore ?? 0);
+                  return (
+                    <div key={m.id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+                      <div className={`flex items-center justify-between gap-3 px-3 py-2 ${homeWins ? "bg-green-900/20" : ""}`}>
+                        <span className={`text-sm font-semibold truncate ${homeWins ? "text-green-400" : "text-white"}`}>
+                          {m.homeTeam.name}
+                        </span>
+                        <span className="text-sm font-black text-white">{finished ? m.homeScore : "-"}</span>
+                      </div>
+                      <div className="border-t border-gray-800" />
+                      <div className={`flex items-center justify-between gap-3 px-3 py-2 ${awayWins ? "bg-green-900/20" : ""}`}>
+                        <span className={`text-sm font-semibold truncate ${awayWins ? "text-green-400" : "text-white"}`}>
+                          {m.awayTeam.name}
+                        </span>
+                        <span className="text-sm font-black text-white">{finished ? m.awayScore : "-"}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
