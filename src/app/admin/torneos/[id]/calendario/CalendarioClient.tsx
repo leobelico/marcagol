@@ -48,9 +48,10 @@ export default function CalendarioClient({ torneo }: { torneo: Torneo }) {
   const [successManual, setSuccessManual] = useState("");
   // Estado liguilla
   const [showLiguilla, setShowLiguilla] = useState(false);
-  const [numLiguilla, setNumLiguilla] = useState<number>(4);
-  const [liguillaPares, setLiguillaPares] = useState<
-    { homeTeamId: string; awayTeamId: string; homeTeamName: string; awayTeamName: string; fecha: string; hora: string; cancha: 1 | 2 }[]
+const [numLiguilla, setNumLiguilla] = useState<number>(4);
+  const [bracketLabel, setBracketLabel] = useState("Cuartos de Final");
+const [liguillaPares, setLiguillaPares] = useState <
+    { homeTeamId: string; awayTeamId: string; homeTeamName: string; awayTeamName: string; fecha: string; hora: string; cancha: 1 | 2; yaExiste: boolean }[]
   >([]);
   const [creandoLiguilla, setCreandoLiguilla] = useState(false);
   const [errorLiguilla, setErrorLiguilla] = useState("");
@@ -304,7 +305,7 @@ async function agregarPartidoManual(forzar = false) {
     for (let i = 0; i < mitad; i++) {
       const home = clasificados[i];
       const away = clasificados[clasificados.length - 1 - i];
-      pares.push({
+   pares.push({
         homeTeamId: home.id,
         awayTeamId: away.id,
         homeTeamName: home.name,
@@ -312,6 +313,7 @@ async function agregarPartidoManual(forzar = false) {
         fecha: "",
         hora: "",
         cancha: 1 as 1 | 2,
+        yaExiste: existeCruce(home.id, away.id),
       });
     }
     setLiguillaPares(pares);
@@ -331,32 +333,32 @@ async function agregarPartidoManual(forzar = false) {
     }
 
     setCreandoLiguilla(true);
-    let creados = 0;
-    for (const p of liguillaPares) {
-      const dateTime = new Date(`${p.fecha}T${p.hora}:00`);
-      const res = await fetch(`/api/admin/torneos/${torneo.id}/calendario/manual`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+    const res = await fetch(`/api/admin/torneos/${torneo.id}/calendario/bracket`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        bracketLabel,
+        pares: liguillaPares.map((p) => ({
           homeTeamId: p.homeTeamId,
           awayTeamId: p.awayTeamId,
-          date: dateTime,
+          fecha: p.fecha,
+          hora: p.hora,
           cancha: p.cancha,
-          roundId: null,
-        }),
-      });
-      if (res.ok) creados++;
-    }
+        })),
+      }),
+    });
+    const json = await res.json();
     setCreandoLiguilla(false);
 
-    if (creados === liguillaPares.length) {
-      setSuccessLiguilla(`✅ ${creados} partidos de liguilla creados`);
-      setLiguillaPares([]);
-      setShowLiguilla(false);
-      router.refresh();
-    } else {
-      setErrorLiguilla(`Solo se crearon ${creados} de ${liguillaPares.length} partidos`);
+    if (!res.ok) {
+      setErrorLiguilla(json.error || "Error al crear la liguilla");
+      return;
     }
+
+    setSuccessLiguilla(`✅ ${bracketLabel} creada con ${liguillaPares.length} partidos`);
+    setLiguillaPares([]);
+    setShowLiguilla(false);
+    router.refresh();
   }
 
 async function generarCedula(match: Match) {
@@ -843,8 +845,15 @@ const away = match.awayTeam.name;
                 className="text-gray-500 hover:text-white text-2xl">×</button>
             </div>
 
-            {liguillaPares.length === 0 && (
+   {liguillaPares.length === 0 && (
               <div className="space-y-4">
+                <label className="text-xs text-gray-400 uppercase tracking-widest block mb-1">
+                  Nombre de la fase
+                </label>
+                <input type="text" value={bracketLabel} onChange={(e) => setBracketLabel(e.target.value)}
+                  placeholder="Ej. Cuartos de Final"
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-yellow-500" />
+
                 <label className="text-xs text-gray-400 uppercase tracking-widest block mb-1">
                   ¿Cuántos equipos entran a la liguilla?
                 </label>
@@ -867,9 +876,14 @@ const away = match.awayTeam.name;
                 <p className="text-gray-400 text-sm">Define fecha, hora y cancha de cada cruce:</p>
                 {liguillaPares.map((p, i) => (
                   <div key={i} className="bg-gray-800/50 border border-gray-800 rounded-xl p-4 space-y-3">
-                    <p className="text-white font-semibold text-sm text-center">
+                  <p className="text-white font-semibold text-sm text-center">
                       {p.homeTeamName} <span className="text-gray-500">vs</span> {p.awayTeamName}
                     </p>
+                    {p.yaExiste && (
+                      <p className="text-yellow-400 text-xs text-center bg-yellow-900/20 border border-yellow-800 rounded-lg py-1.5 px-2">
+                        ⚠️ Este cruce ya se jugó anteriormente
+                      </p>
+                    )}
                     <div className="grid grid-cols-3 gap-3">
                       <input type="date" value={p.fecha}
                         onChange={(e) => actualizarParLiguilla(i, "fecha", e.target.value)}

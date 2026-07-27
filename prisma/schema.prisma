@@ -100,39 +100,39 @@ model Player {
 
 // ─── JORNADAS ────────────────────────────────────
 model Round {
-  id       String  @id @default(cuid())
-  number   Int
-  name     String?
-  tenant   Tenant  @relation(fields: [tenantId], references: [id])
-  tenantId String
+  id           String  @id @default(cuid())
+  number       Int
+  name         String?
+  bracketStage Int?     // 1 = primera ronda liguilla, 2 = siguiente... null = temporada regular
+  bracketLabel String?  // "Cuartos de Final", "Semifinal", "Final"
+  tenant       Tenant  @relation(fields: [tenantId], references: [id])
+  tenantId     String
 
   matches Match[]
 
   @@unique([tenantId, number])
 }
-
-// ─── PARTIDOS ────────────────────────────────────
 model Match {
-  id         String      @id @default(cuid())
-  date       DateTime
-  cancha     Int?  
-  homeScore  Int?
-  awayScore  Int?
-  status     MatchStatus @default(SCHEDULED)
-  tenant     Tenant      @relation(fields: [tenantId], references: [id])
-  tenantId   String
-  homeTeam   Team        @relation("HomeTeam", fields: [homeTeamId], references: [id])
-  homeTeamId String
-  awayTeam   Team        @relation("AwayTeam", fields: [awayTeamId], references: [id])
-  awayTeamId String
-  referee    Referee?    @relation(fields: [refereeId], references: [id])
-  refereeId  String?
-  round      Round?      @relation(fields: [roundId], references: [id])
-  roundId    String?
+  id           String      @id @default(cuid())
+  date         DateTime
+  cancha       Int?
+  homeScore    Int?
+  awayScore    Int?
+  bracketOrder Int?        // posición del cruce dentro de su ronda (0,1,2...) para emparejar ganadores
+  status       MatchStatus @default(SCHEDULED)
+  tenant       Tenant      @relation(fields: [tenantId], references: [id])
+  tenantId     String
+  homeTeam     Team        @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  homeTeamId   String
+  awayTeam     Team        @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  awayTeamId   String
+  referee      Referee?    @relation(fields: [refereeId], references: [id])
+  refereeId    String?
+  round        Round?      @relation(fields: [roundId], references: [id])
+  roundId      String?
 
   events MatchEvent[]
 }
-
 enum MatchStatus {
   SCHEDULED
   LIVE
