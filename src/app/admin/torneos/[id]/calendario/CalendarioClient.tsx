@@ -781,9 +781,9 @@ const away = match.awayTeam.name;
                 </div>
         <div className="flex items-center gap-2 text-xs text-gray-500">
             {m.cancha && <span className="bg-gray-800 px-2 py-1 rounded">C{m.cancha}</span>}
-            <span>{new Date(m.date).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" })}</span>
+          <span>{new Date(m.date).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short", timeZone: "America/Mexico_City" })}</span>
             <span className="bg-green-900/40 border border-green-700 text-green-300 font-bold text-sm px-2.5 py-1 rounded-lg tracking-wide">
-              🕒 {new Date(m.date).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
+              🕒 {new Date(m.date).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", timeZone: "America/Mexico_City" })}
             </span>
             <button onClick={() => generarCedula(m)}
                     className="bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 font-bold px-3 py-1 rounded-lg transition">
@@ -891,11 +891,12 @@ const away = match.awayTeam.name;
                       <input type="time" value={p.hora}
                         onChange={(e) => actualizarParLiguilla(i, "hora", e.target.value)}
                         className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-500" />
-                      <select value={p.cancha}
-                        onChange={(e) => actualizarParLiguilla(i, "cancha", Number(e.target.value) as 1 | 2)}
+                    <select value={p.cancha}
+                        onChange={(e) => actualizarParLiguilla(i, "cancha", Number(e.target.value) as 1 | 2 | 3)}
                         className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-500">
                         <option value={1}>Cancha 1</option>
                         <option value={2}>Cancha 2</option>
+                        <option value={3}>Cancha 3</option>
                       </select>
                     </div>
                   </div>
