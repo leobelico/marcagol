@@ -296,7 +296,7 @@ async function agregarPartidoManual(forzar = false) {
     const clasificados = standings.slice(0, numLiguilla).map((s) => s.team);
 
     if (clasificados.length < 2) {
-      setErrorLiguilla("Necesitas al menos 2 equipos clasificados");
+      setErrorLiguilla("Necesitas al menos 2 equipos clasificados (recuerda que los equipos descalificados no cuentan)");
       return;
     }
 
@@ -318,7 +318,9 @@ async function agregarPartidoManual(forzar = false) {
     }
     setLiguillaPares(pares);
   }
-
+function mexicoLocalToISOString(fechaStr: string, horaStr: string): string {
+  return new Date(`${fechaStr}T${horaStr}:00-06:00`).toISOString();
+}
   function actualizarParLiguilla(i: number, campo: "fecha" | "hora" | "cancha", valor: any) {
     setLiguillaPares((prev) => prev.map((p, idx) => (idx === i ? { ...p, [campo]: valor } : p)));
   }
@@ -343,6 +345,10 @@ async function agregarPartidoManual(forzar = false) {
           awayTeamId: p.awayTeamId,
           fecha: p.fecha,
           hora: p.hora,
+          // Instante UTC ya calculado a partir de horario de México (UTC-6).
+          // Si el backend lo recibe, úsalo directo con `new Date(date)` en vez
+          // de reconstruir con fecha+hora, para evitar el desfase.
+          date: mexicoLocalToISOString(p.fecha, p.hora),
           cancha: p.cancha,
         })),
       }),
@@ -360,6 +366,7 @@ async function agregarPartidoManual(forzar = false) {
     setShowLiguilla(false);
     router.refresh();
   }
+
 
 async function generarCedula(match: Match) {
   const { jsPDF } = await import("jspdf");
