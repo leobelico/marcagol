@@ -46,7 +46,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         tenantId,
         homeTeamId: p.homeTeamId,
         awayTeamId: p.awayTeamId,
-        date: new Date(`${p.fecha}T${p.hora}:00`),
+        date: new Date(`${p.fecha}T${p.hora}:00-06:00`),
         cancha: p.cancha,
         roundId: round.id,
         bracketOrder: i,
