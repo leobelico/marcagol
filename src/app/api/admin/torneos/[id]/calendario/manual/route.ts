@@ -16,7 +16,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (homeTeamId === awayTeamId) {
     return NextResponse.json({ error: "Un equipo no puede jugar contra sí mismo" }, { status: 400 });
   }
-
+const [homeTeam, awayTeam] = await Promise.all([
+  prisma.team.findUnique({ where: { id: homeTeamId } }),
+  prisma.team.findUnique({ where: { id: awayTeamId } }),
+]);
+if (homeTeam?.disqualified || awayTeam?.disqualified) {
+  return NextResponse.json({ error: "No puedes agendar partidos con un equipo descalificado" }, { status: 400 });
+}
   const matchDate = new Date(date);
 const matchEnd = new Date(matchDate.getTime() + 49 * 60 * 1000); // ← aquí
 

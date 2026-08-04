@@ -79,7 +79,8 @@ model Team {
   captain  String?   // ← Nombre del capitán
   tenant   Tenant  @relation(fields: [tenantId], references: [id])
   tenantId String
-
+  disqualified Boolean @default(false)
+  
   players     Player[]
   homeMatches Match[]   @relation("HomeTeam")
   awayMatches Match[]   @relation("AwayTeam")

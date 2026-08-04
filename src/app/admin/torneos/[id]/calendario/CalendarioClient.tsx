@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 type Player = { id: string; name: string; number: number | null; position: string | null; suspendedUntil?: number | null; };
-type Team = { id: string; name: string; players: Player[] };  // ← agrega players aquí
+type Team = { id: string; name: string; players: Player[]; disqualified?: boolean | null };
 type Match = { id: string; date: Date; homeTeam: Team; awayTeam: Team; status: string; cancha?: number | null; homeScore?: number | null; awayScore?: number | null; };
 type Round = { id: string; number: number; name: string | null; matches: Match[] };
 type Torneo = {
@@ -56,7 +56,8 @@ const [liguillaPares, setLiguillaPares] = useState <
   const [creandoLiguilla, setCreandoLiguilla] = useState(false);
   const [errorLiguilla, setErrorLiguilla] = useState("");
   const [successLiguilla, setSuccessLiguilla] = useState("");
-
+const [showDescalificar, setShowDescalificar] = useState(false);
+const [descalificandoId, setDescalificandoId] = useState<string | null>(null);
   const tieneCalendario = torneo.rounds.length > 0;
   const puedeGenerar = torneo.teams.length >= 2 && torneo.matchDays.length > 0 && torneo.startDate;
 
@@ -265,7 +266,9 @@ async function agregarPartidoManual(forzar = false) {
   }
   function calcularStandings() {
     const stats: Record<string, { team: Team; pts: number; gf: number; ga: number }> = {};
-    torneo.teams.forEach((t) => { stats[t.id] = { team: t, pts: 0, gf: 0, ga: 0 }; });
+    torneo.teams
+    .filter((t) => !t.disqualified)
+    .forEach((t) => { stats[t.id] = { team: t, pts: 0, gf: 0, ga: 0 }; });
 
     torneo.rounds.forEach((r) => {
       r.matches.forEach((m) => {
@@ -366,7 +369,24 @@ function mexicoLocalToISOString(fechaStr: string, horaStr: string): string {
     setShowLiguilla(false);
     router.refresh();
   }
-
+async function toggleDescalificado(teamId: string, actual: boolean) {
+  setDescalificandoId(teamId);
+  try {
+    const res = await fetch(`/api/admin/torneos/${torneo.id}/equipos/${teamId}/descalificar`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ disqualified: !actual }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(json.error || "Error al actualizar el equipo");
+    } else {
+      router.refresh();
+    }
+  } finally {
+    setDescalificandoId(null);
+  }
+}
 
 async function generarCedula(match: Match) {
   const { jsPDF } = await import("jspdf");
@@ -623,6 +643,10 @@ const away = match.awayTeam.name;
               className="bg-yellow-700 hover:bg-yellow-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
               🏆 Crear Liguilla
             </button>
+            <button onClick={() => setShowDescalificar(true)}
+            className="bg-red-800 hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
+            🚫 Descalificar equipos
+          </button>
         </div>
         
       </div>
@@ -927,7 +951,37 @@ const away = match.awayTeam.name;
           </div>
         </div>
       )}
-
+{/* Modal Descalificar equipos - independiente */}
+      {showDescalificar && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4 overflow-y-auto py-8">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-lg w-full space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-black text-white">🚫 Descalificar equipos</h3>
+              <button onClick={() => setShowDescalificar(false)}
+                className="text-gray-500 hover:text-white text-2xl">×</button>
+            </div>
+            <p className="text-gray-400 text-sm">
+              Un equipo descalificado no cuenta en la tabla de posiciones ni puede ser convocado a una liguilla nueva. Sus partidos ya jugados no se borran.
+            </p>
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {torneo.teams.map((t) => (
+                <div key={t.id} className={`flex items-center justify-between gap-3 p-3 rounded-xl border ${t.disqualified ? "border-red-800 bg-red-900/10" : "border-gray-800 bg-gray-800/30"}`}>
+                  <span className={`text-sm font-semibold ${t.disqualified ? "text-red-400 line-through" : "text-white"}`}>
+                    {t.name}
+                  </span>
+                  <button
+                    onClick={() => toggleDescalificado(t.id, !!t.disqualified)}
+                    disabled={descalificandoId === t.id}
+                    className={`text-xs font-bold px-3 py-1.5 rounded-lg transition disabled:opacity-50 ${t.disqualified ? "bg-green-900/30 hover:bg-green-900/50 text-green-400" : "bg-red-900/30 hover:bg-red-900/50 text-red-400"}`}
+                  >
+                    {descalificandoId === t.id ? "..." : t.disqualified ? "Reactivar" : "Descalificar"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       {/* Modal Importar Excel - independiente */}
       {showImport && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4 overflow-y-auto py-8">
