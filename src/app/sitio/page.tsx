@@ -9,11 +9,11 @@ export default async function PosicionesPage() {
   console.log("TENANT NOT FOUND - slug buscado desde header");
   notFound();
 }
-  const teams = await prisma.team.findMany({
+const teams = await prisma.team.findMany({
     where: { tenantId: tenant.id },
     include: {
-      homeMatches: { where: { status: "FINISHED" } },
-      awayMatches: { where: { status: "FINISHED" } },
+      homeMatches: { where: { status: "FINISHED", round: { bracketStage: null } } },
+      awayMatches: { where: { status: "FINISHED", round: { bracketStage: null } } },
     },
   });
 

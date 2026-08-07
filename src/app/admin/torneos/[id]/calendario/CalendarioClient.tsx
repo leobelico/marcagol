@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 type Player = { id: string; name: string; number: number | null; position: string | null; suspendedUntil?: number | null; };
 type Team = { id: string; name: string; players: Player[]; disqualified?: boolean | null };
-type Match = { id: string; date: Date; homeTeam: Team; awayTeam: Team; status: string; cancha?: number | null; homeScore?: number | null; awayScore?: number | null; };
-type Round = { id: string; number: number; name: string | null; matches: Match[] };
+type Match = { id: string; date: Date; homeTeam: Team; awayTeam: Team; status: string; cancha?: number | null; homeScore?: number | null; awayScore?: number | null; bracketOrder?: number | null; };
+type Round = { id: string; number: number; name: string | null; matches: Match[]; bracketStage?: number | null; bracketLabel?: string | null; };
 type Torneo = {
   id: string;
   name: string;
@@ -60,14 +60,28 @@ const [showDescalificar, setShowDescalificar] = useState(false);
 const [descalificandoId, setDescalificandoId] = useState<string | null>(null);
   const tieneCalendario = torneo.rounds.length > 0;
   const puedeGenerar = torneo.teams.length >= 2 && torneo.matchDays.length > 0 && torneo.startDate;
-
+const [showSiguienteRonda, setShowSiguienteRonda] = useState(false);
+  const [pasoSiguiente, setPasoSiguiente] = useState<"empates" | "pares">("empates");
+  const [empatesPendientes, setEmpatesPendientes] = useState<Match[]>([]);
+  const [ganadoresEmpate, setGanadoresEmpate] = useState<Record<string, string>>({});
+  const [siguienteLabel, setSiguienteLabel] = useState("");
+  const [siguientePares, setSiguientePares] = useState <
+    { homeTeamId: string; awayTeamId: string; homeTeamName: string; awayTeamName: string; fecha: string; hora: string; cancha: 1 | 2 | 3 }[]
+  >([]);
+  const [generandoSiguiente, setGenerandoSiguiente] = useState(false);
+  const [errorSiguiente, setErrorSiguiente] = useState("");
   const numEquipos = torneo.teams.length;
   const numJornadas = torneo.roundTrip
     ? (numEquipos % 2 === 0 ? (numEquipos - 1) * 2 : numEquipos * 2)
     : (numEquipos % 2 === 0 ? numEquipos - 1 : numEquipos);
   const partidosPorJornada = Math.floor(numEquipos / 2);
   const totalPartidos = numJornadas * partidosPorJornada;
-
+const rondasBracket = torneo.rounds.filter((r) => r.bracketStage != null);
+  const ultimaRondaBracket = rondasBracket.length > 0
+    ? rondasBracket.reduce((a, b) => ((a.bracketStage ?? 0) > (b.bracketStage ?? 0) ? a : b))
+    : null;
+  const bracketCompleta = !!ultimaRondaBracket && ultimaRondaBracket.matches.length > 0 && ultimaRondaBracket.matches.every((m) => m.status === "FINISHED");
+  const esFinalBracket = !!ultimaRondaBracket && ultimaRondaBracket.matches.length === 1;
   async function generarCalendario() {
     setLoading(true);
     setError("");
@@ -264,29 +278,31 @@ async function agregarPartidoManual(forzar = false) {
     }
     setAgregando(false);
   }
-  function calcularStandings() {
+function calcularStandings() {
     const stats: Record<string, { team: Team; pts: number; gf: number; ga: number }> = {};
     torneo.teams
-    .filter((t) => !t.disqualified)
-    .forEach((t) => { stats[t.id] = { team: t, pts: 0, gf: 0, ga: 0 }; });
+      .filter((t) => !t.disqualified)
+      .forEach((t) => { stats[t.id] = { team: t, pts: 0, gf: 0, ga: 0 }; });
 
-    torneo.rounds.forEach((r) => {
-      r.matches.forEach((m) => {
-        if (m.status !== "FINISHED") return;
-        const hs = m.homeScore ?? 0;
-        const as = m.awayScore ?? 0;
-        if (stats[m.homeTeam.id]) {
-          stats[m.homeTeam.id].gf += hs;
-          stats[m.homeTeam.id].ga += as;
-          stats[m.homeTeam.id].pts += hs > as ? 3 : hs === as ? 1 : 0;
-        }
-        if (stats[m.awayTeam.id]) {
-          stats[m.awayTeam.id].gf += as;
-          stats[m.awayTeam.id].ga += hs;
-          stats[m.awayTeam.id].pts += as > hs ? 3 : hs === as ? 1 : 0;
-        }
+    torneo.rounds
+      .filter((r) => r.bracketStage == null)   // ← esto excluye la liguilla
+      .forEach((r) => {
+        r.matches.forEach((m) => {
+          if (m.status !== "FINISHED") return;
+          const hs = m.homeScore ?? 0;
+          const as = m.awayScore ?? 0;
+          if (stats[m.homeTeam.id]) {
+            stats[m.homeTeam.id].gf += hs;
+            stats[m.homeTeam.id].ga += as;
+            stats[m.homeTeam.id].pts += hs > as ? 3 : hs === as ? 1 : 0;
+          }
+          if (stats[m.awayTeam.id]) {
+            stats[m.awayTeam.id].gf += as;
+            stats[m.awayTeam.id].ga += hs;
+            stats[m.awayTeam.id].pts += as > hs ? 3 : hs === as ? 1 : 0;
+          }
+        });
       });
-    });
 
     return Object.values(stats).sort(
       (a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf
@@ -336,7 +352,6 @@ function mexicoLocalToISOString(fechaStr: string, horaStr: string): string {
       setErrorLiguilla("Completa fecha y hora de todos los cruces");
       return;
     }
-
     setCreandoLiguilla(true);
     const res = await fetch(`/api/admin/torneos/${torneo.id}/calendario/bracket`, {
       method: "POST",
@@ -348,9 +363,6 @@ function mexicoLocalToISOString(fechaStr: string, horaStr: string): string {
           awayTeamId: p.awayTeamId,
           fecha: p.fecha,
           hora: p.hora,
-          // Instante UTC ya calculado a partir de horario de México (UTC-6).
-          // Si el backend lo recibe, úsalo directo con `new Date(date)` en vez
-          // de reconstruir con fecha+hora, para evitar el desfase.
           date: mexicoLocalToISOString(p.fecha, p.hora),
           cancha: p.cancha,
         })),
@@ -367,6 +379,105 @@ function mexicoLocalToISOString(fechaStr: string, horaStr: string): string {
     setSuccessLiguilla(`✅ ${bracketLabel} creada con ${liguillaPares.length} partidos`);
     setLiguillaPares([]);
     setShowLiguilla(false);
+    router.refresh();
+  }
+
+  function abrirSiguienteRonda() {
+    if (!ultimaRondaBracket) return;
+    setErrorSiguiente("");
+    const matchesOrdenados = [...ultimaRondaBracket.matches].sort(
+      (a, b) => (a.bracketOrder ?? 0) - (b.bracketOrder ?? 0)
+    );
+    const empates = matchesOrdenados.filter((m) => (m.homeScore ?? 0) === (m.awayScore ?? 0));
+    setEmpatesPendientes(empates);
+    setGanadoresEmpate({});
+    if (empates.length > 0) {
+      setPasoSiguiente("empates");
+    } else {
+      prepararParesSiguienteRonda(matchesOrdenados, {});
+    }
+    setShowSiguienteRonda(true);
+  }
+
+  function prepararParesSiguienteRonda(matchesOrdenados: Match[], empates: Record<string, string>) {
+    const ganadores = matchesOrdenados.map((m) => {
+      if ((m.homeScore ?? 0) === (m.awayScore ?? 0)) {
+        const ganadorId = empates[m.id];
+        return ganadorId === m.awayTeam.id ? m.awayTeam : m.homeTeam;
+      }
+      return (m.homeScore ?? 0) > (m.awayScore ?? 0) ? m.homeTeam : m.awayTeam;
+    });
+
+    const pares = [];
+    for (let i = 0; i < ganadores.length; i += 2) {
+      const home = ganadores[i];
+      const away = ganadores[i + 1];
+      if (!away) break;
+      pares.push({
+        homeTeamId: home.id,
+        awayTeamId: away.id,
+        homeTeamName: home.name,
+        awayTeamName: away.name,
+        fecha: "",
+        hora: "",
+        cancha: 1 as 1 | 2 | 3,
+      });
+    }
+    setSiguientePares(pares);
+    setSiguienteLabel(
+      pares.length === 1 ? "Final" : pares.length === 2 ? "Semifinal" : pares.length === 4 ? "Cuartos de Final" : `Ronda de ${pares.length * 2}`
+    );
+    setPasoSiguiente("pares");
+  }
+
+  function confirmarEmpates() {
+    if (!ultimaRondaBracket) return;
+    const faltan = empatesPendientes.filter((m) => !ganadoresEmpate[m.id]);
+    if (faltan.length > 0) {
+      setErrorSiguiente("Selecciona quién avanza en todos los empates");
+      return;
+    }
+    setErrorSiguiente("");
+    const matchesOrdenados = [...ultimaRondaBracket.matches].sort(
+      (a, b) => (a.bracketOrder ?? 0) - (b.bracketOrder ?? 0)
+    );
+    prepararParesSiguienteRonda(matchesOrdenados, ganadoresEmpate);
+  }
+
+  function actualizarParSiguiente(i: number, campo: "fecha" | "hora" | "cancha", valor: any) {
+    setSiguientePares((prev) => prev.map((p, idx) => (idx === i ? { ...p, [campo]: valor } : p)));
+  }
+
+  async function crearSiguienteRonda() {
+    setErrorSiguiente("");
+    const incompletos = siguientePares.filter((p) => !p.fecha || !p.hora);
+    if (incompletos.length > 0) {
+      setErrorSiguiente("Completa fecha y hora de todos los cruces");
+      return;
+    }
+    setGenerandoSiguiente(true);
+    const res = await fetch(`/api/admin/torneos/${torneo.id}/calendario/bracket`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        bracketLabel: siguienteLabel,
+        pares: siguientePares.map((p) => ({
+          homeTeamId: p.homeTeamId,
+          awayTeamId: p.awayTeamId,
+          fecha: p.fecha,
+          hora: p.hora,
+          date: mexicoLocalToISOString(p.fecha, p.hora),
+          cancha: p.cancha,
+        })),
+      }),
+    });
+    const json = await res.json();
+    setGenerandoSiguiente(false);
+    if (!res.ok) {
+      setErrorSiguiente(json.error || "Error al generar la siguiente ronda");
+      return;
+    }
+    setShowSiguienteRonda(false);
     router.refresh();
   }
 async function toggleDescalificado(teamId: string, actual: boolean) {
@@ -643,6 +754,17 @@ const away = match.awayTeam.name;
               className="bg-yellow-700 hover:bg-yellow-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
               🏆 Crear Liguilla
             </button>
+            {bracketCompleta && !esFinalBracket && (
+              <button onClick={abrirSiguienteRonda}
+                className="bg-green-700 hover:bg-green-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
+                ▶️ Generar Siguiente Ronda
+              </button>
+            )}
+            {bracketCompleta && esFinalBracket && (
+              <span className="bg-yellow-900/30 text-yellow-400 font-bold px-5 py-2.5 rounded-xl text-sm flex items-center">
+                🏆 Torneo finalizado
+              </span>
+            )}
             <button onClick={() => setShowDescalificar(true)}
             className="bg-red-800 hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
             🚫 Descalificar equipos
@@ -951,7 +1073,8 @@ const away = match.awayTeam.name;
           </div>
         </div>
       )}
-{/* Modal Descalificar equipos - independiente */}
+
+      {/* Modal Descalificar equipos - independiente */}
       {showDescalificar && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4 overflow-y-auto py-8">
           <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-lg w-full space-y-4">
@@ -982,6 +1105,7 @@ const away = match.awayTeam.name;
           </div>
         </div>
       )}
+
       {/* Modal Importar Excel - independiente */}
       {showImport && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4 overflow-y-auto py-8">
@@ -1084,6 +1208,88 @@ const away = match.awayTeam.name;
                     Cambiar archivo
                   </button>
                 </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal Generar Siguiente Ronda - independiente */}
+      {showSiguienteRonda && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4 overflow-y-auto py-8">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-2xl w-full space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-black text-white">▶️ Generar Siguiente Ronda</h3>
+              <button onClick={() => setShowSiguienteRonda(false)}
+                className="text-gray-500 hover:text-white text-2xl">×</button>
+            </div>
+
+            {pasoSiguiente === "empates" && (
+              <div className="space-y-4">
+                <p className="text-gray-400 text-sm">Estos cruces empataron — selecciona quién avanza:</p>
+                {empatesPendientes.map((m) => (
+                  <div key={m.id} className="bg-gray-800/50 border border-gray-800 rounded-xl p-4 space-y-2">
+                    <p className="text-white font-semibold text-sm text-center mb-2">
+                      {m.homeTeam.name} {m.homeScore} - {m.awayScore} {m.awayTeam.name}
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => setGanadoresEmpate((prev) => ({ ...prev, [m.id]: m.homeTeam.id }))}
+                        className={`py-2.5 rounded-xl font-bold text-sm transition border ${ganadoresEmpate[m.id] === m.homeTeam.id ? "bg-green-600 border-green-600 text-white" : "bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500"}`}>
+                        {m.homeTeam.name}
+                      </button>
+                      <button
+                        onClick={() => setGanadoresEmpate((prev) => ({ ...prev, [m.id]: m.awayTeam.id }))}
+                        className={`py-2.5 rounded-xl font-bold text-sm transition border ${ganadoresEmpate[m.id] === m.awayTeam.id ? "bg-green-600 border-green-600 text-white" : "bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500"}`}>
+                        {m.awayTeam.name}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {errorSiguiente && <div className="bg-red-900/20 border border-red-800 rounded-xl px-4 py-3 text-red-400 text-sm">{errorSiguiente}</div>}
+                <button onClick={confirmarEmpates}
+                  className="bg-green-600 hover:bg-green-500 text-white font-bold px-6 py-2.5 rounded-xl transition text-sm">
+                  Continuar
+                </button>
+              </div>
+            )}
+
+            {pasoSiguiente === "pares" && (
+              <div className="space-y-4">
+                <label className="text-xs text-gray-400 uppercase tracking-widest block mb-1">Nombre de la fase</label>
+                <input type="text" value={siguienteLabel} onChange={(e) => setSiguienteLabel(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-green-500" />
+
+                <p className="text-gray-400 text-sm">Define fecha, hora y cancha de cada cruce:</p>
+                {siguientePares.map((p, i) => (
+                  <div key={i} className="bg-gray-800/50 border border-gray-800 rounded-xl p-4 space-y-3">
+                    <p className="text-white font-semibold text-sm text-center">
+                      {p.homeTeamName} <span className="text-gray-500">vs</span> {p.awayTeamName}
+                    </p>
+                    <div className="grid grid-cols-3 gap-3">
+                      <input type="date" value={p.fecha}
+                        onChange={(e) => actualizarParSiguiente(i, "fecha", e.target.value)}
+                        className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-green-500" />
+                      <input type="time" value={p.hora}
+                        onChange={(e) => actualizarParSiguiente(i, "hora", e.target.value)}
+                        className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-green-500" />
+                      <select value={p.cancha}
+                        onChange={(e) => actualizarParSiguiente(i, "cancha", Number(e.target.value) as 1 | 2 | 3)}
+                        className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-green-500">
+                        <option value={1}>Cancha 1</option>
+                        <option value={2}>Cancha 2</option>
+                        <option value={3}>Cancha 3</option>
+                      </select>
+                    </div>
+                  </div>
+                ))}
+
+                {errorSiguiente && <div className="bg-red-900/20 border border-red-800 rounded-xl px-4 py-3 text-red-400 text-sm">{errorSiguiente}</div>}
+
+                <button onClick={crearSiguienteRonda} disabled={generandoSiguiente}
+                  className="w-full bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition">
+                  {generandoSiguiente ? "Generando..." : "Generar cruces"}
+                </button>
               </div>
             )}
           </div>
