@@ -11,8 +11,24 @@ export async function DELETE(
 
   const { id, matchId } = await params;
 
+  // Obtenemos el partido antes de borrarlo, para saber a qué jornada pertenece
+  const match = await prisma.match.findUnique({
+    where: { id: matchId },
+    select: { roundId: true },
+  });
+
   await prisma.matchEvent.deleteMany({ where: { matchId } });
   await prisma.match.delete({ where: { id: matchId, tenantId: id } });
+
+  // Si la jornada se quedó sin partidos, la eliminamos también
+  if (match?.roundId) {
+    const partidosRestantes = await prisma.match.count({
+      where: { roundId: match.roundId },
+    });
+    if (partidosRestantes === 0) {
+      await prisma.round.delete({ where: { id: match.roundId } });
+    }
+  }
 
   return NextResponse.json({ ok: true });
 }
