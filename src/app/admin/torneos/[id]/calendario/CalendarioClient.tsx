@@ -399,7 +399,7 @@ function mexicoLocalToISOString(fechaStr: string, horaStr: string): string {
     setShowSiguienteRonda(true);
   }
 
-  function prepararParesSiguienteRonda(matchesOrdenados: Match[], empates: Record<string, string>) {
+function prepararParesSiguienteRonda(matchesOrdenados: Match[], empates: Record<string, string>) {
     const ganadores = matchesOrdenados.map((m) => {
       if ((m.homeScore ?? 0) === (m.awayScore ?? 0)) {
         const ganadorId = empates[m.id];
@@ -408,11 +408,21 @@ function mexicoLocalToISOString(fechaStr: string, horaStr: string): string {
       return (m.homeScore ?? 0) > (m.awayScore ?? 0) ? m.homeTeam : m.awayTeam;
     });
 
+    // Reordena a los ganadores según su posición en la tabla general
+    const standings = calcularStandings();
+    const posicionPorEquipo: Record<string, number> = {};
+    standings.forEach((s, idx) => { posicionPorEquipo[s.team.id] = idx; });
+
+    const ganadoresOrdenados = [...ganadores].sort(
+      (a, b) => (posicionPorEquipo[a.id] ?? 999) - (posicionPorEquipo[b.id] ?? 999)
+    );
+
+    // Empareja mejor vs peor: 1° vs último, 2° vs penúltimo, etc.
     const pares = [];
-    for (let i = 0; i < ganadores.length; i += 2) {
-      const home = ganadores[i];
-      const away = ganadores[i + 1];
-      if (!away) break;
+    const mitad = Math.floor(ganadoresOrdenados.length / 2);
+    for (let i = 0; i < mitad; i++) {
+      const home = ganadoresOrdenados[i];
+      const away = ganadoresOrdenados[ganadoresOrdenados.length - 1 - i];
       pares.push({
         homeTeamId: home.id,
         awayTeamId: away.id,
