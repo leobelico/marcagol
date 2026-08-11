@@ -50,6 +50,25 @@ const bracketRounds = await prisma.round.findMany({
       ? finalMatch.homeTeam
       : finalMatch.awayTeam
     : null;
+
+  // Top 3 goleadores del torneo (solo se consulta si hay campeón, ya que
+  // únicamente se muestra dentro de la animación de campeón)
+  const topScorersRaw = campeon
+    ? await prisma.playerStat.findMany({
+        where: { goals: { gt: 0 }, player: { team: { tenantId: tenant.id } } },
+        orderBy: { goals: "desc" },
+        take: 3,
+        include: { player: true },
+      })
+    : [];
+
+  const topScorers = topScorersRaw.map((s) => ({
+    id: s.player.id,
+    name: s.player.name,
+    photo: s.player.photo,
+    goals: s.goals,
+  }));
+
   const standings = teams.map((team) => {
     let pts = 0, w = 0, d = 0, l = 0, gf = 0, ga = 0;
     team.homeMatches.forEach((m) => {
@@ -70,7 +89,12 @@ const bracketRounds = await prisma.round.findMany({
   return (
     <div className="space-y-8">
       {campeon && (
-        <ChampionAnimation tenantId={tenant.id} teamName={campeon.name} teamLogo={campeon.logo} />
+        <ChampionAnimation
+          tenantId={tenant.id}
+          teamName={campeon.name}
+          teamLogo={campeon.logo}
+          topScorers={topScorers}
+        />
       )}
       {/* Hero */}
       <div className="rounded-2xl bg-gradient-to-br from-green-950 via-gray-900 to-gray-950 border border-green-900/30 p-8">
