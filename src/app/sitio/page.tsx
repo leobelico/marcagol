@@ -2,7 +2,7 @@ import { getTenant } from "@/lib/tenant";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-
+import ChampionAnimation from "@/app/components/ChampionAnimation"; // ajusta la ruta a la tuya
 export default async function PosicionesPage() {
   const tenant = await getTenant();
   if (!tenant) {
@@ -40,6 +40,16 @@ const bracketRounds = await prisma.round.findMany({
     },
     orderBy: { bracketStage: "asc" },
   });
+
+  const finalRound = bracketRounds.find(
+    (r) => r.matches.length === 1 && r.matches[0].status === "FINISHED"
+  );
+  const finalMatch = finalRound?.matches[0];
+  const campeon = finalMatch
+    ? (finalMatch.homeScore ?? 0) > (finalMatch.awayScore ?? 0)
+      ? finalMatch.homeTeam
+      : finalMatch.awayTeam
+    : null;
   const standings = teams.map((team) => {
     let pts = 0, w = 0, d = 0, l = 0, gf = 0, ga = 0;
     team.homeMatches.forEach((m) => {
@@ -59,7 +69,9 @@ const bracketRounds = await prisma.round.findMany({
 
   return (
     <div className="space-y-8">
-
+      {campeon && (
+        <ChampionAnimation tenantId={tenant.id} teamName={campeon.name} teamLogo={campeon.logo} />
+      )}
       {/* Hero */}
       <div className="rounded-2xl bg-gradient-to-br from-green-950 via-gray-900 to-gray-950 border border-green-900/30 p-8">
         <p className="text-green-400 text-xs font-bold tracking-widest uppercase mb-2">⚽ Temporada 2026</p>
