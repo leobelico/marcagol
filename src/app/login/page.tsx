@@ -42,16 +42,18 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
 
             <div>
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">
-                Email
-              </label>
-              <input
-                name="email"
-                type="email"
-                required
-                placeholder="admin@futbol.com"
-                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-green-500 transition"
-              />
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">
+              Email o teléfono
+            </label>
+
+            <input
+              name="email o tel"
+              type="text"
+              required
+              autoComplete="username"
+              placeholder="admin@futbol.com o 8441234567"
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-green-500 transition"
+            />
             </div>
 
             <div>
