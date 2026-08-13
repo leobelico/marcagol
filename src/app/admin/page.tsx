@@ -10,11 +10,20 @@ export default async function AdminPage() {
 
   const isSuperAdmin = (session.user as any).isSuperAdmin;
 
-  if (!isSuperAdmin) {
-    const tenantUser = await prisma.tenantUser.findFirst({
-      where: { userId: session.user.id, role: "ADMIN" },
+if (!isSuperAdmin) {
+  const tenantUser = await prisma.tenantUser.findFirst({
+    where: { userId: session.user.id },
     });
+
     if (!tenantUser) redirect("/login");
+
+    if (tenantUser.role === "CAPTAIN") {
+      redirect("/capitan");
+    }
+
+    if (tenantUser.role !== "ADMIN") {
+      redirect("/login");
+    }
   }
 
   const torneos = isSuperAdmin
