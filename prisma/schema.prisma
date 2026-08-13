@@ -6,157 +6,180 @@ datasource db {
   provider = "postgresql"
 }
 
-// ─── TENANT (Torneo) ─────────────────────────────
 model Tenant {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  logo      String?
-  createdAt DateTime @default(now())
-  rosterLocked Boolean @default(false)
-  // Configuración del torneo
-  startDate     DateTime?
-  matchDays     String[]
-  matchesPerDay Int       @default(2)
-  matchDuration Int       @default(90)
-  roundTrip     Boolean   @default(false)
-
-  // Flyer / Landing
-  description   String?
-  endDate       DateTime?
-  maxTeams      Int?
+  id             String       @id @default(cuid())
+  name           String
+  slug           String       @unique
+  logo           String?
+  createdAt      DateTime     @default(now())
+  matchDays      String[]
+  matchDuration  Int          @default(90)
+  matchesPerDay  Int          @default(2)
+  roundTrip      Boolean      @default(false)
+  startDate      DateTime?
+  bannerUrl      String?
+  contactEmail   String?
+  contactName    String?
+  contactPhone   String?
+  description    String?
+  endDate        DateTime?
+  facebook       String?
   inscriptionFee Float?
-  contactName   String?
-  contactPhone  String?
-  contactEmail  String?
-  instagram     String?
-  facebook      String?
-  whatsapp      String?
-  bannerUrl     String?
-  published     Boolean  @default(false)
-
-  teams     Team[]
-  matches   Match[]
-  rounds    Round[]
-  referees  Referee[]
-  users     TenantUser[]
-  finances  Finance[]
+  instagram      String?
+  maxTeams       Int?
+  published      Boolean      @default(false)
+  whatsapp       String?
+  finances       Finance[]
+  matches        Match[]
+  referees       Referee[]
+  rounds         Round[]
+  teams          Team[]
+  users          TenantUser[]
 }
 
-// ─── USUARIOS ────────────────────────────────────
 model User {
   id           String       @id @default(cuid())
-  email        String?      @unique   // ← ahora opcional (capitanes no tienen email)
+  email        String?      @unique
   name         String?
   password     String?
-  phone        String?     @unique
   isSuperAdmin Boolean      @default(false)
+  phone        String?      @unique
   tenants      TenantUser[]
 }
 
 model TenantUser {
-  id       String   @id @default(cuid())
-  role     Role     @default(VIEWER)
-  user     User     @relation(fields: [userId], references: [id])
+  id       String  @id @default(cuid())
+  role     Role    @default(VIEWER)
   userId   String
-  tenant   Tenant   @relation(fields: [tenantId], references: [id])
   tenantId String
-  team     Team?    @relation(fields: [teamId], references: [id])   // ← nuevo
-  teamId   String?                                                    // ← nuevo
+  teamId   String?
+  team     Team?   @relation(fields: [teamId], references: [id])
+  tenant   Tenant  @relation(fields: [tenantId], references: [id])
+  user     User    @relation(fields: [userId], references: [id])
 
   @@unique([userId, tenantId])
+}
+
+model Team {
+  id           String       @id @default(cuid())
+  name         String
+  logo         String?
+  tenantId     String
+  captain      String?
+  phone        String?
+  disqualified Boolean      @default(false)
+  finances     Finance[]
+  awayMatches  Match[]      @relation("AwayTeam")
+  homeMatches  Match[]      @relation("HomeTeam")
+  players      Player[]
+  tenant       Tenant       @relation(fields: [tenantId], references: [id])
+  captains     TenantUser[]
+}
+
+model Player {
+  id       String      @id @default(cuid())
+  name     String
+  number   Int?
+  position String?
+  photo    String?
+  teamId   String
+  team     Team        @relation(fields: [teamId], references: [id])
+  stats    PlayerStat?
+}
+
+model Round {
+  id           String  @id @default(cuid())
+  number       Int
+  name         String?
+  tenantId     String
+  bracketLabel String?
+  bracketStage Int?
+  matches      Match[]
+  tenant       Tenant  @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, number])
+}
+
+model Match {
+  id           String       @id @default(cuid())
+  date         DateTime
+  homeScore    Int?
+  awayScore    Int?
+  status       MatchStatus  @default(SCHEDULED)
+  tenantId     String
+  homeTeamId   String
+  awayTeamId   String
+  refereeId    String?
+  roundId      String?
+  cancha       Int?
+  bracketOrder Int?
+  awayTeam     Team         @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  homeTeam     Team         @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  referee      Referee?     @relation(fields: [refereeId], references: [id])
+  round        Round?       @relation(fields: [roundId], references: [id])
+  tenant       Tenant       @relation(fields: [tenantId], references: [id])
+  events       MatchEvent[]
+}
+
+model MatchEvent {
+  id              String     @id @default(cuid())
+  type            EventType
+  minute          Int
+  matchId         String
+  playerId        String
+  suspensionGames Int?
+  match           Match      @relation(fields: [matchId], references: [id])
+  player          PlayerStat @relation(fields: [playerId], references: [id])
+}
+
+model PlayerStat {
+  id       String       @id @default(cuid())
+  goals    Int          @default(0)
+  assists  Int          @default(0)
+  yellow   Int          @default(0)
+  red      Int          @default(0)
+  playerId String       @unique
+  events   MatchEvent[]
+  player   Player       @relation(fields: [playerId], references: [id])
+}
+
+model Referee {
+  id          String  @id @default(cuid())
+  name        String
+  tenantId    String
+  email       String?
+  notes       String?
+  payPerMatch Float   @default(0)
+  phone       String?
+  matches     Match[]
+  tenant      Tenant  @relation(fields: [tenantId], references: [id])
+}
+
+model Finance {
+  id          String          @id @default(cuid())
+  type        FinanceType
+  amount      Float
+  description String?
+  date        DateTime        @default(now())
+  tenantId    String
+  category    FinanceCategory @default(OTRO)
+  teamId      String?
+  team        Team?           @relation(fields: [teamId], references: [id])
+  tenant      Tenant          @relation(fields: [tenantId], references: [id])
 }
 
 enum Role {
   SUPER_ADMIN
   ADMIN
   VIEWER
-  CAPTAIN        // ← nuevo
+  CAPTAIN
 }
 
-// ─── EQUIPOS Y JUGADORES ─────────────────────────
-model Team {
-  id       String  @id @default(cuid())
-  name     String
-  logo     String?
-  phone    String?   // teléfono de acceso del capitán
-  captain  String?   // nombre del capitán
-
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  tenantId String
-
-  disqualified Boolean @default(false)
-
-  captains    TenantUser[]
-  players     Player[]
-  homeMatches Match[] @relation("HomeTeam")
-  awayMatches Match[] @relation("AwayTeam")
-  finances    Finance[]
-}
-
-model Player {
-  id       String  @id @default(cuid())
-  name     String
-  number   Int?
-  position String?
-  photo    String?
-  team     Team    @relation(fields: [teamId], references: [id])
-  teamId   String
-
-  stats PlayerStat[]
-}
-
-// ─── JORNADAS ────────────────────────────────────
-model Round {
-  id           String  @id @default(cuid())
-  number       Int
-  name         String?
-  bracketStage Int?     // 1 = primera ronda liguilla, 2 = siguiente... null = temporada regular
-  bracketLabel String?  // "Cuartos de Final", "Semifinal", "Final"
-  tenant       Tenant  @relation(fields: [tenantId], references: [id])
-  tenantId     String
-
-  matches Match[]
-
-  @@unique([tenantId, number])
-}
-model Match {
-  id           String      @id @default(cuid())
-  date         DateTime
-  cancha       Int?
-  homeScore    Int?
-  awayScore    Int?
-  bracketOrder Int?        // posición del cruce dentro de su ronda (0,1,2...) para emparejar ganadores
-  status       MatchStatus @default(SCHEDULED)
-  tenant       Tenant      @relation(fields: [tenantId], references: [id])
-  tenantId     String
-  homeTeam     Team        @relation("HomeTeam", fields: [homeTeamId], references: [id])
-  homeTeamId   String
-  awayTeam     Team        @relation("AwayTeam", fields: [awayTeamId], references: [id])
-  awayTeamId   String
-  referee      Referee?    @relation(fields: [refereeId], references: [id])
-  refereeId    String?
-  round        Round?      @relation(fields: [roundId], references: [id])
-  roundId      String?
-
-  events MatchEvent[]
-}
 enum MatchStatus {
   SCHEDULED
   LIVE
   FINISHED
   CANCELLED
-}
-
-model MatchEvent {
-  id              String    @id @default(cuid())
-  type            EventType
-  minute          Int
-  suspensionGames Int?      // ← agrega esta línea
-  match           Match     @relation(fields: [matchId], references: [id])
-  matchId         String
-  player          PlayerStat @relation(fields: [playerId], references: [id])
-  playerId        String
 }
 
 enum EventType {
@@ -166,44 +189,6 @@ enum EventType {
   SUBSTITUTION
 }
 
-// ─── ESTADÍSTICAS ────────────────────────────────
-model PlayerStat {
-  id       String @id @default(cuid())
-  goals    Int    @default(0)
-  assists  Int    @default(0)
-  yellow   Int    @default(0)
-  red      Int    @default(0)
-  player   Player @relation(fields: [playerId], references: [id])
-  playerId String @unique
-
-  events MatchEvent[]
-}
-model Referee {
-  id          String   @id @default(cuid())
-  name        String
-  phone       String?
-  email       String?
-  payPerMatch Float    @default(0)
-  notes       String?
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  tenantId    String
-
-  matches Match[]
-}
-
-// ─── FINANZAS ────────────────────────────────────
-model Finance {
-  id          String          @id @default(cuid())
-  type        FinanceType
-  category    FinanceCategory @default(OTRO)
-  amount      Float
-  description String?
-  date        DateTime        @default(now())
-  team        Team?           @relation(fields: [teamId], references: [id])
-  teamId      String?
-  tenant      Tenant          @relation(fields: [tenantId], references: [id])
-  tenantId    String
-}
 enum FinanceType {
   INCOME
   EXPENSE
