@@ -60,81 +60,48 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         },
       },
 
-      async authorize(credentials) {
-        if (
-          
-          !credentials?.identifier ||
-          !credentials?.password
-          
-        ) {
-          return null;
-        }
+async authorize(credentials) {
+  if (!credentials?.identifier || !credentials?.password) {
+    return null;
+  }
 
-        const identifier = String(
-          credentials.identifier
-        ).trim();
+  const identifier = String(credentials.identifier).trim().toLowerCase();
+  const password = String(credentials.password);
 
-        const password = String(
-          credentials.password
-        );
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { email: identifier },
+        { phone: identifier },
+      ],
+    },
+    include: {
+      tenants: true,
+    },
+  });
 
-        // Buscar por email O teléfono
- const user = await prisma.user.findFirst({
-  where: {
-    OR: [
-      {
-        email: identifier,
-      },
-      {
-        phone: identifier,
-      },
-    ],
-  },
+  if (!user || !user.password) {
+    return null;
+  }
 
-  include: {
-    tenants: true,
-  },
-});
+  const valid = await bcrypt.compare(password, user.password);
 
-console.log("AUTH DEBUG:", {
-  identifier,
-  userFound: !!user,
-  userId: user?.id,
-  isSuperAdmin: user?.isSuperAdmin,
-  hasPassword: !!user?.password,
-});
+  if (!valid) {
+    return null;
+  }
 
-if (!user || !user.password) {
-  return null;
-}
+  const tenantUser = user.tenants[0];
 
-const valid = await bcrypt.compare(
-  password,
-  user.password
-);
-
-console.log("AUTH PASSWORD VALID:", valid);
-
-if (!valid) {
-  return null;
-}
-
-        // Buscar la relación del usuario
-        // con el torneo/equipo
-        const tenantUser = user.tenants[0];
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-
-          isSuperAdmin: user.isSuperAdmin,
-
-          role: tenantUser?.role ?? null,
-          teamId: tenantUser?.teamId ?? null,
-          tenantId: tenantUser?.tenantId ?? null,
-        };
-      },
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    isSuperAdmin: user.isSuperAdmin,
+    role: tenantUser?.role ?? null,
+    teamId: tenantUser?.teamId ?? null,
+    tenantId: tenantUser?.tenantId ?? null,
+  };
+},
     }),
   ],
 });
