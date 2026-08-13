@@ -62,8 +62,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       async authorize(credentials) {
         if (
+          
           !credentials?.identifier ||
           !credentials?.password
+          
         ) {
           return null;
         }
@@ -77,36 +79,45 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         );
 
         // Buscar por email O teléfono
-        const user = await prisma.user.findFirst({
-          where: {
-            OR: [
-              {
-                email: identifier,
-              },
-              {
-                phone: identifier,
-              },
-            ],
-          },
+ const user = await prisma.user.findFirst({
+  where: {
+    OR: [
+      {
+        email: identifier,
+      },
+      {
+        phone: identifier,
+      },
+    ],
+  },
 
-          include: {
-            tenants: true,
-          },
-        });
+  include: {
+    tenants: true,
+  },
+});
 
-        if (!user || !user.password) {
-          return null;
-        }
+console.log("AUTH DEBUG:", {
+  identifier,
+  userFound: !!user,
+  userId: user?.id,
+  isSuperAdmin: user?.isSuperAdmin,
+  hasPassword: !!user?.password,
+});
 
-        // Comprobar contraseña
-        const valid = await bcrypt.compare(
-          password,
-          user.password
-        );
+if (!user || !user.password) {
+  return null;
+}
 
-        if (!valid) {
-          return null;
-        }
+const valid = await bcrypt.compare(
+  password,
+  user.password
+);
+
+console.log("AUTH PASSWORD VALID:", valid);
+
+if (!valid) {
+  return null;
+}
 
         // Buscar la relación del usuario
         // con el torneo/equipo
