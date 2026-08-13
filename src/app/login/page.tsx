@@ -47,7 +47,7 @@ export default function LoginPage() {
             </label>
 
             <input
-              name="email o tel"
+              name="email"
               type="text"
               required
               autoComplete="username"
