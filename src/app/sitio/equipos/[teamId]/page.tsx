@@ -96,14 +96,10 @@ export default async function EquipoPage({ params }: { params: Promise<{ teamId:
                     <p className="text-gray-500 text-xs">{p.position ?? "—"}</p>
                   </div>
                 </div>
-              <div className="flex gap-3 text-xs text-gray-400">
-                <span className="text-green-400 font-bold">
-                  {p.stats?.goals ?? 0} goles
-                </span>
-                <span>
-                  {p.stats?.assists ?? 0} asist.
-                </span>
-              </div>
+                <div className="flex gap-3 text-xs text-gray-400">
+                  <span className="text-green-400 font-bold">{p.stats[0]?.goals ?? 0} goles</span>
+                  <span>{p.stats[0]?.assists ?? 0} asist.</span>
+                </div>
               </div>
             ))}
           </div>

@@ -84,7 +84,7 @@ model Player {
   photo    String?
   teamId   String
   team     Team        @relation(fields: [teamId], references: [id])
-  stats    PlayerStat?
+  stats    PlayerStat[]
 }
 
 model Round {
