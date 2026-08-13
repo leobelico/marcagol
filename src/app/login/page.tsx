@@ -9,25 +9,29 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  e.preventDefault();
+  setLoading(true);
+  setError("");
 
-    const form = new FormData(e.currentTarget);
-    const result = await signIn("credentials", {
-      identifier: form.get("email"),
-      password: form.get("password"),
-      redirect: false,
-    });
+  const form = new FormData(e.currentTarget);
 
-    if (result?.error) {
-      setError("Email o contraseña incorrectos");
-      setLoading(false);
-    } else {
-      router.push("/admin");
-    }
+  const result = await signIn("credentials", {
+    identifier: form.get("identifier"),
+    password: form.get("password"),
+    redirect: false,
+  });
+
+  console.log("SIGN IN RESULT:", result);
+
+  if (result?.error) {
+    setError("Email o contraseña incorrectos");
+    setLoading(false);
+    return;
   }
+
+  router.push("/admin");
+}
 
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
@@ -47,7 +51,7 @@ export default function LoginPage() {
             </label>
 
             <input
-              name="email"
+              name="identifier"
               type="text"
               required
               autoComplete="username"
