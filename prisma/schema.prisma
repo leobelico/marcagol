@@ -13,7 +13,7 @@ model Tenant {
   slug      String   @unique
   logo      String?
   createdAt DateTime @default(now())
-
+  rosterLocked Boolean @default(false)
   // Configuración del torneo
   startDate     DateTime?
   matchDays     String[]
@@ -46,10 +46,11 @@ model Tenant {
 // ─── USUARIOS ────────────────────────────────────
 model User {
   id           String       @id @default(cuid())
-  email        String       @unique
+  email        String?      @unique   // ← ahora opcional (capitanes no tienen email)
   name         String?
   password     String?
-  isSuperAdmin Boolean      @default(false)  // ← agregar esto
+  phone        String?     @unique
+  isSuperAdmin Boolean      @default(false)
   tenants      TenantUser[]
 }
 
@@ -60,6 +61,8 @@ model TenantUser {
   userId   String
   tenant   Tenant   @relation(fields: [tenantId], references: [id])
   tenantId String
+  team     Team?    @relation(fields: [teamId], references: [id])   // ← nuevo
+  teamId   String?                                                    // ← nuevo
 
   @@unique([userId, tenantId])
 }
@@ -68,6 +71,7 @@ enum Role {
   SUPER_ADMIN
   ADMIN
   VIEWER
+  CAPTAIN        // ← nuevo
 }
 
 // ─── EQUIPOS Y JUGADORES ─────────────────────────
@@ -75,15 +79,18 @@ model Team {
   id       String  @id @default(cuid())
   name     String
   logo     String?
-  phone    String?   // ← WhatsApp del capitán
-  captain  String?   // ← Nombre del capitán
-  tenant   Tenant  @relation(fields: [tenantId], references: [id])
+  phone    String?   // teléfono de acceso del capitán
+  captain  String?   // nombre del capitán
+
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   tenantId String
+
   disqualified Boolean @default(false)
-  
+
+  captains    TenantUser[]
   players     Player[]
-  homeMatches Match[]   @relation("HomeTeam")
-  awayMatches Match[]   @relation("AwayTeam")
+  homeMatches Match[] @relation("HomeTeam")
+  awayMatches Match[] @relation("AwayTeam")
   finances    Finance[]
 }
 

@@ -1,7 +1,8 @@
 // app/api/admin/torneos/[torneoId]/equipos/[teamId]/jugadores/[playerId]/foto/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma"; // ajusta la ruta a tu instancia de Prisma
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -10,34 +11,175 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export async function POST(req: NextRequest, context: any) {
+export async function POST(
+  req: NextRequest,
+  context: {
+    params: Promise<{
+      torneoId: string;
+      teamId: string;
+      playerId: string;
+    }>;
+  }
+) {
+  // ─────────────────────────────────────
+  // AUTENTICACIÓN
+  // ─────────────────────────────────────
+  const session = await auth();
+
+  if (!session?.user) {
+    return NextResponse.json(
+      { error: "No autorizado" },
+      { status: 401 }
+    );
+  }
+
   const params = await context.params;
 
+  const {
+    torneoId,
+    teamId,
+    playerId,
+  } = params;
+
+  const role = (session.user as any).role;
+  const sessionTeamId = (session.user as any).teamId;
+  const sessionTenantId = (session.user as any).tenantId;
+  const isSuperAdmin = (session.user as any).isSuperAdmin;
+
+  // ─────────────────────────────────────
+  // CAPITÁN: SOLO SU EQUIPO
+  // ─────────────────────────────────────
+  if (
+    role === "CAPTAIN" &&
+    sessionTeamId !== teamId
+  ) {
+    return NextResponse.json(
+      { error: "No tienes permiso para este equipo" },
+      { status: 403 }
+    );
+  }
+
+  // ─────────────────────────────────────
+  // CAPITÁN: SOLO SU TORNEO
+  // ─────────────────────────────────────
+  if (
+    role === "CAPTAIN" &&
+    sessionTenantId !== torneoId
+  ) {
+    return NextResponse.json(
+      { error: "No tienes permiso para este torneo" },
+      { status: 403 }
+    );
+  }
+
+  // ─────────────────────────────────────
+  // PERMISOS
+  // ─────────────────────────────────────
+  if (
+    !isSuperAdmin &&
+    role !== "ADMIN" &&
+    role !== "CAPTAIN"
+  ) {
+    return NextResponse.json(
+      { error: "No tienes permisos" },
+      { status: 403 }
+    );
+  }
+
+  // ─────────────────────────────────────
+  // COMPROBAR JUGADOR
+  // ─────────────────────────────────────
+  const jugador = await prisma.player.findUnique({
+    where: {
+      id: playerId,
+    },
+    include: {
+      team: true,
+    },
+  });
+
+  if (!jugador) {
+    return NextResponse.json(
+      { error: "Jugador no encontrado" },
+      { status: 404 }
+    );
+  }
+
+  // El jugador tiene que pertenecer al equipo
+  if (jugador.teamId !== teamId) {
+    return NextResponse.json(
+      {
+        error: "El jugador no pertenece a este equipo",
+      },
+      { status: 403 }
+    );
+  }
+
+  // El equipo tiene que pertenecer al torneo
+  if (jugador.team.tenantId !== torneoId) {
+    return NextResponse.json(
+      {
+        error: "El equipo no pertenece a este torneo",
+      },
+      { status: 403 }
+    );
+  }
+
+  // ─────────────────────────────────────
+  // ARCHIVO
+  // ─────────────────────────────────────
   const formData = await req.formData();
+
   const file = formData.get("foto") as File | null;
 
   if (!file) {
-    return NextResponse.json({ error: "No file" }, { status: 400 });
+    return NextResponse.json(
+      { error: "No se recibió ninguna foto" },
+      { status: 400 }
+    );
   }
 
+  // Opcional pero recomendable:
+  // limitar a imágenes
+  if (!file.type.startsWith("image/")) {
+    return NextResponse.json(
+      { error: "El archivo debe ser una imagen" },
+      { status: 400 }
+    );
+  }
+
+  // ─────────────────────────────────────
+  // CLOUDINARY
+  // ─────────────────────────────────────
   const buffer = await file.arrayBuffer();
+
   const base64 = Buffer.from(buffer).toString("base64");
+
   const dataUri = `data:${file.type};base64,${base64}`;
 
-  const result = await cloudinary.uploader.upload(dataUri, {
-    folder: `torneos/${params.id}/jugadores`,
-    public_id: params.playerId,
-    overwrite: true,
-  });
+  const result = await cloudinary.uploader.upload(
+    dataUri,
+    {
+      folder: `torneos/${torneoId}/equipos/${teamId}/jugadores`,
+      public_id: playerId,
+      overwrite: true,
+    }
+  );
 
-  const jugador = await prisma.player.update({
-    where: {
-      id: params.playerId,
-    },
-    data: {
-      photo: result.secure_url,
-    },
-  });
+  // ─────────────────────────────────────
+  // GUARDAR URL EN PRISMA
+  // ─────────────────────────────────────
+  const jugadorActualizado =
+    await prisma.player.update({
+      where: {
+        id: playerId,
+      },
+      data: {
+        photo: result.secure_url,
+      },
+    });
 
-  return NextResponse.json({ photo: jugador.photo });
+  return NextResponse.json({
+    photo: jugadorActualizado.photo,
+  });
 }

@@ -4,53 +4,124 @@ import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+  },
+
   pages: {
     signIn: "/login",
   },
+
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.isSuperAdmin = (user as any).isSuperAdmin; // ← cambiar
+        token.isSuperAdmin = (user as any).isSuperAdmin;
+        token.role = (user as any).role;
+        token.teamId = (user as any).teamId;
+        token.tenantId = (user as any).tenantId;
       }
+
       return token;
     },
+
     async session({ session, token }) {
-      if (token) {
+      if (session.user) {
         session.user.id = token.id as string;
-        (session.user as any).isSuperAdmin = token.isSuperAdmin; // ← cambiar
+
+        (session.user as any).isSuperAdmin =
+          token.isSuperAdmin;
+
+        (session.user as any).role =
+          token.role;
+
+        (session.user as any).teamId =
+          token.teamId;
+
+        (session.user as any).tenantId =
+          token.tenantId;
       }
+
       return session;
     },
   },
+
   providers: [
     Credentials({
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        identifier: {
+          label: "Email o teléfono",
+          type: "text",
+        },
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
+        password: {
+          label: "Contraseña",
+          type: "password",
+        },
+      },
+
+      async authorize(credentials) {
+        if (
+          !credentials?.identifier ||
+          !credentials?.password
+        ) {
+          return null;
+        }
+
+        const identifier = String(
+          credentials.identifier
+        ).trim();
+
+        const password = String(
+          credentials.password
+        );
+
+        // Buscar por email O teléfono
+        const user = await prisma.user.findFirst({
+          where: {
+            OR: [
+              {
+                email: identifier,
+              },
+              {
+                phone: identifier,
+              },
+            ],
+          },
+
+          include: {
+            tenants: true,
+          },
         });
 
-        if (!user || !user.password) return null;
+        if (!user || !user.password) {
+          return null;
+        }
 
+        // Comprobar contraseña
         const valid = await bcrypt.compare(
-          credentials.password as string,
+          password,
           user.password
         );
 
-        if (!valid) return null;
+        if (!valid) {
+          return null;
+        }
 
-        return { 
-          id: user.id, 
-          email: user.email, 
+        // Buscar la relación del usuario
+        // con el torneo/equipo
+        const tenantUser = user.tenants[0];
+
+        return {
+          id: user.id,
+          email: user.email,
           name: user.name,
-          isSuperAdmin: user.isSuperAdmin, // ← agregar
+
+          isSuperAdmin: user.isSuperAdmin,
+
+          role: tenantUser?.role ?? null,
+          teamId: tenantUser?.teamId ?? null,
+          tenantId: tenantUser?.tenantId ?? null,
         };
       },
     }),
