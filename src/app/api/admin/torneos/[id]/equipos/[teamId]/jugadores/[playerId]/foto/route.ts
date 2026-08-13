@@ -15,7 +15,7 @@ export async function POST(
   req: NextRequest,
   context: {
     params: Promise<{
-      torneoId: string;
+      id: string;
       teamId: string;
       playerId: string;
     }>;
@@ -35,11 +35,11 @@ export async function POST(
 
   const params = await context.params;
 
-  const {
-    torneoId,
-    teamId,
-    playerId,
-  } = params;
+ const {
+  id,
+  teamId,
+  playerId,
+} = params;
 
   const role = (session.user as any).role;
   const sessionTeamId = (session.user as any).teamId;
@@ -64,7 +64,7 @@ export async function POST(
   // ─────────────────────────────────────
   if (
     role === "CAPTAIN" &&
-    sessionTenantId !== torneoId
+    sessionTenantId !== id
   ) {
     return NextResponse.json(
       { error: "No tienes permiso para este torneo" },
@@ -116,7 +116,7 @@ export async function POST(
   }
 
   // El equipo tiene que pertenecer al torneo
-  if (jugador.team.tenantId !== torneoId) {
+  if (jugador.team.tenantId !== id) {
     return NextResponse.json(
       {
         error: "El equipo no pertenece a este torneo",
@@ -160,7 +160,7 @@ export async function POST(
   const result = await cloudinary.uploader.upload(
     dataUri,
     {
-      folder: `torneos/${torneoId}/equipos/${teamId}/jugadores`,
+      folder: `torneos/${id}/equipos/${teamId}/jugadores`,
       public_id: playerId,
       overwrite: true,
     }
