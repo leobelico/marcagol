@@ -18,21 +18,26 @@ export default async function CapitanPage() {
     include: {
       team: {
         include: {
-          players: true,
+          players: {
+            orderBy: {
+              name: "asc",
+            },
+          },
         },
       },
       tenant: true,
     },
   });
 
-  if (!tenantUser?.team) {
+  if (!tenantUser || !tenantUser.team || !tenantUser.tenant) {
     redirect("/login");
   }
 
   return (
     <CapitanClient
       team={tenantUser.team}
-      tenantName={tenantUser.tenant.name}
+      tenant={tenantUser.tenant}
+      email={session.user.email ?? null}
     />
   );
 }

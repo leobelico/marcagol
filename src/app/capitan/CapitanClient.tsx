@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Player = {
@@ -18,354 +18,605 @@ type Team = {
   players: Player[];
 };
 
-export default function CapitanClient({
-  team,
-  tenantName,
-}: {
+type Props = {
   team: Team;
-  tenantName: string;
-}) {
+  tenant: {
+    id: string;
+    name: string;
+  };
+  email: string | null;
+};
+
+const POSICIONES = [
+  "Portero",
+  "Defensa",
+  "Mediocampista",
+  "Delantero",
+];
+
+export default function CapitanClient({
+  team: initialTeam,
+  tenant,
+  email,
+}: Props) {
   const router = useRouter();
 
+  const [team, setTeam] = useState(initialTeam);
   const [loading, setLoading] = useState(false);
+  const [subiendoFoto, setSubiendoFoto] = useState<string | null>(null);
+  const [subiendoLogo, setSubiendoLogo] = useState(false);
+
+  const [mostrarNuevoJugador, setMostrarNuevoJugador] = useState(false);
+
   const [nuevoJugador, setNuevoJugador] = useState({
     name: "",
     number: "",
     position: "",
   });
 
-  const [fotos, setFotos] = useState<Record<string, string>>({});
-  const [logo, setLogo] = useState(team.logo || "");
+  const logoInputRef = useRef<HTMLInputElement | null>(null);
 
-  const fotoRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const logoRef = useRef<HTMLInputElement | null>(null);
+  const fotoInputRefs = useRef<
+    Record<string, HTMLInputElement | null>
+  >({});
 
-  const POSICIONES = [
-    "Portero",
-    "Defensa",
-    "Mediocampista",
-    "Delantero",
-  ];
+  useEffect(() => {
+    setTeam(initialTeam);
+  }, [initialTeam]);
+
+  // ─────────────────────────────────────
+  // AGREGAR JUGADOR
+  // ─────────────────────────────────────
 
   async function agregarJugador() {
-    if (!nuevoJugador.name.trim()) return;
+    if (!nuevoJugador.name.trim()) {
+      alert("Escribe el nombre del jugador");
+      return;
+    }
 
     setLoading(true);
 
-    const res = await fetch(
-      `/api/admin/torneos/${tenantName}/equipos/${team.id}/jugadores`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: nuevoJugador.name.trim(),
-          number: nuevoJugador.number
-            ? Number(nuevoJugador.number)
-            : null,
-          position: nuevoJugador.position || null,
-        }),
+    try {
+      const res = await fetch(
+        `/api/admin/torneos/${tenant.id}/equipos/${team.id}/jugadores`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: nuevoJugador.name.trim(),
+            number: nuevoJugador.number
+              ? Number(nuevoJugador.number)
+              : null,
+            position: nuevoJugador.position || null,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "No se pudo crear el jugador");
       }
-    );
 
-    setLoading(false);
+      setNuevoJugador({
+        name: "",
+        number: "",
+        position: "",
+      });
 
-    if (!res.ok) {
-      alert("No se pudo agregar el jugador");
-      return;
+      setMostrarNuevoJugador(false);
+
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Error creando jugador"
+      );
+    } finally {
+      setLoading(false);
     }
-
-    setNuevoJugador({
-      name: "",
-      number: "",
-      position: "",
-    });
-
-    router.refresh();
   }
+
+  // ─────────────────────────────────────
+  // SUBIR FOTO JUGADOR
+  // ─────────────────────────────────────
 
   async function subirFoto(playerId: string, file: File) {
-    const formData = new FormData();
-    formData.append("foto", file);
+    setSubiendoFoto(playerId);
 
-    const res = await fetch(
-      `/api/admin/torneos/${tenantName}/equipos/${team.id}/jugadores/${playerId}/foto`,
-      {
-        method: "POST",
-        body: formData,
+    try {
+      const formData = new FormData();
+      formData.append("foto", file);
+
+      const res = await fetch(
+        `/api/admin/torneos/${tenant.id}/equipos/${team.id}/jugadores/${playerId}/foto`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(
+          data.error || "No se pudo subir la foto"
+        );
       }
-    );
 
-    if (!res.ok) {
-      alert("Error subiendo foto");
-      return;
+      // Actualizar inmediatamente la foto en pantalla
+      setTeam((prev) => ({
+        ...prev,
+        players: prev.players.map((player) =>
+          player.id === playerId
+            ? {
+                ...player,
+                photo: data.photo,
+              }
+            : player
+        ),
+      }));
+
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Error subiendo foto"
+      );
+    } finally {
+      setSubiendoFoto(null);
     }
-
-    const data = await res.json();
-
-    setFotos((prev) => ({
-      ...prev,
-      [playerId]: data.photo,
-    }));
-
-    router.refresh();
   }
 
+  // ─────────────────────────────────────
+  // SUBIR LOGO EQUIPO
+  // ─────────────────────────────────────
+
   async function subirLogo(file: File) {
-    const formData = new FormData();
-    formData.append("logo", file);
+    setSubiendoLogo(true);
 
-    const res = await fetch(
-      `/api/admin/torneos/${tenantName}/equipos/${team.id}/logo`,
-      {
-        method: "POST",
-        body: formData,
+    try {
+      const formData = new FormData();
+      formData.append("logo", file);
+
+      const res = await fetch(
+        `/api/admin/torneos/${tenant.id}/equipos/${team.id}/logo`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(
+          data.error || "No se pudo subir el logo"
+        );
       }
-    );
 
-    if (!res.ok) {
-      alert("Error subiendo logo");
-      return;
+      setTeam((prev) => ({
+        ...prev,
+        logo: data.logo,
+      }));
+
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Error subiendo logo"
+      );
+    } finally {
+      setSubiendoLogo(false);
     }
+  }
 
-    const data = await res.json();
+  // ─────────────────────────────────────
+  // ELIMINAR JUGADOR
+  // ─────────────────────────────────────
 
-    setLogo(data.logo);
-    router.refresh();
+  async function eliminarJugador(playerId: string) {
+    if (!confirm("¿Eliminar este jugador?")) return;
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(
+        `/api/admin/torneos/${tenant.id}/equipos/${team.id}/jugadores/${playerId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(
+          data?.error || "No se pudo eliminar el jugador"
+        );
+      }
+
+      setTeam((prev) => ({
+        ...prev,
+        players: prev.players.filter(
+          (player) => player.id !== playerId
+        ),
+      }));
+
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Error eliminando jugador"
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-6">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-gray-950 text-white">
+      {/* HEADER */}
 
-        <div className="mb-8">
-          <p className="text-green-400 text-xs font-bold uppercase tracking-widest">
-            Panel del Capitán
-          </p>
+      <header className="border-b border-gray-800 bg-gray-900">
+        <div className="max-w-5xl mx-auto px-4 py-5 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-green-400 font-bold uppercase tracking-widest">
+              Panel del Capitán
+            </p>
 
-          <h1 className="text-3xl font-black mt-1">
-            {team.name}
-          </h1>
+            <h1 className="text-2xl font-black mt-1">
+              ⚽ {team.name}
+            </h1>
 
-          <p className="text-gray-500 mt-1">
-            {tenantName}
-          </p>
+            <p className="text-sm text-gray-500 mt-1">
+              {tenant.name}
+            </p>
+          </div>
+
+          <div className="text-right">
+            <p className="text-sm text-gray-400">
+              {email}
+            </p>
+
+            <a
+              href="/api/auth/signout"
+              className="inline-block mt-2 text-xs bg-gray-800 hover:bg-gray-700 px-3 py-2 rounded-lg"
+            >
+              Cerrar sesión
+            </a>
+          </div>
         </div>
+      </header>
 
-        {/* LOGO */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
-          <h2 className="font-bold mb-4">
-            Escudo del equipo
-          </h2>
+      <main className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+        {/* INFORMACIÓN EQUIPO */}
 
-          <div className="flex items-center gap-5">
+        <section className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+            {/* LOGO */}
 
-            <div className="w-24 h-24 rounded-2xl bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center">
-              {logo ? (
+            <button
+              type="button"
+              onClick={() => logoInputRef.current?.click()}
+              disabled={subiendoLogo}
+              className="w-28 h-28 rounded-2xl overflow-hidden bg-gray-800 border-2 border-gray-700 hover:border-green-500 transition flex items-center justify-center"
+            >
+              {team.logo ? (
                 <img
-                  src={logo}
-                  alt={team.name}
+                  src={team.logo}
+                  alt={`Logo ${team.name}`}
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-3xl">⚽</span>
+                <div className="text-center">
+                  <div className="text-3xl">⚽</div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Subir logo
+                  </p>
+                </div>
               )}
-            </div>
+            </button>
+
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+
+                if (file) {
+                  subirLogo(file);
+                }
+
+                e.target.value = "";
+              }}
+            />
 
             <div>
+              <h2 className="text-2xl font-black">
+                {team.name}
+              </h2>
+
+              <p className="text-gray-500 text-sm mt-1">
+                {team.players.length} jugadores registrados
+              </p>
+
               <button
-                onClick={() => logoRef.current?.click()}
-                className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-xl font-bold text-sm"
+                type="button"
+                onClick={() => logoInputRef.current?.click()}
+                disabled={subiendoLogo}
+                className="mt-3 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-2 rounded-lg"
               >
-                {logo ? "Cambiar escudo" : "Subir escudo"}
+                {subiendoLogo
+                  ? "Subiendo..."
+                  : team.logo
+                  ? "Cambiar logo"
+                  : "Subir logo del equipo"}
               </button>
-
-              <input
-                ref={logoRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-
-                  if (file) {
-                    subirLogo(file);
-                  }
-
-                  e.target.value = "";
-                }}
-              />
             </div>
           </div>
-        </div>
-
-        {/* AGREGAR JUGADOR */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
-          <h2 className="font-bold mb-4">
-            Agregar jugador
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-
-            <input
-              type="text"
-              placeholder="Nombre"
-              value={nuevoJugador.name}
-              onChange={(e) =>
-                setNuevoJugador({
-                  ...nuevoJugador,
-                  name: e.target.value,
-                })
-              }
-              className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3"
-            />
-
-            <input
-              type="number"
-              placeholder="Número"
-              value={nuevoJugador.number}
-              onChange={(e) =>
-                setNuevoJugador({
-                  ...nuevoJugador,
-                  number: e.target.value,
-                })
-              }
-              className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3"
-            />
-
-            <select
-              value={nuevoJugador.position}
-              onChange={(e) =>
-                setNuevoJugador({
-                  ...nuevoJugador,
-                  position: e.target.value,
-                })
-              }
-              className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3"
-            >
-              <option value="">Posición</option>
-
-              {POSICIONES.map((position) => (
-                <option key={position} value={position}>
-                  {position}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <button
-            onClick={agregarJugador}
-            disabled={loading}
-            className="mt-4 bg-green-600 hover:bg-green-500 px-5 py-3 rounded-xl font-bold"
-          >
-            {loading ? "Agregando..." : "+ Agregar jugador"}
-          </button>
-        </div>
+        </section>
 
         {/* JUGADORES */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
 
-          <div className="px-6 py-4 border-b border-gray-800">
-            <h2 className="font-bold">
-              Jugadores ({team.players.length})
-            </h2>
+        <section className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+          <div className="px-6 py-5 border-b border-gray-800 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-black">
+                Jugadores
+              </h2>
+
+              <p className="text-sm text-gray-500 mt-1">
+                Agrega y administra los jugadores de tu equipo.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                setMostrarNuevoJugador(!mostrarNuevoJugador)
+              }
+              className="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm"
+            >
+              + Jugador
+            </button>
           </div>
 
-          {team.players.length === 0 ? (
-            <p className="p-6 text-gray-500">
-              Todavía no hay jugadores.
-            </p>
-          ) : (
-            <div className="divide-y divide-gray-800">
+          {/* NUEVO JUGADOR */}
 
-              {team.players.map((player) => {
+          {mostrarNuevoJugador && (
+            <div className="p-6 bg-gray-800/40 border-b border-gray-800">
+              <h3 className="text-sm font-bold text-gray-300 mb-4">
+                Nuevo jugador
+              </h3>
 
-                const photo =
-                  fotos[player.id] || player.photo;
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <input
+                  type="text"
+                  placeholder="Nombre completo *"
+                  value={nuevoJugador.name}
+                  onChange={(e) =>
+                    setNuevoJugador({
+                      ...nuevoJugador,
+                      name: e.target.value,
+                    })
+                  }
+                  className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 outline-none focus:border-green-500"
+                />
 
-                return (
-                  <div
-                    key={player.id}
-                    className="flex items-center justify-between p-5"
-                  >
+                <input
+                  type="number"
+                  placeholder="Número"
+                  value={nuevoJugador.number}
+                  onChange={(e) =>
+                    setNuevoJugador({
+                      ...nuevoJugador,
+                      number: e.target.value,
+                    })
+                  }
+                  className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 outline-none focus:border-green-500"
+                />
 
-                    <div className="flex items-center gap-4">
+                <select
+                  value={nuevoJugador.position}
+                  onChange={(e) =>
+                    setNuevoJugador({
+                      ...nuevoJugador,
+                      position: e.target.value,
+                    })
+                  }
+                  className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white outline-none focus:border-green-500"
+                >
+                  <option value="">
+                    Posición
+                  </option>
 
-                      <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-800 border border-gray-700">
+                  {POSICIONES.map((posicion) => (
+                    <option
+                      key={posicion}
+                      value={posicion}
+                    >
+                      {posicion}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                        {photo ? (
-                          <img
-                            src={photo}
-                            alt={player.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-600">
-                            👤
-                          </div>
-                        )}
+              <div className="flex gap-2 mt-4">
+                <button
+                  type="button"
+                  onClick={agregarJugador}
+                  disabled={loading}
+                  className="bg-green-600 hover:bg-green-500 disabled:opacity-50 px-5 py-2.5 rounded-xl font-bold text-sm"
+                >
+                  {loading ? "Agregando..." : "Agregar jugador"}
+                </button>
 
-                      </div>
-
-                      <div>
-                        <p className="font-bold">
-                          {player.name}
-                        </p>
-
-                        <p className="text-sm text-gray-500">
-                          {player.number !== null
-                            ? `#${player.number}`
-                            : "Sin número"}{" "}
-                          ·{" "}
-                          {player.position ||
-                            "Sin posición"}
-                        </p>
-                      </div>
-
-                    </div>
-
-                    <div>
-
-                      <button
-                        onClick={() =>
-                          fotoRefs.current[player.id]?.click()
-                        }
-                        className="bg-indigo-900/40 text-indigo-400 px-3 py-2 rounded-lg text-xs font-bold"
-                      >
-                        📷 {photo ? "Cambiar foto" : "Subir foto"}
-                      </button>
-
-                      <input
-                        ref={(el) => {
-                          fotoRefs.current[player.id] = el;
-                        }}
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-
-                          if (file) {
-                            subirFoto(player.id, file);
-                          }
-
-                          e.target.value = "";
-                        }}
-                      />
-
-                    </div>
-
-                  </div>
-                );
-              })}
-
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMostrarNuevoJugador(false)
+                  }
+                  className="bg-gray-700 hover:bg-gray-600 px-5 py-2.5 rounded-xl font-bold text-sm"
+                >
+                  Cancelar
+                </button>
+              </div>
             </div>
           )}
-        </div>
 
-      </div>
+          {/* LISTA */}
+
+          {team.players.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="text-4xl mb-3">
+                👥
+              </div>
+
+              <p className="text-gray-400">
+                Todavía no tienes jugadores.
+              </p>
+
+              <p className="text-gray-600 text-sm mt-1">
+                Agrega el primer jugador de tu equipo.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-800">
+              {team.players.map((player) => (
+                <div
+                  key={player.id}
+                  className="px-6 py-4 flex items-center justify-between gap-4"
+                >
+                  <div className="flex items-center gap-4 min-w-0">
+                    {/* FOTO */}
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        fotoInputRefs.current[
+                          player.id
+                        ]?.click()
+                      }
+                      disabled={
+                        subiendoFoto === player.id
+                      }
+                      className="w-14 h-14 rounded-xl overflow-hidden bg-gray-800 border border-gray-700 flex-shrink-0 hover:border-green-500 transition"
+                    >
+                      {player.photo ? (
+                        <img
+                          src={player.photo}
+                          alt={player.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-600">
+                          👤
+                        </div>
+                      )}
+                    </button>
+
+                    <input
+                      ref={(el) => {
+                        fotoInputRefs.current[player.id] =
+                          el;
+                      }}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file =
+                          e.target.files?.[0];
+
+                        if (file) {
+                          subirFoto(
+                            player.id,
+                            file
+                          );
+                        }
+
+                        e.target.value = "";
+                      }}
+                    />
+
+                    {/* DATOS */}
+
+                    <div className="min-w-0">
+                      <p className="font-bold text-white truncate">
+                        {player.name}
+                      </p>
+
+                      <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                        {player.number !== null && (
+                          <span>
+                            #{player.number}
+                          </span>
+                        )}
+
+                        {player.position && (
+                          <span>
+                            {player.position}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ACCIONES */}
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        fotoInputRefs.current[
+                          player.id
+                        ]?.click()
+                      }
+                      disabled={
+                        subiendoFoto === player.id
+                      }
+                      className="text-xs bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-400 font-bold px-3 py-2 rounded-lg"
+                    >
+                      {subiendoFoto === player.id
+                        ? "Subiendo..."
+                        : player.photo
+                        ? "📷 Cambiar foto"
+                        : "📷 Subir foto"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        eliminarJugador(player.id)
+                      }
+                      disabled={loading}
+                      className="text-xs text-red-400 hover:text-red-300 px-2"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </main>
     </div>
   );
 }
