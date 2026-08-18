@@ -35,6 +35,7 @@ model Tenant {
   rounds         Round[]
   teams          Team[]
   users          TenantUser[]
+  archived Boolean @default(false)
 }
 
 model User {

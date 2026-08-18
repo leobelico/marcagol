@@ -26,17 +26,33 @@ if (!isSuperAdmin) {
     }
   }
 
-  const torneos = isSuperAdmin
-    ? await prisma.tenant.findMany({
-        include: { _count: { select: { teams: true, matches: true } } },
-        orderBy: { createdAt: "desc" },
-      })
-    : await prisma.tenant.findMany({
-        where: {
-          users: {
-            some: { userId: session.user.id, role: "ADMIN" },
+const torneos = isSuperAdmin
+  ? await prisma.tenant.findMany({
+      where: {
+        archived: false,
+      },
+      include: {
+        _count: {
+          select: {
+            teams: true,
+            matches: true,
           },
         },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    })
+: await prisma.tenant.findMany({
+    where: {
+      archived: false,
+      users: {
+        some: {
+          userId: session.user.id,
+          role: "ADMIN",
+        },
+      },
+    },
         include: { _count: { select: { teams: true, matches: true } } },
         orderBy: { createdAt: "desc" },
       });

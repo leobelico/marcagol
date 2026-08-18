@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import LogoUploader from "./torneos/[id]/LogoUploader";
 
@@ -18,8 +19,52 @@ export default function TorneoCard({
   isSuperAdmin: boolean;
   appDomain: string;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+
+  const handleArchive = async () => {
+    const confirmed = window.confirm(
+      `¿Quieres archivar el torneo "${t.name}"?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setArchiving(true);
+
+      const res = await fetch("/api/admin/torneo", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: t.id,
+          archived: true,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "No se pudo archivar el torneo");
+      }
+
+      // Recarga la página para que desaparezca la card
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "No se pudo archivar el torneo"
+      );
+
+      setArchiving(false);
+    }
+  };
+
   return (
-    <div className="bg-gray-900 border border-gray-800 hover:border-gray-600 rounded-2xl p-6 transition group">
+    <div className="relative bg-gray-900 border border-gray-800 hover:border-gray-600 rounded-2xl p-6 transition group">
       <Link href={`/admin/torneos/${t.id}`} className="block">
         <div>
           <div className="flex items-start justify-between mb-4">
@@ -28,6 +73,7 @@ export default function TorneoCard({
                 <img
                   src={t.logo}
                   className="w-full h-full object-cover rounded-xl"
+                  alt=""
                 />
               ) : (
                 <span className="text-2xl">⚽</span>
@@ -49,21 +95,59 @@ export default function TorneoCard({
 
           <div className="flex gap-4 text-sm mb-4">
             <span className="text-gray-400">
-              <span className="text-white font-bold">{t._count.teams}</span>{" "}
+              <span className="text-white font-bold">
+                {t._count.teams}
+              </span>{" "}
               equipos
             </span>
 
             <span className="text-gray-400">
-              <span className="text-white font-bold">{t._count.matches}</span>{" "}
+              <span className="text-white font-bold">
+                {t._count.matches}
+              </span>{" "}
               partidos
             </span>
           </div>
 
           {isSuperAdmin && (
-            <LogoUploader torneoId={t.id} logoActual={t.logo} />
+            <LogoUploader
+              torneoId={t.id}
+              logoActual={t.logo}
+            />
           )}
         </div>
       </Link>
+
+      {/* Menú de opciones */}
+      {isSuperAdmin && (
+        <div className="absolute top-5 right-5">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setMenuOpen((prev) => !prev);
+            }}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition"
+            aria-label="Opciones del torneo"
+          >
+            ⋮
+          </button>
+
+          {menuOpen && (
+            <div className="absolute right-0 top-10 z-50 w-48 bg-gray-800 border border-gray-700 rounded-xl shadow-xl overflow-hidden">
+              <button
+                type="button"
+                onClick={handleArchive}
+                disabled={archiving}
+                className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition disabled:opacity-50"
+              >
+                {archiving ? "Archivando..." : "📦 Archivar torneo"}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
