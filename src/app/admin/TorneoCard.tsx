@@ -32,7 +32,7 @@ const handleArchive = async () => {
   try {
     setArchiving(true);
 
-    const res = await fetch("/api/admin/torneo", {
+    const res = await fetch("/api/admin/torneos", {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
