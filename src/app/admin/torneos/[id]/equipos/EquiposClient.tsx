@@ -8,7 +8,7 @@ type Player = {
   name: string;
   number: number | null;
   position: string | null;
-  photo?: string | null; // URL de la foto almacenada
+  photo?: string | null;
 };
 
 type Team = {
@@ -18,7 +18,9 @@ type Team = {
   phone: string | null;
   logo?: string | null;
   players: Player[];
-  _count: { players: number };
+  _count: {
+    players: number;
+  };
 };
 
 type Torneo = {
@@ -27,94 +29,180 @@ type Torneo = {
   teams: Team[];
   logo?: string | null;
 };
-// Fotos en memoria (por jugadorId → base64).
-// En producción deberías subirlas a tu API/storage y persistirlas en BD.
+
 const fotosEnMemoria: Record<string, string> = {};
 
-export default function EquiposClient({ torneo }: { torneo: Torneo }) {
+export default function EquiposClient({
+  torneo,
+}: {
+  torneo: Torneo;
+}) {
   const router = useRouter();
+
   const [loading, setLoading] = useState(false);
   const [generandoPDF, setGenerandoPDF] = useState<string | null>(null);
+
+  // =========================
+  // EDITAR EQUIPO
+  // =========================
+
   const [editandoEquipo, setEditandoEquipo] = useState<string | null>(null);
-  const [nombreEquipoEdit, setNombreEquipoEdit] = useState("");
-  const [editandoJugador, setEditandoJugador] = useState<string | null>(null);
-  const [jugadorEdit, setJugadorEdit] = useState({ name: "", number: "", position: "" });
-  const [showNuevoEquipo, setShowNuevoEquipo] = useState(false);
-  const [nuevoEquipo, setNuevoEquipo] = useState({ name: "", captain: "", phone: "" });
 
-  const [equipoSeleccionado, setEquipoSeleccionado] = useState<string | null>(null);
-  const [nuevoJugador, setNuevoJugador] = useState({ name: "", number: "", position: "" });
+  const [equipoEdit, setEquipoEdit] = useState({
+    name: "",
+    captain: "",
+    phone: "",
+  });
 
-  // Mapa local de fotos (playerId → dataURL base64)
-  const [fotos, setFotos] = useState<Record<string, string>>(fotosEnMemoria);
+  // =========================
+  // EDITAR JUGADOR
+  // =========================
 
-  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [editandoJugador, setEditandoJugador] =
+    useState<string | null>(null);
 
-  const POSICIONES = ["Portero", "Defensa", "Mediocampista", "Delantero"];
+  const [jugadorEdit, setJugadorEdit] = useState({
+    name: "",
+    number: "",
+    position: "",
+  });
 
-  const [logos, setLogos] = useState<Record<string, string>>({});
+  // =========================
+  // NUEVO EQUIPO
+  // =========================
 
-  const logoInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  // ─── Foto de jugador ──────────────────────────────────────────────
+  const [showNuevoEquipo, setShowNuevoEquipo] =
+    useState(false);
+
+  const [nuevoEquipo, setNuevoEquipo] = useState({
+    name: "",
+    captain: "",
+    phone: "",
+  });
+
+  // =========================
+  // NUEVO JUGADOR
+  // =========================
+
+  const [equipoSeleccionado, setEquipoSeleccionado] =
+    useState<string | null>(null);
+
+  const [nuevoJugador, setNuevoJugador] = useState({
+    name: "",
+    number: "",
+    position: "",
+  });
+
+  // =========================
+  // FOTOS
+  // =========================
+
+  const [fotos, setFotos] =
+    useState<Record<string, string>>(fotosEnMemoria);
+
+  const fileInputRefs =
+    useRef<Record<string, HTMLInputElement | null>>({});
+
+  // =========================
+  // LOGOS
+  // =========================
+
+  const [logos, setLogos] =
+    useState<Record<string, string>>({});
+
+  const logoInputRefs =
+    useRef<Record<string, HTMLInputElement | null>>({});
+
+  // =========================
+  // POSICIONES
+  // =========================
+
+  const POSICIONES = [
+    "Portero",
+    "Defensa",
+    "Mediocampista",
+    "Delantero",
+  ];
+
+  // ============================================================
+  // FOTO JUGADOR
+  // ============================================================
+
   function handleFotoClick(playerId: string) {
     fileInputRefs.current[playerId]?.click();
   }
-function handleLogoClick(teamId: string) {
-  logoInputRefs.current[teamId]?.click();
-}
-  async function handleLogoChange(teamId: string, file: File) {
-  const formData = new FormData();
-  formData.append("logo", file);
 
-  const res = await fetch(
-    `/api/admin/torneos/${torneo.id}/equipos/${teamId}/logo`,
-    {
-      method: "POST",
-      body: formData,
+  async function handleFotoChange(
+    playerId: string,
+    teamId: string,
+    file: File
+  ) {
+    try {
+      // Preview inmediato
+      const reader = new FileReader();
+
+      reader.onload = async (e) => {
+        const dataUrl = e.target?.result as string;
+
+        setFotos((prev) => ({
+          ...prev,
+          [playerId]: dataUrl,
+        }));
+
+        // Subir archivo
+        const formData = new FormData();
+        formData.append("foto", file);
+
+        const res = await fetch(
+          `/api/admin/torneos/${torneo.id}/equipos/${teamId}/jugadores/${playerId}/foto`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error("Error subiendo imagen");
+        }
+
+        const data = await res.json();
+
+        // Guardar URL definitiva
+        setFotos((prev) => ({
+          ...prev,
+          [playerId]: data.photo,
+        }));
+
+        router.refresh();
+      };
+
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error(error);
+      alert("Error al subir la foto");
     }
-  );
-
-  if (!res.ok) {
-    alert("Error subiendo logo");
-    return;
   }
 
-  const data = await res.json();
+  // ============================================================
+  // LOGO EQUIPO
+  // ============================================================
 
-  setLogos((prev) => ({
-    ...prev,
-    [teamId]: data.logo,
-  }));
+  function handleLogoClick(teamId: string) {
+    logoInputRefs.current[teamId]?.click();
+  }
 
-  router.refresh();
-}
+  async function handleLogoChange(
+    teamId: string,
+    file: File
+  ) {
+    try {
+      setLoading(true);
 
-
-
-async function handleFotoChange(
-  playerId: string,
-  teamId: string,
-  file: File
-) {
-  try {
-    // Preview instantáneo
-    const reader = new FileReader();
-
-    reader.onload = async (e) => {
-      const dataUrl = e.target?.result as string;
-
-      // Mostrar preview local
-      setFotos((prev) => ({
-        ...prev,
-        [playerId]: dataUrl,
-      }));
-
-      // Subir a API
       const formData = new FormData();
-      formData.append("foto", file);
+      formData.append("logo", file);
 
       const res = await fetch(
-        `/api/admin/torneos/${torneo.id}/equipos/${teamId}/jugadores/${playerId}/foto`,
+        `/api/admin/torneos/${torneo.id}/equipos/${teamId}/logo`,
         {
           method: "POST",
           body: formData,
@@ -122,568 +210,1707 @@ async function handleFotoChange(
       );
 
       if (!res.ok) {
-        throw new Error("Error subiendo imagen");
+        throw new Error("Error subiendo logo");
       }
 
       const data = await res.json();
 
-      // Guardar URL real de Cloudinary
-      setFotos((prev) => ({
+      setLogos((prev) => ({
         ...prev,
-        [playerId]: data.photo,
+        [teamId]: data.logo,
       }));
 
       router.refresh();
-    };
-
-    reader.readAsDataURL(file);
-  } catch (error) {
-    console.error(error);
-    alert("Error al subir la foto");
+    } catch (error) {
+      console.error(error);
+      alert("Error subiendo logo");
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
-async function generarCredenciales(team: Team) {
-  setGenerandoPDF(team.id);
-  const { jsPDF } = await import("jspdf");
+  // ============================================================
+  // GENERAR CREDENCIALES PDF
+  // ============================================================
 
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  async function generarCredenciales(team: Team) {
+    try {
+      setGenerandoPDF(team.id);
 
-  let logoData: string | null = null;
-let logoFormato: "JPEG" | "PNG" = "JPEG";
+      const { jsPDF } = await import("jspdf");
 
-if (torneo.logo) {
-  try {
-    const response = await fetch(torneo.logo);
-
-    if (response.ok) {
-      const blob = await response.blob();
-      logoFormato = blob.type === "image/png" ? "PNG" : "JPEG";
-
-      logoData = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(blob);
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
       });
-    } else {
-      console.error("Fetch del logo falló con status:", response.status);
-    }
-  } catch (err) {
-    console.error("Error cargando logo:", err);
-  }
-}
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const cardW = 85.6;
-  const cardH = 54;
-  const marginX = 10;
-  const marginY = 15;
-  const cols = 2;
-  const gapX = (pageWidth - marginX * 2 - cardW * cols) / (cols - 1);
-  const gapY = 8;
-  const players = team.players;
-  let col = 0;
-  let row = 0;
 
-  for (let i = 0; i < players.length; i++) {
-    const player = players[i];
-    const x = marginX + col * (cardW + gapX);
-    const y = marginY + row * (cardH + gapY);
+      // -------------------------
+      // Cargar logo del torneo
+      // -------------------------
 
-    // Fondo blanco
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(x, y, cardW, cardH, 3, 3, "F");
-    doc.setDrawColor(220, 220, 220);
-    doc.setLineWidth(0.3);
-    doc.roundedRect(x, y, cardW, cardH, 3, 3, "S");
+      let logoData: string | null = null;
+      let logoFormato: "JPEG" | "PNG" = "JPEG";
 
-    // Barra superior verde
-    doc.setFillColor(22, 163, 74);
-    doc.rect(x, y, cardW, 8, "F");
+      if (torneo.logo) {
+        try {
+          const response = await fetch(torneo.logo);
 
-   let logoFormato: "JPEG" | "PNG" = "JPEG";
+          if (response.ok) {
+            const blob = await response.blob();
 
-   if (logoData) {
-  logoFormato = logoData.startsWith("data:image/png") ? "PNG" : "JPEG"; // esto también lo puedes quitar, ya viene bien desde blob.type
-  doc.addImage(logoData, logoFormato, x + cardW - 20, y + 0.5, 19, 7);
-}
-    // Nombre del torneo en barra
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(6.5);
-    doc.text(torneo.name.toUpperCase(), x + 3, y + 5.2);
+            logoFormato =
+              blob.type === "image/png"
+                ? "PNG"
+                : "JPEG";
 
-    // Foto del jugador
-    const fotoSize = 22;
-    const fotoX = x + 5;
-    const fotoY = y + 11;
-    const fotoData = fotos[player.id] || player.photo;
-    if (fotoData) {
-      try {
-        const fmt = fotoData.startsWith("data:image/png") ? "PNG" : "JPEG";
-        doc.addImage(fotoData, fmt, fotoX, fotoY, fotoSize, fotoSize);
-        doc.setDrawColor(22, 163, 74);
-        doc.setLineWidth(0.5);
-        doc.rect(fotoX, fotoY, fotoSize, fotoSize);
-      } catch {
-        doc.setFillColor(240, 240, 240);
-        doc.rect(fotoX, fotoY, fotoSize, fotoSize, "F");
+            logoData = await new Promise<string>(
+              (resolve) => {
+                const reader = new FileReader();
+
+                reader.onloadend = () => {
+                  resolve(reader.result as string);
+                };
+
+                reader.readAsDataURL(blob);
+              }
+            );
+          }
+        } catch (error) {
+          console.error(
+            "Error cargando logo:",
+            error
+          );
+        }
       }
-    } else {
-      doc.setFillColor(240, 240, 240);
-      doc.roundedRect(fotoX, fotoY, fotoSize, fotoSize, 2, 2, "F");
-      doc.setTextColor(150, 150, 150);
-      doc.setFontSize(7);
-      doc.text("SIN FOTO", fotoX + fotoSize / 2, fotoY + fotoSize / 2, { align: "center" });
-    }
 
-    // Datos del jugador
-    const dataX = fotoX + fotoSize + 4;
-    const dataW = cardW - fotoSize - 14;
+      // -------------------------
+      // Configuración página
+      // -------------------------
 
-    if (player.number !== null) {
-      doc.setTextColor(22, 163, 74);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(22);
-      doc.text(`#${player.number}`, dataX, fotoY + 10);
-    }
+      const pageWidth =
+        doc.internal.pageSize.getWidth();
 
-    doc.setTextColor(15, 23, 42);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    const nombreLines = doc.splitTextToSize(player.name.toUpperCase(), dataW);
-    doc.text(nombreLines.slice(0, 2), dataX, fotoY + (player.number !== null ? 17 : 8));
+      const pageHeight =
+        doc.internal.pageSize.getHeight();
 
-    if (player.position) {
-      doc.setTextColor(22, 163, 74);
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(7);
-      doc.text(player.position.toUpperCase(), dataX, fotoY + (player.number !== null ? 24 : 16));
-    }
+      const cardW = 85.6;
+      const cardH = 54;
 
-    // Pie del equipo
-    doc.setFillColor(240, 240, 240);
-    doc.rect(x, y + cardH - 9, cardW, 9, "F");
-    doc.setTextColor(75, 85, 99);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(6.5);
-    doc.text(team.name.toUpperCase(), x + cardW / 2, y + cardH - 3.5, { align: "center" });
+      const marginX = 10;
+      const marginY = 15;
 
-    col++;
-    if (col >= cols) {
-      col = 0;
-      row++;
-      const maxRows = Math.floor((pageHeight - marginY * 2) / (cardH + gapY));
-      if (row >= maxRows && i < players.length - 1) {
-        doc.addPage();
-        row = 0;
+      const cols = 2;
+
+      const gapX =
+        (pageWidth -
+          marginX * 2 -
+          cardW * cols) /
+        (cols - 1);
+
+      const gapY = 8;
+
+      const players = team.players;
+
+      let col = 0;
+      let row = 0;
+
+      // -------------------------
+      // Crear tarjetas
+      // -------------------------
+
+      for (let i = 0; i < players.length; i++) {
+        const player = players[i];
+
+        const x =
+          marginX +
+          col * (cardW + gapX);
+
+        const y =
+          marginY +
+          row * (cardH + gapY);
+
+        // Fondo
+        doc.setFillColor(
+          255,
+          255,
+          255
+        );
+
+        doc.roundedRect(
+          x,
+          y,
+          cardW,
+          cardH,
+          3,
+          3,
+          "F"
+        );
+
+        // Borde
+        doc.setDrawColor(
+          220,
+          220,
+          220
+        );
+
+        doc.setLineWidth(0.3);
+
+        doc.roundedRect(
+          x,
+          y,
+          cardW,
+          cardH,
+          3,
+          3,
+          "S"
+        );
+
+        // -------------------------
+        // Barra superior
+        // -------------------------
+
+        doc.setFillColor(
+          22,
+          163,
+          74
+        );
+
+        doc.rect(
+          x,
+          y,
+          cardW,
+          8,
+          "F"
+        );
+
+        // Logo
+        if (logoData) {
+          try {
+            doc.addImage(
+              logoData,
+              logoFormato,
+              x + cardW - 20,
+              y + 0.5,
+              19,
+              7
+            );
+          } catch (error) {
+            console.error(
+              "Error agregando logo:",
+              error
+            );
+          }
+        }
+
+        // Nombre torneo
+        doc.setTextColor(
+          255,
+          255,
+          255
+        );
+
+        doc.setFont(
+          "helvetica",
+          "bold"
+        );
+
+        doc.setFontSize(6.5);
+
+        doc.text(
+          torneo.name.toUpperCase(),
+          x + 3,
+          y + 5.2
+        );
+
+        // -------------------------
+        // Foto jugador
+        // -------------------------
+
+        const fotoSize = 22;
+
+        const fotoX = x + 5;
+        const fotoY = y + 11;
+
+        const fotoData =
+          fotos[player.id] ||
+          player.photo;
+
+        if (fotoData) {
+          try {
+            const fmt =
+              fotoData.startsWith(
+                "data:image/png"
+              )
+                ? "PNG"
+                : "JPEG";
+
+            doc.addImage(
+              fotoData,
+              fmt,
+              fotoX,
+              fotoY,
+              fotoSize,
+              fotoSize
+            );
+
+            doc.setDrawColor(
+              22,
+              163,
+              74
+            );
+
+            doc.setLineWidth(0.5);
+
+            doc.rect(
+              fotoX,
+              fotoY,
+              fotoSize,
+              fotoSize
+            );
+          } catch {
+            doc.setFillColor(
+              240,
+              240,
+              240
+            );
+
+            doc.rect(
+              fotoX,
+              fotoY,
+              fotoSize,
+              fotoSize,
+              "F"
+            );
+          }
+        } else {
+          doc.setFillColor(
+            240,
+            240,
+            240
+          );
+
+          doc.roundedRect(
+            fotoX,
+            fotoY,
+            fotoSize,
+            fotoSize,
+            2,
+            2,
+            "F"
+          );
+
+          doc.setTextColor(
+            150,
+            150,
+            150
+          );
+
+          doc.setFontSize(7);
+
+          doc.text(
+            "SIN FOTO",
+            fotoX + fotoSize / 2,
+            fotoY + fotoSize / 2,
+            {
+              align: "center",
+            }
+          );
+        }
+
+        // -------------------------
+        // Datos jugador
+        // -------------------------
+
+        const dataX =
+          fotoX + fotoSize + 4;
+
+        const dataW =
+          cardW - fotoSize - 14;
+
+        if (player.number !== null) {
+          doc.setTextColor(
+            22,
+            163,
+            74
+          );
+
+          doc.setFont(
+            "helvetica",
+            "bold"
+          );
+
+          doc.setFontSize(22);
+
+          doc.text(
+            `#${player.number}`,
+            dataX,
+            fotoY + 10
+          );
+        }
+
+        doc.setTextColor(
+          15,
+          23,
+          42
+        );
+
+        doc.setFont(
+          "helvetica",
+          "bold"
+        );
+
+        doc.setFontSize(9);
+
+        const nombreLines =
+          doc.splitTextToSize(
+            player.name.toUpperCase(),
+            dataW
+          );
+
+        doc.text(
+          nombreLines.slice(0, 2),
+          dataX,
+          fotoY +
+            (player.number !== null
+              ? 17
+              : 8)
+        );
+
+        if (player.position) {
+          doc.setTextColor(
+            22,
+            163,
+            74
+          );
+
+          doc.setFont(
+            "helvetica",
+            "normal"
+          );
+
+          doc.setFontSize(7);
+
+          doc.text(
+            player.position.toUpperCase(),
+            dataX,
+            fotoY +
+              (player.number !== null
+                ? 24
+                : 16)
+          );
+        }
+
+        // -------------------------
+        // Pie equipo
+        // -------------------------
+
+        doc.setFillColor(
+          240,
+          240,
+          240
+        );
+
+        doc.rect(
+          x,
+          y + cardH - 9,
+          cardW,
+          9,
+          "F"
+        );
+
+        doc.setTextColor(
+          75,
+          85,
+          99
+        );
+
+        doc.setFont(
+          "helvetica",
+          "bold"
+        );
+
+        doc.setFontSize(6.5);
+
+        doc.text(
+          team.name.toUpperCase(),
+          x + cardW / 2,
+          y + cardH - 3.5,
+          {
+            align: "center",
+          }
+        );
+
+        // -------------------------
+        // Siguiente tarjeta
+        // -------------------------
+
+        col++;
+
+        if (col >= cols) {
+          col = 0;
+          row++;
+
+          const maxRows = Math.floor(
+            (pageHeight -
+              marginY * 2) /
+              (cardH + gapY)
+          );
+
+          if (
+            row >= maxRows &&
+            i < players.length - 1
+          ) {
+            doc.addPage();
+            row = 0;
+          }
+        }
       }
+
+      // -------------------------
+      // Sin jugadores
+      // -------------------------
+
+      if (players.length === 0) {
+        doc.setTextColor(
+          150,
+          150,
+          150
+        );
+
+        doc.setFontSize(12);
+
+        doc.text(
+          "Sin jugadores registrados.",
+          pageWidth / 2,
+          pageHeight / 2,
+          {
+            align: "center",
+          }
+        );
+      }
+
+      // Descargar
+      doc.save(
+        `Credenciales_${team.name.replace(
+          /\s+/g,
+          "_"
+        )}.pdf`
+      );
+    } catch (error) {
+      console.error(error);
+      alert(
+        "No se pudieron generar las credenciales."
+      );
+    } finally {
+      setGenerandoPDF(null);
     }
   }
 
-  if (players.length === 0) {
-    doc.setTextColor(150, 150, 150);
-    doc.setFontSize(12);
-    doc.text("Sin jugadores registrados.", pageWidth / 2, pageHeight / 2, { align: "center" });
+  // ============================================================
+  // GUARDAR EQUIPO
+  // ============================================================
+
+  async function guardarEquipo(
+    teamId: string
+  ) {
+    if (!equipoEdit.name.trim()) {
+      alert(
+        "El nombre del equipo es obligatorio"
+      );
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await fetch(
+        `/api/admin/torneos/${torneo.id}/equipos/${teamId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            name: equipoEdit.name.trim(),
+            captain:
+              equipoEdit.captain.trim() ||
+              null,
+            phone:
+              equipoEdit.phone.trim() ||
+              null,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        const text =
+          await res.text();
+
+        throw new Error(
+          text ||
+            "No se pudo actualizar el equipo"
+        );
+      }
+
+      setEditandoEquipo(null);
+
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        "No se pudo actualizar el equipo"
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
-  doc.save(`Credenciales_${team.name.replace(/\s+/g, "_")}.pdf`);
-  setGenerandoPDF(null);
-}async function guardarNombreEquipo(teamId: string) {
-  if (!nombreEquipoEdit.trim()) return;
-  setLoading(true);
-  await fetch(`/api/admin/torneos/${torneo.id}/equipos/${teamId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: nombreEquipoEdit.trim() }),
-  });
-  setEditandoEquipo(null);
-  setLoading(false);
-  router.refresh();
-}
+  // ============================================================
+  // GUARDAR JUGADOR
+  // ============================================================
 
-async function guardarJugador(teamId: string, playerId: string) {
-  if (!jugadorEdit.name.trim()) return;
-  setLoading(true);
-  await fetch(`/api/admin/torneos/${torneo.id}/equipos/${teamId}/jugadores/${playerId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      name: jugadorEdit.name.trim(),
-      number: jugadorEdit.number ? Number(jugadorEdit.number) : null,
-      position: jugadorEdit.position || null,
-    }),
-  });
-  setEditandoJugador(null);
-  setLoading(false);
-  router.refresh();
-}
-  // ─── CRUD ─────────────────────────────────────────────────────────
+  async function guardarJugador(
+    teamId: string,
+    playerId: string
+  ) {
+    if (!jugadorEdit.name.trim()) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await fetch(
+        `/api/admin/torneos/${torneo.id}/equipos/${teamId}/jugadores/${playerId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            name: jugadorEdit.name.trim(),
+            number: jugadorEdit.number
+              ? Number(
+                  jugadorEdit.number
+                )
+              : null,
+            position:
+              jugadorEdit.position ||
+              null,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error(
+          "No se pudo actualizar el jugador"
+        );
+      }
+
+      setEditandoJugador(null);
+
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        "No se pudo actualizar el jugador"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ============================================================
+  // CREAR EQUIPO
+  // ============================================================
+
   async function crearEquipo() {
-    if (!nuevoEquipo.name.trim()) return;
-    setLoading(true);
-    await fetch(`/api/admin/torneos/${torneo.id}/equipos`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: nuevoEquipo.name,
-        captain: nuevoEquipo.captain || null,
-        phone: nuevoEquipo.phone || null,
-      }),
-    });
-    setNuevoEquipo({ name: "", captain: "", phone: "" });
-    setShowNuevoEquipo(false);
-    setLoading(false);
-    router.refresh();
+    if (!nuevoEquipo.name.trim()) {
+      alert(
+        "El nombre del equipo es obligatorio"
+      );
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await fetch(
+        `/api/admin/torneos/${torneo.id}/equipos`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            name: nuevoEquipo.name.trim(),
+            captain:
+              nuevoEquipo.captain.trim() ||
+              null,
+            phone:
+              nuevoEquipo.phone.trim() ||
+              null,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error(
+          "No se pudo crear el equipo"
+        );
+      }
+
+      setNuevoEquipo({
+        name: "",
+        captain: "",
+        phone: "",
+      });
+
+      setShowNuevoEquipo(false);
+
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        "No se pudo crear el equipo"
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
-  async function eliminarEquipo(teamId: string) {
-    if (!confirm("¿Eliminar este equipo y todos sus jugadores?")) return;
-    setLoading(true);
-    await fetch(`/api/admin/torneos/${torneo.id}/equipos/${teamId}`, { method: "DELETE" });
-    setLoading(false);
-    router.refresh();
+  // ============================================================
+  // ELIMINAR EQUIPO
+  // ============================================================
+
+  async function eliminarEquipo(
+    teamId: string
+  ) {
+    if (
+      !confirm(
+        "¿Eliminar este equipo y todos sus jugadores?"
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await fetch(
+        `/api/admin/torneos/${torneo.id}/equipos/${teamId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error(
+          "No se pudo eliminar el equipo"
+        );
+      }
+
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        "No se pudo eliminar el equipo"
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
-  async function agregarJugador(teamId: string) {
-    if (!nuevoJugador.name.trim()) return;
-    setLoading(true);
-    await fetch(`/api/admin/torneos/${torneo.id}/equipos/${teamId}/jugadores`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: nuevoJugador.name,
-        number: nuevoJugador.number ? Number(nuevoJugador.number) : null,
-        position: nuevoJugador.position || null,
-      }),
-    });
-    setNuevoJugador({ name: "", number: "", position: "" });
-    setEquipoSeleccionado(null);
-    setLoading(false);
-    router.refresh();
+  // ============================================================
+  // AGREGAR JUGADOR
+  // ============================================================
+
+  async function agregarJugador(
+    teamId: string
+  ) {
+    if (!nuevoJugador.name.trim()) {
+      alert(
+        "El nombre del jugador es obligatorio"
+      );
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await fetch(
+        `/api/admin/torneos/${torneo.id}/equipos/${teamId}/jugadores`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            name: nuevoJugador.name.trim(),
+            number: nuevoJugador.number
+              ? Number(
+                  nuevoJugador.number
+                )
+              : null,
+            position:
+              nuevoJugador.position ||
+              null,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error(
+          "No se pudo agregar el jugador"
+        );
+      }
+
+      setNuevoJugador({
+        name: "",
+        number: "",
+        position: "",
+      });
+
+      setEquipoSeleccionado(null);
+
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        "No se pudo agregar el jugador"
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
-  async function eliminarJugador(teamId: string, playerId: string) {
-    if (!confirm("¿Eliminar este jugador?")) return;
-    setLoading(true);
-    await fetch(`/api/admin/torneos/${torneo.id}/equipos/${teamId}/jugadores/${playerId}`, { method: "DELETE" });
-    setLoading(false);
-    router.refresh();
+  // ============================================================
+  // ELIMINAR JUGADOR
+  // ============================================================
+
+  async function eliminarJugador(
+    teamId: string,
+    playerId: string
+  ) {
+    if (
+      !confirm(
+        "¿Eliminar este jugador?"
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await fetch(
+        `/api/admin/torneos/${torneo.id}/equipos/${teamId}/jugadores/${playerId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error(
+          "No se pudo eliminar el jugador"
+        );
+      }
+
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        "No se pudo eliminar el jugador"
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
-  // ─── RENDER ───────────────────────────────────────────────────────
+  // ============================================================
+  // RENDER
+  // ============================================================
+
   return (
     <div className="space-y-6">
 
-      {/* Header */}
+      {/* ======================================================
+          HEADER
+      ====================================================== */}
+
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-black text-white">Equipos</h2>
-          <p className="text-gray-500 text-sm mt-1">{torneo.teams.length} equipos registrados</p>
+          <h2 className="text-2xl font-black text-white">
+            Equipos
+          </h2>
+
+          <p className="text-gray-500 text-sm mt-1">
+            {torneo.teams.length} equipos registrados
+          </p>
         </div>
+
         <button
-          onClick={() => setShowNuevoEquipo(true)}
+          onClick={() =>
+            setShowNuevoEquipo(true)
+          }
           className="bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
         >
           + Agregar Equipo
         </button>
       </div>
 
-      {/* Form nuevo equipo */}
+      {/* ======================================================
+          NUEVO EQUIPO
+      ====================================================== */}
+
       {showNuevoEquipo && (
         <div className="bg-gray-900 border border-green-800 rounded-2xl p-5">
-          <h3 className="text-sm font-bold text-white mb-4">Nuevo Equipo</h3>
-          <div className="grid grid-cols-3 gap-3 mb-3">
+          <h3 className="text-sm font-bold text-white mb-4">
+            Nuevo Equipo
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+
             <input
               type="text"
               placeholder="Nombre del equipo *"
               value={nuevoEquipo.name}
-              onChange={(e) => setNuevoEquipo({ ...nuevoEquipo, name: e.target.value })}
+              onChange={(e) =>
+                setNuevoEquipo({
+                  ...nuevoEquipo,
+                  name: e.target.value,
+                })
+              }
               className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-green-500 transition text-sm"
             />
+
             <input
               type="text"
               placeholder="Nombre del capitán"
               value={nuevoEquipo.captain}
-              onChange={(e) => setNuevoEquipo({ ...nuevoEquipo, captain: e.target.value })}
+              onChange={(e) =>
+                setNuevoEquipo({
+                  ...nuevoEquipo,
+                  captain: e.target.value,
+                })
+              }
               className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-green-500 transition text-sm"
             />
+
             <input
               type="text"
               placeholder="WhatsApp (+52...)"
               value={nuevoEquipo.phone}
-              onChange={(e) => setNuevoEquipo({ ...nuevoEquipo, phone: e.target.value })}
+              onChange={(e) =>
+                setNuevoEquipo({
+                  ...nuevoEquipo,
+                  phone: e.target.value,
+                })
+              }
               className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-green-500 transition text-sm"
             />
+
           </div>
+
           <div className="flex gap-3">
+
             <button
               onClick={crearEquipo}
               disabled={loading}
-              className="bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-3 rounded-xl transition text-sm"
+              className="bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-3 rounded-xl transition text-sm disabled:opacity-50"
             >
-              Crear
+              {loading
+                ? "Creando..."
+                : "Crear"}
             </button>
+
             <button
-              onClick={() => setShowNuevoEquipo(false)}
+              onClick={() =>
+                setShowNuevoEquipo(false)
+              }
               className="bg-gray-800 hover:bg-gray-700 text-gray-400 font-bold px-5 py-3 rounded-xl transition text-sm"
             >
               Cancelar
             </button>
+
           </div>
         </div>
       )}
 
-      {/* Lista de equipos */}
+      {/* ======================================================
+          LISTA EQUIPOS
+      ====================================================== */}
+
       {torneo.teams.length === 0 ? (
+
         <div className="text-center py-20 border border-dashed border-gray-800 rounded-2xl">
-          <p className="text-4xl mb-4">👥</p>
-          <p className="text-gray-400 font-medium">No hay equipos aún</p>
-          <p className="text-gray-600 text-sm mt-1">Agrega equipos para poder generar el calendario</p>
+          <p className="text-4xl mb-4">
+            👥
+          </p>
+
+          <p className="text-gray-400 font-medium">
+            No hay equipos aún
+          </p>
+
+          <p className="text-gray-600 text-sm mt-1">
+            Agrega equipos para poder generar el calendario
+          </p>
         </div>
+
       ) : (
+
         <div className="space-y-4">
+
           {torneo.teams.map((team) => (
-            <div key={team.id} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
 
-              {/* Header del equipo */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
-                <div>
-                <div className="flex items-center gap-2">
+            <div
+              key={team.id}
+              className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden"
+            >
 
-                  {/* LOGO CLICKABLE */}
-                  <div
-                    onClick={() => handleLogoClick(team.id)}
-                    className="w-7 h-7 rounded-full overflow-hidden bg-gray-800 border border-gray-700 flex items-center justify-center cursor-pointer hover:opacity-80"
-                    title="Cambiar escudo"
-                  >
-                    {logos[team.id] || team.logo ? (
-                      <img
-                        src={logos[team.id] || team.logo!}
-                        alt={team.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-xs text-gray-500">⚽</span>
-                    )}
-                  </div>
+              {/* ==================================================
+                  HEADER EQUIPO
+              ================================================== */}
 
-                 {editandoEquipo === team.id ? (
-                    <div className="flex items-center gap-2">
-                      <input
-                        autoFocus
-                        value={nombreEquipoEdit}
-                        onChange={e => setNombreEquipoEdit(e.target.value)}
-                        onKeyDown={e => {
-                          if (e.key === "Enter") guardarNombreEquipo(team.id);
-                          if (e.key === "Escape") setEditandoEquipo(null);
-                        }}
-                        className="bg-gray-800 border border-green-600 rounded-lg px-3 py-1 text-white text-sm focus:outline-none w-48"
-                      />
-                      <button onClick={() => guardarNombreEquipo(team.id)} disabled={loading}
-                        className="text-green-400 hover:text-green-300 text-xs font-bold">✓</button>
-                      <button onClick={() => setEditandoEquipo(null)}
-                        className="text-gray-500 hover:text-gray-300 text-xs">✕</button>
-                    </div>
-                  ) : (
-                    <h3
-                      onClick={() => { setEditandoEquipo(team.id); setNombreEquipoEdit(team.name); }}
-                      className="text-white font-bold text-lg cursor-pointer hover:text-green-400 transition"
-                      title="Clic para editar"
+              <div className="px-6 py-4 border-b border-gray-800">
+
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+                  {/* IZQUIERDA */}
+
+                  <div className="flex items-start gap-3">
+
+                    {/* LOGO */}
+
+                    <div
+                      onClick={() =>
+                        handleLogoClick(team.id)
+                      }
+                      className="w-10 h-10 rounded-full overflow-hidden bg-gray-800 border border-gray-700 flex items-center justify-center cursor-pointer hover:opacity-80 flex-shrink-0"
+                      title="Cambiar escudo"
                     >
-                      {team.name} <span className="text-gray-600 text-xs font-normal">✏️</span>
-                    </h3>
-                  )}
 
-                </div>
-                    <div className="flex gap-3 text-xs text-gray-500 mt-0.5">
-                    <span>{team._count.players} jugadores</span>
-                    {team.captain && <span>👤 {team.captain}</span>}
-                    {team.phone && <span>📱 {team.phone}</span>}
+                      {logos[team.id] ||
+                      team.logo ? (
+
+                        <img
+                          src={
+                            logos[team.id] ||
+                            team.logo!
+                          }
+                          alt={team.name}
+                          className="w-full h-full object-cover"
+                        />
+
+                      ) : (
+
+                        <span className="text-sm text-gray-500">
+                          ⚽
+                        </span>
+
+                      )}
+
+                    </div>
+
+                    {/* INPUT LOGO */}
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      ref={(el) => {
+                        logoInputRefs.current[
+                          team.id
+                        ] = el;
+                      }}
+                      onChange={(e) => {
+                        const file =
+                          e.target.files?.[0];
+
+                        if (file) {
+                          handleLogoChange(
+                            team.id,
+                            file
+                          );
+                        }
+
+                        e.target.value = "";
+                      }}
+                    />
+
+                    {/* INFORMACIÓN */}
+
+                    <div className="min-w-0">
+
+                      {editandoEquipo ===
+                      team.id ? (
+
+                        /* ========================================
+                           EDITAR EQUIPO
+                        ======================================== */
+
+                        <div className="bg-gray-800 border border-green-700 rounded-xl p-3 space-y-3 w-full max-w-xl">
+
+                          <input
+                            autoFocus
+                            type="text"
+                            placeholder="Nombre del equipo"
+                            value={
+                              equipoEdit.name
+                            }
+                            onChange={(e) =>
+                              setEquipoEdit({
+                                ...equipoEdit,
+                                name: e.target.value,
+                              })
+                            }
+                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-green-500"
+                          />
+
+                          <input
+                            type="text"
+                            placeholder="Nombre del capitán"
+                            value={
+                              equipoEdit.captain
+                            }
+                            onChange={(e) =>
+                              setEquipoEdit({
+                                ...equipoEdit,
+                                captain:
+                                  e.target.value,
+                              })
+                            }
+                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-green-500"
+                          />
+
+                          <input
+                            type="tel"
+                            placeholder="WhatsApp / Teléfono"
+                            value={
+                              equipoEdit.phone
+                            }
+                            onChange={(e) =>
+                              setEquipoEdit({
+                                ...equipoEdit,
+                                phone:
+                                  e.target.value,
+                              })
+                            }
+                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-green-500"
+                          />
+
+                          <div className="flex gap-2">
+
+                            <button
+                              onClick={() =>
+                                guardarEquipo(
+                                  team.id
+                                )
+                              }
+                              disabled={loading}
+                              className="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2 rounded-lg text-xs disabled:opacity-50"
+                            >
+                              {loading
+                                ? "Guardando..."
+                                : "✓ Guardar"}
+                            </button>
+
+                            <button
+                              onClick={() =>
+                                setEditandoEquipo(
+                                  null
+                                )
+                              }
+                              className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-2 rounded-lg text-xs"
+                            >
+                              Cancelar
+                            </button>
+
+                          </div>
+
+                        </div>
+
+                      ) : (
+
+                        /* ========================================
+                           NOMBRE NORMAL
+                        ======================================== */
+
+                        <>
+
+                          <h3
+                            onClick={() => {
+                              setEditandoEquipo(
+                                team.id
+                              );
+
+                              setEquipoEdit({
+                                name: team.name,
+                                captain:
+                                  team.captain ??
+                                  "",
+                                phone:
+                                  team.phone ??
+                                  "",
+                              });
+                            }}
+                            className="text-white font-bold text-lg cursor-pointer hover:text-green-400 transition"
+                            title="Clic para editar"
+                          >
+                            {team.name}{" "}
+                            <span className="text-gray-600 text-xs font-normal">
+                              ✏️
+                            </span>
+                          </h3>
+
+                          <div className="flex flex-wrap gap-3 text-xs text-gray-500 mt-1">
+
+                            <span>
+                              {team._count.players}{" "}
+                              jugadores
+                            </span>
+
+                            {team.captain && (
+                              <span>
+                                👤{" "}
+                                {team.captain}
+                              </span>
+                            )}
+
+                            {team.phone && (
+                              <span>
+                                📱{" "}
+                                {team.phone}
+                              </span>
+                            )}
+
+                          </div>
+
+                        </>
+
+                      )}
+
+                    </div>
+
                   </div>
-                </div>
-                <div className="flex gap-2">
-                  {/* Botón Agregar Jugador */}
-                  <button
-                    onClick={() => setEquipoSeleccionado(equipoSeleccionado === team.id ? null : team.id)}
-                    className="text-xs bg-blue-900/40 hover:bg-blue-900/60 text-blue-400 font-bold px-3 py-2 rounded-lg transition"
-                  >
-                    + Jugador
-                  </button>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  ref={(el) => {
-                    logoInputRefs.current[team.id] = el;
-                  }}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleLogoChange(team.id, file);
-                    e.target.value = "";
-                  }}
-                />
-                  {/* ── NUEVO: Botón Ver Credenciales ── */}
-                  <button
-                    onClick={() => generarCredenciales(team)}
-                    disabled={generandoPDF === team.id || team.players.length === 0}
-                    title={team.players.length === 0 ? "Agrega jugadores primero" : "Descargar credenciales en PDF"}
-                    className="text-xs bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 font-bold px-3 py-2 rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
-                  >
-                    {generandoPDF === team.id ? (
-                      <>
-                        <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                        </svg>
-                        Generando...
-                      </>
-                    ) : (
-                      <>
-                        🪪 Credenciales
-                      </>
-                    )}
-                  </button>
 
-                  <button
-                    onClick={() => eliminarEquipo(team.id)}
-                    className="text-xs bg-red-900/20 hover:bg-red-900/40 text-red-400 font-bold px-3 py-2 rounded-lg transition"
-                  >
-                    Eliminar
-                  </button>
+                  {/* ==================================================
+                      BOTONES
+                  ================================================== */}
+
+                  <div className="flex flex-wrap gap-2">
+
+                    <button
+                      onClick={() =>
+                        setEquipoSeleccionado(
+                          equipoSeleccionado ===
+                            team.id
+                            ? null
+                            : team.id
+                        )
+                      }
+                      className="text-xs bg-blue-900/40 hover:bg-blue-900/60 text-blue-400 font-bold px-3 py-2 rounded-lg transition"
+                    >
+                      + Jugador
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        generarCredenciales(
+                          team
+                        )
+                      }
+                      disabled={
+                        generandoPDF ===
+                          team.id ||
+                        team.players.length ===
+                          0
+                      }
+                      title={
+                        team.players.length ===
+                        0
+                          ? "Agrega jugadores primero"
+                          : "Descargar credenciales en PDF"
+                      }
+                      className="text-xs bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 font-bold px-3 py-2 rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                    >
+
+                      {generandoPDF ===
+                      team.id ? (
+
+                        <>
+                          <svg
+                            className="animate-spin h-3 w-3"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            />
+
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8v8H4z"
+                            />
+                          </svg>
+
+                          Generando...
+                        </>
+
+                      ) : (
+
+                        <>
+                          🪪 Credenciales
+                        </>
+
+                      )}
+
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        eliminarEquipo(
+                          team.id
+                        )
+                      }
+                      disabled={loading}
+                      className="text-xs bg-red-900/20 hover:bg-red-900/40 text-red-400 font-bold px-3 py-2 rounded-lg transition disabled:opacity-50"
+                    >
+                      Eliminar
+                    </button>
+
+                  </div>
+
                 </div>
+
               </div>
 
-              {/* Form nuevo jugador */}
-              {equipoSeleccionado === team.id && (
+              {/* ==================================================
+                  FORM NUEVO JUGADOR
+              ================================================== */}
+
+              {equipoSeleccionado ===
+                team.id && (
+
                 <div className="px-6 py-4 border-b border-gray-800 bg-gray-800/30">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Agregar Jugador</p>
-                  <div className="grid grid-cols-3 gap-3">
+
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+                    Agregar Jugador
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+
                     <input
                       type="text"
                       placeholder="Nombre del jugador"
-                      value={nuevoJugador.name}
-                      onChange={(e) => setNuevoJugador({ ...nuevoJugador, name: e.target.value })}
+                      value={
+                        nuevoJugador.name
+                      }
+                      onChange={(e) =>
+                        setNuevoJugador({
+                          ...nuevoJugador,
+                          name: e.target.value,
+                        })
+                      }
                       className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-green-500 transition text-sm"
                     />
+
                     <input
                       type="number"
                       placeholder="Número (opcional)"
-                      value={nuevoJugador.number}
-                      onChange={(e) => setNuevoJugador({ ...nuevoJugador, number: e.target.value })}
+                      value={
+                        nuevoJugador.number
+                      }
+                      onChange={(e) =>
+                        setNuevoJugador({
+                          ...nuevoJugador,
+                          number:
+                            e.target.value,
+                        })
+                      }
                       className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-green-500 transition text-sm"
                     />
+
                     <select
-                      value={nuevoJugador.position}
-                      onChange={(e) => setNuevoJugador({ ...nuevoJugador, position: e.target.value })}
+                      value={
+                        nuevoJugador.position
+                      }
+                      onChange={(e) =>
+                        setNuevoJugador({
+                          ...nuevoJugador,
+                          position:
+                            e.target.value,
+                        })
+                      }
                       className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-green-500 transition text-sm"
                     >
-                      <option value="">Posición (opcional)</option>
-                      {POSICIONES.map((p) => <option key={p} value={p}>{p}</option>)}
+
+                      <option value="">
+                        Posición (opcional)
+                      </option>
+
+                      {POSICIONES.map(
+                        (posicion) => (
+                          <option
+                            key={posicion}
+                            value={posicion}
+                          >
+                            {posicion}
+                          </option>
+                        )
+                      )}
+
                     </select>
+
                   </div>
+
                   <div className="flex gap-2 mt-3">
+
                     <button
-                      onClick={() => agregarJugador(team.id)}
+                      onClick={() =>
+                        agregarJugador(
+                          team.id
+                        )
+                      }
                       disabled={loading}
-                      className="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2 rounded-xl transition text-sm"
+                      className="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2 rounded-xl transition text-sm disabled:opacity-50"
                     >
-                      Agregar
+                      {loading
+                        ? "Agregando..."
+                        : "Agregar"}
                     </button>
+
                     <button
-                      onClick={() => setEquipoSeleccionado(null)}
+                      onClick={() =>
+                        setEquipoSeleccionado(
+                          null
+                        )
+                      }
                       className="bg-gray-700 hover:bg-gray-600 text-gray-400 font-bold px-4 py-2 rounded-xl transition text-sm"
                     >
                       Cancelar
                     </button>
+
                   </div>
+
                 </div>
               )}
 
-              {/* Lista jugadores */}
+              {/* ==================================================
+                  LISTA JUGADORES
+              ================================================== */}
+
               <div className="divide-y divide-gray-800">
-                {team.players.length === 0 ? (
-                  <p className="px-6 py-4 text-gray-600 text-sm">Sin jugadores aún</p>
+
+                {team.players.length ===
+                0 ? (
+
+                  <p className="px-6 py-4 text-gray-600 text-sm">
+                    Sin jugadores aún
+                  </p>
+
                 ) : (
-                  team.players.map((p) => (
-                    <div key={p.id} className="flex items-center justify-between px-6 py-3">
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="relative w-9 h-9 rounded-lg overflow-hidden bg-gray-800 border border-gray-700 flex-shrink-0">
-                          {fotos[p.id] || p.photo ? (
-                            <img src={fotos[p.id] || p.photo!} alt={p.name} className="w-full h-full object-cover" />
+
+                  team.players.map(
+                    (player) => (
+
+                      <div
+                        key={player.id}
+                        className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-6 py-3"
+                      >
+
+                        {/* ================================
+                            DATOS JUGADOR
+                        ================================= */}
+
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+
+                          {/* FOTO */}
+
+                          <div className="relative w-9 h-9 rounded-lg overflow-hidden bg-gray-800 border border-gray-700 flex-shrink-0">
+
+                            {fotos[player.id] ||
+                            player.photo ? (
+
+                              <img
+                                src={
+                                  fotos[
+                                    player.id
+                                  ] ||
+                                  player.photo!
+                                }
+                                alt={
+                                  player.name
+                                }
+                                className="w-full h-full object-cover"
+                              />
+
+                            ) : (
+
+                              <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">
+                                👤
+                              </div>
+
+                            )}
+
+                          </div>
+
+                          {/* ================================
+                              EDITAR JUGADOR
+                          ================================= */}
+
+                          {editandoJugador ===
+                          player.id ? (
+
+                            <div className="flex flex-wrap items-center gap-2 flex-1">
+
+                              <input
+                                autoFocus
+                                value={
+                                  jugadorEdit.name
+                                }
+                                onChange={(e) =>
+                                  setJugadorEdit({
+                                    ...jugadorEdit,
+                                    name: e.target.value,
+                                  })
+                                }
+                                placeholder="Nombre"
+                                className="bg-gray-800 border border-blue-600 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none w-40"
+                              />
+
+                              <input
+                                type="number"
+                                value={
+                                  jugadorEdit.number
+                                }
+                                onChange={(e) =>
+                                  setJugadorEdit({
+                                    ...jugadorEdit,
+                                    number:
+                                      e.target.value,
+                                  })
+                                }
+                                placeholder="#"
+                                className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-white text-sm focus:outline-none w-16"
+                              />
+
+                              <select
+                                value={
+                                  jugadorEdit.position
+                                }
+                                onChange={(e) =>
+                                  setJugadorEdit({
+                                    ...jugadorEdit,
+                                    position:
+                                      e.target.value,
+                                  })
+                                }
+                                className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-white text-sm focus:outline-none"
+                              >
+
+                                <option value="">
+                                  Sin posición
+                                </option>
+
+                                {POSICIONES.map(
+                                  (posicion) => (
+                                    <option
+                                      key={
+                                        posicion
+                                      }
+                                      value={
+                                        posicion
+                                      }
+                                    >
+                                      {posicion}
+                                    </option>
+                                  )
+                                )}
+
+                              </select>
+
+                              <button
+                                onClick={() =>
+                                  guardarJugador(
+                                    team.id,
+                                    player.id
+                                  )
+                                }
+                                disabled={loading}
+                                className="text-green-400 hover:text-green-300 text-sm font-bold"
+                              >
+                                ✓
+                              </button>
+
+                              <button
+                                onClick={() =>
+                                  setEditandoJugador(
+                                    null
+                                  )
+                                }
+                                className="text-gray-500 hover:text-gray-300 text-sm"
+                              >
+                                ✕
+                              </button>
+
+                            </div>
+
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">👤</div>
+
+                            /* ================================
+                               JUGADOR NORMAL
+                            ================================= */
+
+                            <>
+
+                              <span className="text-gray-600 text-sm w-6 text-center font-mono flex-shrink-0">
+                                {player.number ??
+                                  "-"}
+                              </span>
+
+                              <div
+                                onClick={() => {
+                                  setEditandoJugador(
+                                    player.id
+                                  );
+
+                                  setJugadorEdit({
+                                    name: player.name,
+                                    number:
+                                      player.number?.toString() ??
+                                      "",
+                                    position:
+                                      player.position ??
+                                      "",
+                                  });
+                                }}
+                                className="cursor-pointer hover:text-green-400 transition min-w-0"
+                                title="Clic para editar"
+                              >
+
+                                <p className="text-white text-sm font-medium truncate">
+
+                                  {player.name}{" "}
+
+                                  <span className="text-gray-600 text-xs font-normal">
+                                    ✏️
+                                  </span>
+
+                                </p>
+
+                                <p className="text-gray-500 text-xs">
+                                  {player.position ??
+                                    "Sin posición"}
+                                </p>
+
+                              </div>
+
+                            </>
+
                           )}
+
                         </div>
 
-                        {editandoJugador === p.id ? (
-                          <div className="flex items-center gap-2 flex-1">
-                            <input
-                              autoFocus
-                              value={jugadorEdit.name}
-                              onChange={e => setJugadorEdit({ ...jugadorEdit, name: e.target.value })}
-                              placeholder="Nombre"
-                              className="bg-gray-800 border border-blue-600 rounded-lg px-3 py-1 text-white text-sm focus:outline-none w-36"
-                            />
-                            <input
-                              type="number"
-                              value={jugadorEdit.number}
-                              onChange={e => setJugadorEdit({ ...jugadorEdit, number: e.target.value })}
-                              placeholder="#"
-                              className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-white text-sm focus:outline-none w-14"
-                            />
-                            <select
-                              value={jugadorEdit.position}
-                              onChange={e => setJugadorEdit({ ...jugadorEdit, position: e.target.value })}
-                              className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-white text-sm focus:outline-none"
-                            >
-                              <option value="">Sin posición</option>
-                              {POSICIONES.map(pos => <option key={pos} value={pos}>{pos}</option>)}
-                            </select>
-                            <button onClick={() => guardarJugador(team.id, p.id)} disabled={loading}
-                              className="text-green-400 hover:text-green-300 text-xs font-bold">✓</button>
-                            <button onClick={() => setEditandoJugador(null)}
-                              className="text-gray-500 hover:text-gray-300 text-xs">✕</button>
-                          </div>
-                        ) : (
-                          <>
-                            <span className="text-gray-600 text-sm w-6 text-center font-mono">{p.number ?? "-"}</span>
-                            <div
-                              onClick={() => { setEditandoJugador(p.id); setJugadorEdit({ name: p.name, number: p.number?.toString() ?? "", position: p.position ?? "" }); }}
-                              className="cursor-pointer hover:text-green-400 transition"
-                              title="Clic para editar"
-                            >
-                              <p className="text-white text-sm font-medium">{p.name} <span className="text-gray-600 text-xs font-normal">✏️</span></p>
-                              <p className="text-gray-500 text-xs">{p.position ?? "Sin posición"}</p>
-                            </div>
-                          </>
-                        )}
+                        {/* ================================
+                            BOTONES JUGADOR
+                        ================================= */}
+
+                        <div className="flex items-center gap-2">
+
+                          <button
+                            onClick={() =>
+                              handleFotoClick(
+                                player.id
+                              )
+                            }
+                            className="text-xs bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1"
+                          >
+                            📷{" "}
+                            {fotos[
+                              player.id
+                            ] ||
+                            player.photo
+                              ? "Cambiar foto"
+                              : "Subir foto"}
+                          </button>
+
+                          <input
+                            ref={(el) => {
+                              fileInputRefs.current[
+                                player.id
+                              ] = el;
+                            }}
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file =
+                                e.target.files?.[0];
+
+                              if (file) {
+                                handleFotoChange(
+                                  player.id,
+                                  team.id,
+                                  file
+                                );
+                              }
+
+                              e.target.value =
+                                "";
+                            }}
+                          />
+
+                          <button
+                            onClick={() =>
+                              eliminarJugador(
+                                team.id,
+                                player.id
+                              )
+                            }
+                            disabled={loading}
+                            className="text-xs text-red-400 hover:text-red-300 transition disabled:opacity-50"
+                          >
+                            Eliminar
+                          </button>
+
+                        </div>
+
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => handleFotoClick(p.id)}
-                          className="text-xs bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1">
-                          📷 {fotos[p.id] || p.photo ? "Cambiar foto" : "Subir foto"}
-                        </button>
-                        <input
-                          ref={(el) => { fileInputRefs.current[p.id] = el; }}
-                          type="file" accept="image/*" capture="environment" className="hidden"
-                          onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFotoChange(p.id, team.id, file); e.target.value = ""; }}
-                        />
-                        <button onClick={() => eliminarJugador(team.id, p.id)}
-                          className="text-xs text-red-400 hover:text-red-300 transition">
-                          Eliminar
-                        </button>
-                      </div>
-                    </div>
-                  ))
+                    )
+                  )
+
                 )}
+
               </div>
 
             </div>
+
           ))}
+
         </div>
+
       )}
+
     </div>
   );
 }
