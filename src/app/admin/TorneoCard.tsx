@@ -22,46 +22,49 @@ export default function TorneoCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [archiving, setArchiving] = useState(false);
 
-  const handleArchive = async () => {
-    const confirmed = window.confirm(
-      `¿Quieres archivar el torneo "${t.name}"?`
+const handleArchive = async () => {
+  const confirmed = window.confirm(
+    `¿Quieres archivar el torneo "${t.name}"?`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setArchiving(true);
+
+    const res = await fetch("/api/admin/torneo", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: t.id,
+        archived: true,
+      }),
+    });
+
+    const text = await res.text();
+
+    console.log("STATUS:", res.status);
+    console.log("RESPONSE:", text);
+
+    if (!res.ok) {
+      throw new Error(`Error ${res.status}: ${text}`);
+    }
+
+    window.location.reload();
+  } catch (error) {
+    console.error("ERROR ARCHIVANDO:", error);
+
+    alert(
+      error instanceof Error
+        ? error.message
+        : "No se pudo archivar el torneo"
     );
 
-    if (!confirmed) return;
-
-    try {
-      setArchiving(true);
-
-      const res = await fetch("/api/admin/torneo", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: t.id,
-          archived: true,
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "No se pudo archivar el torneo");
-      }
-
-      // Recarga la página para que desaparezca la card
-      window.location.reload();
-    } catch (error) {
-      console.error(error);
-
-      alert(
-        error instanceof Error
-          ? error.message
-          : "No se pudo archivar el torneo"
-      );
-
-      setArchiving(false);
-    }
-  };
+    setArchiving(false);
+  }
+};
 
   return (
     <div className="relative bg-gray-900 border border-gray-800 hover:border-gray-600 rounded-2xl p-6 transition group">
