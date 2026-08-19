@@ -711,62 +711,63 @@ export default function EquiposClient({
   // GUARDAR EQUIPO
   // ============================================================
 
-  async function guardarEquipo(
-    teamId: string
-  ) {
-    if (!equipoEdit.name.trim()) {
-      alert(
-        "El nombre del equipo es obligatorio"
-      );
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const res = await fetch(
-        `/api/admin/torneos/${torneo.id}/equipos/${teamId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            name: equipoEdit.name.trim(),
-            captain:
-              equipoEdit.captain.trim() ||
-              null,
-            phone:
-              equipoEdit.phone.trim() ||
-              null,
-          }),
-        }
-      );
-
-      if (!res.ok) {
-        const text =
-          await res.text();
-
-        throw new Error(
-          text ||
-            "No se pudo actualizar el equipo"
-        );
-      }
-
-      setEditandoEquipo(null);
-
-      router.refresh();
-    } catch (error) {
-      console.error(error);
-
-      alert(
-        "No se pudo actualizar el equipo"
-      );
-    } finally {
-      setLoading(false);
-    }
+  async function guardarEquipo(teamId: string) {
+  if (!equipoEdit.name.trim()) {
+    alert("El nombre del equipo es obligatorio");
+    return;
   }
+
+  if (!equipoEdit.captain.trim()) {
+    alert("El nombre del capitán es obligatorio");
+    return;
+  }
+
+  if (!equipoEdit.phone.trim()) {
+    alert("El teléfono del capitán es obligatorio");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const res = await fetch(
+      `/api/admin/torneos/${torneo.id}/equipos/${teamId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: equipoEdit.name.trim(),
+          captain: equipoEdit.captain.trim(),
+          phone: equipoEdit.phone.trim(),
+        }),
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        data?.error ||
+          "No se pudo actualizar el equipo"
+      );
+    }
+
+    setEditandoEquipo(null);
+
+    router.refresh();
+  } catch (error: any) {
+    console.error("ERROR ACTUALIZANDO EQUIPO:", error);
+
+    alert(
+      error?.message ||
+        "No se pudo actualizar el equipo"
+    );
+  } finally {
+    setLoading(false);
+  }
+}
 
   // ============================================================
   // GUARDAR JUGADOR
@@ -829,62 +830,68 @@ export default function EquiposClient({
   // CREAR EQUIPO
   // ============================================================
 
-  async function crearEquipo() {
-    if (!nuevoEquipo.name.trim()) {
-      alert(
-        "El nombre del equipo es obligatorio"
-      );
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const res = await fetch(
-        `/api/admin/torneos/${torneo.id}/equipos`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            name: nuevoEquipo.name.trim(),
-            captain:
-              nuevoEquipo.captain.trim() ||
-              null,
-            phone:
-              nuevoEquipo.phone.trim() ||
-              null,
-          }),
-        }
-      );
-
-      if (!res.ok) {
-        throw new Error(
-          "No se pudo crear el equipo"
-        );
-      }
-
-      setNuevoEquipo({
-        name: "",
-        captain: "",
-        phone: "",
-      });
-
-      setShowNuevoEquipo(false);
-
-      router.refresh();
-    } catch (error) {
-      console.error(error);
-
-      alert(
-        "No se pudo crear el equipo"
-      );
-    } finally {
-      setLoading(false);
-    }
+async function crearEquipo() {
+  if (!nuevoEquipo.name.trim()) {
+    alert("El nombre del equipo es obligatorio");
+    return;
   }
+
+  if (!nuevoEquipo.captain.trim()) {
+    alert("El nombre del capitán es obligatorio");
+    return;
+  }
+
+  if (!nuevoEquipo.phone.trim()) {
+    alert("El teléfono del capitán es obligatorio");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const res = await fetch(
+      `/api/admin/torneos/${torneo.id}/equipos`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: nuevoEquipo.name.trim(),
+          captain: nuevoEquipo.captain.trim(),
+          phone: nuevoEquipo.phone.trim(),
+        }),
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(
+        data?.error || "No se pudo crear el equipo"
+      );
+    }
+
+    setNuevoEquipo({
+      name: "",
+      captain: "",
+      phone: "",
+    });
+
+    setShowNuevoEquipo(false);
+
+    router.refresh();
+  } catch (error: any) {
+    console.error("ERROR CREANDO EQUIPO:", error);
+
+    alert(
+      error?.message ||
+        "No se pudo crear el equipo"
+    );
+  } finally {
+    setLoading(false);
+  }
+}
 
   // ============================================================
   // ELIMINAR EQUIPO
