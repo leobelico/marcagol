@@ -868,7 +868,34 @@ async function crearEquipo() {
 
     if (!res.ok) {
       throw new Error(
-        data?.error || "No se pudo crear el equipo"
+        data?.error ||
+        "No se pudo crear el equipo"
+      );
+    }
+
+    console.log(
+      "EQUIPO CREADO:",
+      data.team
+    );
+
+    console.log(
+      "USUARIO CREADO:",
+      data.user
+    );
+
+    console.log(
+      "RELACIÓN CREADA:",
+      data.tenantUser
+    );
+
+    // Mostrar credenciales al administrador
+    if (data.captainCredentials) {
+      alert(
+        `Equipo creado correctamente.\n\n` +
+        `CAPITÁN: ${data.captainCredentials.name}\n` +
+        `EMAIL: ${data.captainCredentials.email}\n` +
+        `TELÉFONO: ${data.captainCredentials.phone}\n` +
+        `CONTRASEÑA: ${data.captainCredentials.password}`
       );
     }
 
@@ -881,18 +908,23 @@ async function crearEquipo() {
     setShowNuevoEquipo(false);
 
     router.refresh();
+
   } catch (error: any) {
-    console.error("ERROR CREANDO EQUIPO:", error);
+
+    console.error(
+      "ERROR CREANDO EQUIPO:",
+      error
+    );
 
     alert(
       error?.message ||
-        "No se pudo crear el equipo"
+      "Error al crear el equipo"
     );
+
   } finally {
     setLoading(false);
   }
 }
-
   // ============================================================
   // ELIMINAR EQUIPO
   // ============================================================
