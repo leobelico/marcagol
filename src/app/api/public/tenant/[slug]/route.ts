@@ -1,4 +1,7 @@
-// app/api/organizations/[slug]/tenants/route.ts
+// app/api/public/tenants/[slug]/route.ts
+//
+// [slug] aquí es el slug de la ORGANIZACIÓN (ej. "liga-rinos"),
+// devuelve los torneos (Tenants) que pertenecen a esa organización.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -25,7 +28,6 @@ export async function GET(
       where: {
         organizationId: organization.id,
         archived: false,
-        published: true, // solo torneos publicados; quita esto si quieres mostrar todos
       },
       select: {
         id: true,
