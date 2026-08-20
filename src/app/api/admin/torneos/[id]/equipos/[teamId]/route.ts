@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 export async function DELETE(
   req: NextRequest,
@@ -294,6 +295,73 @@ export async function PATCH(
     }
 
     // --------------------------------------------------
+    // SI NO HAY USUARIO CAPITÁN TODAVÍA, PREPARAR
+    // EMAIL Y CONTRASEÑA PARA CREARLO EN LA TRANSACCIÓN
+    // (MISMA LÓGICA QUE AL CREAR EQUIPO)
+    // --------------------------------------------------
+
+    const necesitaCrearUsuario = !tenantUser?.userId;
+
+    let emailNuevoUsuario = "";
+    let passwordInicial = "";
+    let passwordHash = "";
+
+    if (necesitaCrearUsuario) {
+      const emailBase = captain
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, ".")
+        .replace(/[^a-z0-9.]/g, "");
+
+      emailNuevoUsuario = `${emailBase}@marcagol.site`;
+
+      // Comprobar que el teléfono no esté ya usado por otro user
+      // (ya se validó arriba si cambió, pero si es creación nueva
+      // también hay que validarlo aunque el teléfono no "cambió"
+      // porque antes el equipo no tenía usuario)
+
+      const usuarioConEseTelefono = await prisma.user.findFirst({
+        where: {
+          phone,
+        },
+      });
+
+      if (usuarioConEseTelefono) {
+        return NextResponse.json(
+          {
+            error:
+              "Ese teléfono ya está registrado en otro usuario",
+          },
+          { status: 400 }
+        );
+      }
+
+      const usuarioConEseEmail = await prisma.user.findUnique({
+        where: {
+          email: emailNuevoUsuario,
+        },
+      });
+
+      if (usuarioConEseEmail) {
+        return NextResponse.json(
+          {
+            error:
+              "Ese capitán ya tiene un usuario registrado",
+            email: emailNuevoUsuario,
+          },
+          { status: 400 }
+        );
+      }
+
+      const ultimos3 = phone.replace(/\D/g, "").slice(-3);
+
+      passwordInicial = `${captain}${ultimos3}`;
+
+      passwordHash = await bcrypt.hash(passwordInicial, 10);
+    }
+
+    // --------------------------------------------------
     // ACTUALIZAR TODO EN UNA TRANSACCIÓN
     // --------------------------------------------------
 
@@ -314,7 +382,7 @@ export async function PATCH(
       });
 
       // ----------------------------------------------
-      // 2. SI EXISTE USUARIO DEL CAPITÁN
+      // 2A. SI YA EXISTE USUARIO DEL CAPITÁN, ACTUALIZAR
       // ----------------------------------------------
 
       if (tenantUser?.userId) {
@@ -327,13 +395,11 @@ export async function PATCH(
             phone,
           },
         });
-      }
 
-      // ----------------------------------------------
-      // 3. ASEGURAR RELACIÓN TENANT USER
-      // ----------------------------------------------
+        // ----------------------------------------------
+        // 3A. ASEGURAR RELACIÓN TENANT USER
+        // ----------------------------------------------
 
-      if (tenantUser) {
         await tx.tenantUser.update({
           where: {
             id: tenantUser.id,
@@ -344,9 +410,53 @@ export async function PATCH(
             role: "CAPTAIN",
           },
         });
+
+        return { team, nuevoUsuario: null as null };
       }
 
-      return team;
+      // ----------------------------------------------
+      // 2B. NO EXISTÍA USUARIO -> CREARLO AHORA
+      // ----------------------------------------------
+
+      const nuevoUsuario = await tx.user.create({
+        data: {
+          name: captain,
+          email: emailNuevoUsuario,
+          phone,
+          password: passwordHash,
+          isSuperAdmin: false,
+        },
+      });
+
+      // ----------------------------------------------
+      // 3B. CREAR O ACTUALIZAR TENANT USER
+      // ----------------------------------------------
+
+      if (tenantUser) {
+        // Existía un tenantUser huérfano (sin userId) -> enlazarlo
+        await tx.tenantUser.update({
+          where: {
+            id: tenantUser.id,
+          },
+          data: {
+            userId: nuevoUsuario.id,
+            teamId: team.id,
+            tenantId: id,
+            role: "CAPTAIN",
+          },
+        });
+      } else {
+        await tx.tenantUser.create({
+          data: {
+            userId: nuevoUsuario.id,
+            tenantId: id,
+            teamId: team.id,
+            role: "CAPTAIN",
+          },
+        });
+      }
+
+      return { team, nuevoUsuario };
     });
 
     // --------------------------------------------------
@@ -355,7 +465,17 @@ export async function PATCH(
 
     return NextResponse.json({
       ok: true,
-      team: result,
+      team: result.team,
+      ...(result.nuevoUsuario
+        ? {
+            captainCredentials: {
+              name: result.nuevoUsuario.name,
+              email: result.nuevoUsuario.email,
+              phone: result.nuevoUsuario.phone,
+              password: passwordInicial,
+            },
+          }
+        : {}),
     });
   } catch (error: any) {
     console.error("ERROR ACTUALIZANDO EQUIPO:", error);
