@@ -119,7 +119,7 @@ export default function NuevoTorneoPage() {
                   placeholder="liga-regia"
                   className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-green-500 transition"
                 />
-                <span className="text-gray-500 text-sm">.tuapp.com</span>
+                <span className="text-gray-500 text-sm">.marcagol.site</span>
               </div>
               <p className="text-xs text-gray-600 mt-1">Solo letras minúsculas, números y guiones</p>
             </div>

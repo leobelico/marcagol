@@ -30,6 +30,20 @@ type Torneo = {
   logo?: string | null;
 };
 
+type EquipoBusqueda = {
+  id: string;
+  name: string;
+  logo: string | null;
+  captain: string | null;
+  phone: string | null;
+  tenant: {
+    name: string;
+  };
+  _count: {
+    players: number;
+  };
+};
+
 const fotosEnMemoria: Record<string, string> = {};
 
 export default function EquiposClient({
@@ -92,6 +106,25 @@ export default function EquiposClient({
     number: "",
     position: "",
   });
+
+  // =========================
+  // TRAER EQUIPO (IMPORTAR)
+  // =========================
+
+  const [showTraerEquipo, setShowTraerEquipo] =
+    useState(false);
+
+  const [busquedaEquipo, setBusquedaEquipo] =
+    useState("");
+
+  const [resultadosBusqueda, setResultadosBusqueda] =
+    useState<EquipoBusqueda[]>([]);
+
+  const [buscandoEquipo, setBuscandoEquipo] =
+    useState(false);
+
+  const [importandoId, setImportandoId] =
+    useState<string | null>(null);
 
   // =========================
   // FOTOS
@@ -1078,6 +1111,87 @@ async function crearEquipo() {
   }
 
   // ============================================================
+  // BUSCAR EQUIPO EN OTROS TORNEOS
+  // ============================================================
+
+  async function buscarEquipos(query: string) {
+    setBusquedaEquipo(query);
+
+    if (!query.trim()) {
+      setResultadosBusqueda([]);
+      return;
+    }
+
+    try {
+      setBuscandoEquipo(true);
+
+      const res = await fetch(
+        `/api/admin/torneos/${torneo.id}/equipos/importar?q=${encodeURIComponent(
+          query.trim()
+        )}`
+      );
+
+      if (!res.ok) {
+        throw new Error("No se pudo buscar equipos");
+      }
+
+      const data = await res.json();
+
+      setResultadosBusqueda(data.teams || []);
+    } catch (error) {
+      console.error(error);
+      setResultadosBusqueda([]);
+    } finally {
+      setBuscandoEquipo(false);
+    }
+  }
+
+  // ============================================================
+  // IMPORTAR EQUIPO
+  // ============================================================
+
+  async function importarEquipo(sourceTeamId: string) {
+    try {
+      setImportandoId(sourceTeamId);
+
+      const res = await fetch(
+        `/api/admin/torneos/${torneo.id}/equipos/importar`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sourceTeamId,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(
+          data?.error || "No se pudo importar el equipo"
+        );
+      }
+
+      setShowTraerEquipo(false);
+      setBusquedaEquipo("");
+      setResultadosBusqueda([]);
+
+      router.refresh();
+    } catch (error: any) {
+      console.error("ERROR IMPORTANDO EQUIPO:", error);
+
+      alert(
+        error?.message || "No se pudo importar el equipo"
+      );
+    } finally {
+      setImportandoId(null);
+    }
+  }
+
+  // ============================================================
   // RENDER
   // ============================================================
 
@@ -1099,15 +1213,141 @@ async function crearEquipo() {
           </p>
         </div>
 
-        <button
-          onClick={() =>
-            setShowNuevoEquipo(true)
-          }
-          className="bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
-        >
-          + Agregar Equipo
-        </button>
+        <div className="flex gap-2">
+
+          <button
+            onClick={() =>
+              setShowTraerEquipo(true)
+            }
+            className="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
+          >
+            📥 Traer Equipo
+          </button>
+
+          <button
+            onClick={() =>
+              setShowNuevoEquipo(true)
+            }
+            className="bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
+          >
+            + Agregar Equipo
+          </button>
+
+        </div>
       </div>
+
+      {/* ======================================================
+          TRAER EQUIPO (IMPORTAR DE OTRO TORNEO)
+      ====================================================== */}
+
+      {showTraerEquipo && (
+        <div className="bg-gray-900 border border-blue-800 rounded-2xl p-5">
+
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-white">
+              Traer Equipo de Otro Torneo
+            </h3>
+
+            <button
+              onClick={() => {
+                setShowTraerEquipo(false);
+                setBusquedaEquipo("");
+                setResultadosBusqueda([]);
+              }}
+              className="text-gray-500 hover:text-gray-300 text-sm"
+            >
+              ✕
+            </button>
+          </div>
+
+          <input
+            type="text"
+            autoFocus
+            placeholder="Buscar equipo por nombre..."
+            value={busquedaEquipo}
+            onChange={(e) =>
+              buscarEquipos(e.target.value)
+            }
+            className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition text-sm mb-3"
+          />
+
+          {buscandoEquipo && (
+            <p className="text-gray-500 text-xs">
+              Buscando...
+            </p>
+          )}
+
+          {!buscandoEquipo &&
+            busquedaEquipo.trim() &&
+            resultadosBusqueda.length === 0 && (
+              <p className="text-gray-500 text-xs">
+                No se encontraron equipos con ese nombre.
+              </p>
+            )}
+
+          <div className="space-y-2">
+
+            {resultadosBusqueda.map((equipo) => (
+
+              <div
+                key={equipo.id}
+                className="flex items-center justify-between gap-3 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3"
+              >
+
+                <div className="flex items-center gap-3 min-w-0">
+
+                  <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-900 border border-gray-700 flex items-center justify-center flex-shrink-0">
+                    {equipo.logo ? (
+                      <img
+                        src={equipo.logo}
+                        alt={equipo.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-sm text-gray-500">
+                        ⚽
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-white text-sm font-medium truncate">
+                      {equipo.name}
+                    </p>
+
+                    <p className="text-gray-500 text-xs truncate">
+                      {equipo.tenant.name} ·{" "}
+                      {equipo._count.players} jugadores
+                      {equipo.captain
+                        ? ` · 👤 ${equipo.captain}`
+                        : ""}
+                    </p>
+                  </div>
+
+                </div>
+
+                <button
+                  onClick={() =>
+                    importarEquipo(equipo.id)
+                  }
+                  disabled={
+                    importandoId === equipo.id
+                  }
+                  className="text-xs bg-blue-900/40 hover:bg-blue-900/60 text-blue-400 font-bold px-3 py-2 rounded-lg transition disabled:opacity-50 flex-shrink-0"
+                >
+                  {importandoId === equipo.id
+                    ? "Importando..."
+                    : "Importar"}
+                </button>
+
+              </div>
+
+            ))}
+
+          </div>
+
+        </div>
+      )}
 
       {/* ======================================================
           NUEVO EQUIPO
