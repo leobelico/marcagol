@@ -70,6 +70,42 @@ const [showSiguienteRonda, setShowSiguienteRonda] = useState(false);
   >([]);
   const [generandoSiguiente, setGenerandoSiguiente] = useState(false);
   const [errorSiguiente, setErrorSiguiente] = useState("");
+
+  // =========================
+  // OPCIONES DE GENERACIÓN (hora inicio + preferencias)
+  // =========================
+
+  const [horaInicioGen, setHoraInicioGen] = useState("18:00");
+
+  const [preferenciasGen, setPreferenciasGen] = useState<
+    { teamId: string; day: string }[]
+  >([]);
+
+  const [conflictosGen, setConflictosGen] = useState<
+    { homeTeam: string; awayTeam: string; motivo: string }[]
+  >([]);
+
+  function agregarPreferencia() {
+    setPreferenciasGen((prev) => [
+      ...prev,
+      { teamId: "", day: torneo.matchDays[0] || "MONDAY" },
+    ]);
+  }
+
+  function actualizarPreferencia(
+    index: number,
+    campo: "teamId" | "day",
+    valor: string
+  ) {
+    setPreferenciasGen((prev) =>
+      prev.map((p, i) => (i === index ? { ...p, [campo]: valor } : p))
+    );
+  }
+
+  function quitarPreferencia(index: number) {
+    setPreferenciasGen((prev) => prev.filter((_, i) => i !== index));
+  }
+
   const numEquipos = torneo.teams.length;
   const numJornadas = torneo.roundTrip
     ? (numEquipos % 2 === 0 ? (numEquipos - 1) * 2 : numEquipos * 2)
@@ -85,11 +121,25 @@ const rondasBracket = torneo.rounds.filter((r) => r.bracketStage != null);
   async function generarCalendario() {
     setLoading(true);
     setError("");
-    const res = await fetch(`/api/admin/torneos/${torneo.id}/calendario/generar`, { method: "POST" });
+    setConflictosGen([]);
+
+    const res = await fetch(`/api/admin/torneos/${torneo.id}/calendario/generar`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        horaInicio: horaInicioGen,
+        preferencias: preferenciasGen.filter((p) => p.teamId),
+      }),
+    });
     const json = await res.json();
     if (!res.ok) { setError(json.error || "Error al generar"); setLoading(false); return; }
     setConfirmar(false);
     setLoading(false);
+
+    if (json.conflictos && json.conflictos.length > 0) {
+      setConflictosGen(json.conflictos);
+    }
+
     router.refresh();
   }
 
@@ -783,6 +833,33 @@ const away = match.awayTeam.name;
         
       </div>
 
+      {/* Conflictos de la última generación */}
+      {conflictosGen.length > 0 && (
+        <div className="bg-orange-900/20 border border-orange-800 rounded-2xl p-5 space-y-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-orange-400 font-bold text-sm">
+              ⚠️ {conflictosGen.length} partido(s) no se pudieron agendar automáticamente
+            </h3>
+            <button
+              onClick={() => setConflictosGen([])}
+              className="text-gray-500 hover:text-gray-300 text-sm"
+            >
+              ✕
+            </button>
+          </div>
+          <p className="text-orange-300 text-xs">
+            Agrégalos manualmente desde la pestaña "✏️ Manual".
+          </p>
+          <ul className="space-y-1 text-sm text-orange-200">
+            {conflictosGen.map((c, i) => (
+              <li key={i}>
+                • {c.homeTeam} vs {c.awayTeam} — {c.motivo}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* MODO AUTOMÁTICO */}
       {modo === "auto" && (
         <div className="space-y-6">
@@ -899,18 +976,96 @@ const away = match.awayTeam.name;
         </div>
       )}
 
-      {/* Modal confirmación auto */}
+      {/* Modal confirmación auto (hora inicio + preferencias) */}
       {confirmar && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-md w-full">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4 overflow-y-auto py-8">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-xl w-full space-y-6">
             <h3 className="text-xl font-black text-white mb-2">
               {tieneCalendario ? "¿Regenerar calendario?" : "¿Generar calendario?"}
             </h3>
-            <p className="text-gray-400 text-sm mb-6">
+            <p className="text-gray-400 text-sm">
               {tieneCalendario
                 ? "Se eliminará el calendario actual. Los resultados se perderán."
                 : `Se generarán ${numJornadas} jornadas con ${totalPartidos} partidos.`}
             </p>
+
+            <div>
+              <label className="text-xs text-gray-400 uppercase tracking-widest block mb-1">
+                Hora de inicio del primer partido del día
+              </label>
+              <input
+                type="time"
+                value={horaInicioGen}
+                onChange={(e) => setHoraInicioGen(e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-green-500"
+              />
+              <p className="text-gray-500 text-xs mt-1">
+                Los siguientes partidos del día se acomodan uno tras otro según la duración de partido configurada, repartidos en 3 canchas.
+              </p>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs text-gray-400 uppercase tracking-widest">
+                  ¿Algún equipo tiene preferencia de día?
+                </label>
+                <button
+                  onClick={agregarPreferencia}
+                  className="text-xs bg-blue-900/40 hover:bg-blue-900/60 text-blue-400 font-bold px-3 py-1.5 rounded-lg transition"
+                >
+                  + Agregar preferencia
+                </button>
+              </div>
+
+              {preferenciasGen.length === 0 && (
+                <p className="text-gray-600 text-xs">
+                  Ninguna configurada. Solo agrega si un equipo pagó o pidió jugar siempre el mismo día.
+                </p>
+              )}
+
+              <div className="space-y-2">
+                {preferenciasGen.map((p, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <select
+                      value={p.teamId}
+                      onChange={(e) =>
+                        actualizarPreferencia(i, "teamId", e.target.value)
+                      }
+                      className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
+                    >
+                      <option value="">Selecciona equipo</option>
+                      {torneo.teams.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      value={p.day}
+                      onChange={(e) =>
+                        actualizarPreferencia(i, "day", e.target.value)
+                      }
+                      className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
+                    >
+                      {torneo.matchDays.map((d) => (
+                        <option key={d} value={d}>
+                          {DIAS_LABEL[d] ?? d}
+                        </option>
+                      ))}
+                    </select>
+
+                    <button
+                      onClick={() => quitarPreferencia(i)}
+                      className="text-gray-500 hover:text-red-400 text-sm px-2"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="flex gap-3">
               <button onClick={generarCalendario} disabled={loading}
                 className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition">
