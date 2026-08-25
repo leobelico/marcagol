@@ -27,19 +27,20 @@ export async function POST(
 
     const { id } = await params;
 
-    console.log("=================================");
-    console.log("CREANDO EQUIPO");
-    console.log("TORNEO ID:", id);
-
     // ─────────────────────────────────────
     // LEER DATOS
     // ─────────────────────────────────────
 
     const body = await req.json();
 
-    console.log("BODY RECIBIDO:", body);
-
     const { name, captain, phone } = body;
+
+    // capitanUserId: si viene, se está reutilizando un
+    // capitán YA EXISTENTE en vez de crear uno nuevo
+    const capitanUserId: string | null =
+      typeof body.capitanUserId === "string" && body.capitanUserId
+        ? body.capitanUserId
+        : null;
 
     // ─────────────────────────────────────
     // VALIDACIONES
@@ -47,48 +48,106 @@ export async function POST(
 
     if (!name?.trim()) {
       return NextResponse.json(
-        {
-          error: "El nombre del equipo es obligatorio",
-        },
-        {
-          status: 400,
-        }
+        { error: "El nombre del equipo es obligatorio" },
+        { status: 400 }
       );
     }
 
-    if (!captain?.trim()) {
-      return NextResponse.json(
-        {
-          error: "El nombre del capitán es obligatorio",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
+    // Si NO se está reutilizando un capitán existente,
+    // captain y phone son obligatorios (flujo de siempre)
+    if (!capitanUserId) {
+      if (!captain?.trim()) {
+        return NextResponse.json(
+          { error: "El nombre del capitán es obligatorio" },
+          { status: 400 }
+        );
+      }
 
-    if (!phone?.trim()) {
-      return NextResponse.json(
-        {
-          error: "El teléfono del capitán es obligatorio",
-        },
-        {
-          status: 400,
-        }
-      );
+      if (!phone?.trim()) {
+        return NextResponse.json(
+          { error: "El teléfono del capitán es obligatorio" },
+          { status: 400 }
+        );
+      }
     }
-
-    // ─────────────────────────────────────
-    // LIMPIAR DATOS
-    // ─────────────────────────────────────
 
     const nombreEquipo = name.trim();
+
+    // ─────────────────────────────────────
+    // FLUJO A: REUTILIZAR CAPITÁN EXISTENTE
+    // ─────────────────────────────────────
+
+    if (capitanUserId) {
+      const usuarioExistente = await prisma.user.findUnique({
+        where: { id: capitanUserId },
+      });
+
+      if (!usuarioExistente) {
+        return NextResponse.json(
+          { error: "El capitán seleccionado no existe" },
+          { status: 404 }
+        );
+      }
+
+      const result = await prisma.$transaction(async (tx) => {
+        // 1. Crear equipo (guarda snapshot de nombre/teléfono
+        //    del capitán en el propio Team, como ya hacías)
+        const team = await tx.team.create({
+          data: {
+            name: nombreEquipo,
+            captain: usuarioExistente.name,
+            phone: usuarioExistente.phone,
+            tenantId: id,
+          },
+        });
+
+        // 2. Asegurar TenantUser para este usuario en este torneo
+        let tenantUser = await tx.tenantUser.findUnique({
+          where: {
+            userId_tenantId: {
+              userId: usuarioExistente.id,
+              tenantId: id,
+            },
+          },
+        });
+
+        if (!tenantUser) {
+          tenantUser = await tx.tenantUser.create({
+            data: {
+              userId: usuarioExistente.id,
+              tenantId: id,
+              role: "CAPTAIN",
+            },
+          });
+        }
+
+        // 3. Vincular el equipo nuevo a ese capitán (N a N)
+        const teamCaptain = await tx.teamCaptain.create({
+          data: {
+            tenantUserId: tenantUser.id,
+            teamId: team.id,
+          },
+        });
+
+        return { team, tenantUser, teamCaptain };
+      });
+
+      return NextResponse.json({
+        ok: true,
+        team: result.team,
+        // No hay credenciales nuevas que mostrar: el capitán
+        // ya tenía su cuenta de antes.
+      });
+    }
+
+    // ─────────────────────────────────────
+    // FLUJO B: CREAR CAPITÁN NUEVO (comportamiento original)
+    // ─────────────────────────────────────
+
     const nombreCapitan = captain.trim();
     const telefono = phone.trim();
 
-    // ─────────────────────────────────────
     // GENERAR EMAIL
-    // ─────────────────────────────────────
 
     const emailBase = nombreCapitan
       .toLowerCase()
@@ -99,55 +158,53 @@ export async function POST(
 
     const email = `${emailBase}@marcagol.site`;
 
-    console.log("EMAIL GENERADO:", email);
+    // COMPROBAR TELÉFONO
 
-    // ─────────────────────────────────────
-    // BUSCAR USUARIO EXISTENTE
-    // ─────────────────────────────────────
-
-    const usuarioExistente = await prisma.user.findFirst({
+    const usuarioExistente = await prisma.user.findUnique({
       where: {
-        OR: [
-          {
-            phone: telefono,
-          },
-          {
-            email,
-          },
-        ],
+        phone: telefono,
       },
     });
 
     if (usuarioExistente) {
-      console.log(
-        "USUARIO EXISTENTE ENCONTRADO:",
-        usuarioExistente.id
+      return NextResponse.json(
+        {
+          error:
+            "Ese teléfono ya está registrado. Búscalo en 'Capitán existente' para reutilizar su cuenta.",
+        },
+        { status: 400 }
       );
-    } else {
-      console.log("NO EXISTE USUARIO. SE CREARÁ UNO NUEVO.");
     }
 
-    // ─────────────────────────────────────
-    // PASSWORD INICIAL
-    // ─────────────────────────────────────
+    // COMPROBAR EMAIL
 
-    const ultimos3 = telefono
-      .replace(/\D/g, "")
-      .slice(-3);
+    const usuarioEmailExistente = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (usuarioEmailExistente) {
+      return NextResponse.json(
+        {
+          error: "Ese capitán ya tiene un usuario registrado",
+          email,
+        },
+        { status: 400 }
+      );
+    }
+
+    // PASSWORD INICIAL
+
+    const ultimos3 = telefono.replace(/\D/g, "").slice(-3);
 
     const passwordInicial = `${nombreCapitan}${ultimos3}`;
 
-    // ─────────────────────────────────────
+    const passwordHash = await bcrypt.hash(passwordInicial, 10);
+
     // TRANSACCIÓN
-    // ─────────────────────────────────────
 
     const result = await prisma.$transaction(async (tx) => {
-      // ─────────────────────────────────
-      // 1. CREAR EQUIPO
-      // ─────────────────────────────────
-
-      console.log("1. CREANDO TEAM...");
-
       const team = await tx.team.create({
         data: {
           name: nombreEquipo,
@@ -157,118 +214,39 @@ export async function POST(
         },
       });
 
-      console.log("TEAM CREADO:", team.id);
+      const user = await tx.user.create({
+        data: {
+          name: nombreCapitan,
+          email,
+          phone: telefono,
+          password: passwordHash,
+          isSuperAdmin: false,
+        },
+      });
 
-      // ─────────────────────────────────
-      // 2. OBTENER O CREAR USER
-      // ─────────────────────────────────
+      const tenantUser = await tx.tenantUser.create({
+        data: {
+          userId: user.id,
+          tenantId: id,
+          role: "CAPTAIN",
+        },
+      });
 
-      let user;
-
-      if (usuarioExistente) {
-        // =================================
-        // USUARIO YA EXISTE
-        // =================================
-
-        console.log(
-          "2. USUARIO YA EXISTE. SE REUTILIZARÁ:",
-          usuarioExistente.id
-        );
-
-        user = await tx.user.update({
-          where: {
-            id: usuarioExistente.id,
-          },
-          data: {
-            // Actualizamos nombre/teléfono por si
-            // el administrador introdujo información
-            // más reciente.
-            name: nombreCapitan,
-            phone: telefono,
-          },
-        });
-      } else {
-        // =================================
-        // USUARIO NUEVO
-        // =================================
-
-        console.log("2. CREANDO USER...");
-
-        const passwordHash = await bcrypt.hash(
-          passwordInicial,
-          10
-        );
-
-        user = await tx.user.create({
-          data: {
-            name: nombreCapitan,
-            email,
-            phone: telefono,
-            password: passwordHash,
-            isSuperAdmin: false,
-          },
-        });
-
-        console.log("USER CREADO:", user.id);
-      }
-
-      // ─────────────────────────────────
-      // 3. CREAR RELACIÓN CON EL TORNEO
-      // ─────────────────────────────────
-
-      console.log(
-        "3. CREANDO TENANT USER..."
-      );
-
-      const tenantUser =
-        await tx.tenantUser.create({
-          data: {
-            userId: user.id,
-            tenantId: id,
-            teamId: team.id,
-            role: "CAPTAIN",
-          },
-        });
-
-      console.log(
-        "TENANT USER CREADO:",
-        tenantUser.id
-      );
-
-      // ─────────────────────────────────
-      // DEVOLVER RESULTADO
-      // ─────────────────────────────────
+      const teamCaptain = await tx.teamCaptain.create({
+        data: {
+          tenantUserId: tenantUser.id,
+          teamId: team.id,
+        },
+      });
 
       return {
         team,
         user,
         tenantUser,
-
-        // Si es usuario existente,
-        // no estamos creando una contraseña nueva.
-        passwordInicial: usuarioExistente
-          ? null
-          : passwordInicial,
+        teamCaptain,
+        passwordInicial,
       };
     });
-
-    // ─────────────────────────────────────
-    // LOG FINAL
-    // ─────────────────────────────────────
-
-    console.log("=================================");
-    console.log("TODO CREADO CORRECTAMENTE");
-    console.log("TEAM:", result.team.id);
-    console.log("USER:", result.user.id);
-    console.log(
-      "TENANT USER:",
-      result.tenantUser.id
-    );
-    console.log("=================================");
-
-    // ─────────────────────────────────────
-    // RESPUESTA
-    // ─────────────────────────────────────
 
     return NextResponse.json({
       ok: true,
@@ -279,23 +257,11 @@ export async function POST(
         name: result.user.name,
         email: result.user.email,
         phone: result.user.phone,
-
-        // null significa que el usuario
-        // ya existía y conserva su contraseña.
         password: result.passwordInicial,
       },
-
-      existingUser: Boolean(usuarioExistente),
     });
   } catch (error) {
-    // ─────────────────────────────────────
-    // ERROR
-    // ─────────────────────────────────────
-
-    console.error("=================================");
-    console.error("ERROR CREANDO EQUIPO:");
-    console.error(error);
-    console.error("=================================");
+    console.error("ERROR CREANDO EQUIPO:", error);
 
     return NextResponse.json(
       {

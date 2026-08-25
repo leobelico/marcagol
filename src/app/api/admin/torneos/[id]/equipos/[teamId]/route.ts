@@ -90,13 +90,10 @@ export async function DELETE(
       },
     });
 
-    // Usuarios relacionados con este equipo
-    await tx.tenantUser.updateMany({
+    // Vínculos de capitanes con este equipo (N a N)
+    await tx.teamCaptain.deleteMany({
       where: {
         teamId,
-      },
-      data: {
-        teamId: null,
       },
     });
 
@@ -139,7 +136,9 @@ export async function PATCH(
     const { id, teamId } = await params;
 
     const role = (session.user as any).role;
-    const sessionTeamId = (session.user as any).teamId;
+    const sessionTeamIds = (session.user as any).teamIds as
+      | string[]
+      | undefined;
     const sessionTenantId = (session.user as any).tenantId;
     const isSuperAdmin = (session.user as any).isSuperAdmin;
 
@@ -164,6 +163,14 @@ export async function PATCH(
         ? body.phone.trim()
         : "";
 
+    // Si viene, se está reasignando el equipo a un capitán
+    // YA EXISTENTE (distinto flujo que capturar nombre/teléfono
+    // nuevos)
+    const capitanUserId: string | null =
+      typeof body.capitanUserId === "string" && body.capitanUserId
+        ? body.capitanUserId
+        : null;
+
     // --------------------------------------------------
     // VALIDACIONES
     // --------------------------------------------------
@@ -175,18 +182,20 @@ export async function PATCH(
       );
     }
 
-    if (!captain) {
-      return NextResponse.json(
-        { error: "El nombre del capitán es obligatorio" },
-        { status: 400 }
-      );
-    }
+    if (!capitanUserId) {
+      if (!captain) {
+        return NextResponse.json(
+          { error: "El nombre del capitán es obligatorio" },
+          { status: 400 }
+        );
+      }
 
-    if (!phone) {
-      return NextResponse.json(
-        { error: "El teléfono del capitán es obligatorio" },
-        { status: 400 }
-      );
+      if (!phone) {
+        return NextResponse.json(
+          { error: "El teléfono del capitán es obligatorio" },
+          { status: 400 }
+        );
+      }
     }
 
     // --------------------------------------------------
@@ -194,7 +203,7 @@ export async function PATCH(
     // --------------------------------------------------
 
     if (role === "CAPTAIN") {
-      if (sessionTeamId !== teamId) {
+      if (!sessionTeamIds || !sessionTeamIds.includes(teamId)) {
         return NextResponse.json(
           { error: "No puedes modificar otro equipo" },
           { status: 403 }
@@ -252,31 +261,123 @@ export async function PATCH(
     }
 
     // --------------------------------------------------
-    // BUSCAR USUARIO DEL CAPITÁN
+    // BUSCAR CAPITÁN ACTUAL DE ESTE EQUIPO (si tiene)
     // --------------------------------------------------
 
-    const tenantUser = await prisma.tenantUser.findFirst({
+    const teamCaptainActual = await prisma.teamCaptain.findFirst({
       where: {
-        teamId: teamId,
-        tenantId: id,
+        teamId,
       },
       include: {
-        user: true,
+        tenantUser: {
+          include: {
+            user: true,
+          },
+        },
       },
     });
 
-    // --------------------------------------------------
-    // COMPROBAR TELÉFONO
-    // --------------------------------------------------
+    // ====================================================
+    // FLUJO A: REASIGNAR A UN CAPITÁN EXISTENTE DISTINTO
+    // ====================================================
 
+    if (capitanUserId) {
+      const usuarioNuevo = await prisma.user.findUnique({
+        where: { id: capitanUserId },
+      });
+
+      if (!usuarioNuevo) {
+        return NextResponse.json(
+          { error: "El capitán seleccionado no existe" },
+          { status: 404 }
+        );
+      }
+
+      const result = await prisma.$transaction(async (tx) => {
+        // 1. Actualizar equipo (nombre + snapshot de capitán/tel)
+        const team = await tx.team.update({
+          where: { id: teamId },
+          data: {
+            name,
+            captain: usuarioNuevo.name,
+            phone: usuarioNuevo.phone,
+          },
+        });
+
+        // 2. Quitar el vínculo del capitán anterior (si había
+        //    uno distinto) — NO tocamos sus datos de User,
+        //    porque puede seguir manejando otros equipos.
+        if (
+          teamCaptainActual &&
+          teamCaptainActual.tenantUser.userId !== usuarioNuevo.id
+        ) {
+          await tx.teamCaptain.delete({
+            where: { id: teamCaptainActual.id },
+          });
+        }
+
+        // 3. Asegurar TenantUser para el usuario nuevo en este torneo
+        let tenantUser = await tx.tenantUser.findUnique({
+          where: {
+            userId_tenantId: {
+              userId: usuarioNuevo.id,
+              tenantId: id,
+            },
+          },
+        });
+
+        if (!tenantUser) {
+          tenantUser = await tx.tenantUser.create({
+            data: {
+              userId: usuarioNuevo.id,
+              tenantId: id,
+              role: "CAPTAIN",
+            },
+          });
+        }
+
+        // 4. Crear el vínculo nuevo (si no existía ya)
+        const yaVinculado = await tx.teamCaptain.findUnique({
+          where: {
+            tenantUserId_teamId: {
+              tenantUserId: tenantUser.id,
+              teamId: team.id,
+            },
+          },
+        });
+
+        if (!yaVinculado) {
+          await tx.teamCaptain.create({
+            data: {
+              tenantUserId: tenantUser.id,
+              teamId: team.id,
+            },
+          });
+        }
+
+        return team;
+      });
+
+      return NextResponse.json({
+        ok: true,
+        team: result,
+      });
+    }
+
+    // ====================================================
+    // FLUJO B: EDITAR DATOS DEL CAPITÁN ACTUAL (o crear uno
+    // nuevo si el equipo no tenía) — comportamiento original
+    // ====================================================
+
+    // Comprobar teléfono duplicado (solo si cambió)
     if (phone !== existingTeam.phone) {
       const usuarioConEseTelefono = await prisma.user.findFirst({
         where: {
           phone,
-          ...(tenantUser?.userId
+          ...(teamCaptainActual?.tenantUser.userId
             ? {
                 NOT: {
-                  id: tenantUser.userId,
+                  id: teamCaptainActual.tenantUser.userId,
                 },
               }
             : {}),
@@ -287,20 +388,14 @@ export async function PATCH(
         return NextResponse.json(
           {
             error:
-              "Ese teléfono ya está registrado en otro usuario",
+              "Ese teléfono ya está registrado en otro usuario. Búscalo en 'Capitán existente' para reutilizar su cuenta.",
           },
           { status: 400 }
         );
       }
     }
 
-    // --------------------------------------------------
-    // SI NO HAY USUARIO CAPITÁN TODAVÍA, PREPARAR
-    // EMAIL Y CONTRASEÑA PARA CREARLO EN LA TRANSACCIÓN
-    // (MISMA LÓGICA QUE AL CREAR EQUIPO)
-    // --------------------------------------------------
-
-    const necesitaCrearUsuario = !tenantUser?.userId;
+    const necesitaCrearUsuario = !teamCaptainActual;
 
     let emailNuevoUsuario = "";
     let passwordInicial = "";
@@ -316,38 +411,28 @@ export async function PATCH(
 
       emailNuevoUsuario = `${emailBase}@marcagol.site`;
 
-      // Comprobar que el teléfono no esté ya usado por otro user
-      // (ya se validó arriba si cambió, pero si es creación nueva
-      // también hay que validarlo aunque el teléfono no "cambió"
-      // porque antes el equipo no tenía usuario)
-
       const usuarioConEseTelefono = await prisma.user.findFirst({
-        where: {
-          phone,
-        },
+        where: { phone },
       });
 
       if (usuarioConEseTelefono) {
         return NextResponse.json(
           {
             error:
-              "Ese teléfono ya está registrado en otro usuario",
+              "Ese teléfono ya está registrado en otro usuario. Búscalo en 'Capitán existente' para reutilizar su cuenta.",
           },
           { status: 400 }
         );
       }
 
       const usuarioConEseEmail = await prisma.user.findUnique({
-        where: {
-          email: emailNuevoUsuario,
-        },
+        where: { email: emailNuevoUsuario },
       });
 
       if (usuarioConEseEmail) {
         return NextResponse.json(
           {
-            error:
-              "Ese capitán ya tiene un usuario registrado",
+            error: "Ese capitán ya tiene un usuario registrado",
             email: emailNuevoUsuario,
           },
           { status: 400 }
@@ -355,25 +440,13 @@ export async function PATCH(
       }
 
       const ultimos3 = phone.replace(/\D/g, "").slice(-3);
-
       passwordInicial = `${captain}${ultimos3}`;
-
       passwordHash = await bcrypt.hash(passwordInicial, 10);
     }
 
-    // --------------------------------------------------
-    // ACTUALIZAR TODO EN UNA TRANSACCIÓN
-    // --------------------------------------------------
-
     const result = await prisma.$transaction(async (tx) => {
-      // ----------------------------------------------
-      // 1. ACTUALIZAR TEAM
-      // ----------------------------------------------
-
       const team = await tx.team.update({
-        where: {
-          id: teamId,
-        },
+        where: { id: teamId },
         data: {
           name,
           captain,
@@ -381,43 +454,22 @@ export async function PATCH(
         },
       });
 
-      // ----------------------------------------------
-      // 2A. SI YA EXISTE USUARIO DEL CAPITÁN, ACTUALIZAR
-      // ----------------------------------------------
-
-      if (tenantUser?.userId) {
+      // Si ya había capitán vinculado a ESTE equipo, actualizamos
+      // sus datos de User (nombre/teléfono) — su relación con
+      // otros equipos no se toca.
+      if (teamCaptainActual) {
         await tx.user.update({
-          where: {
-            id: tenantUser.userId,
-          },
+          where: { id: teamCaptainActual.tenantUser.userId },
           data: {
             name: captain,
             phone,
           },
         });
 
-        // ----------------------------------------------
-        // 3A. ASEGURAR RELACIÓN TENANT USER
-        // ----------------------------------------------
-
-        await tx.tenantUser.update({
-          where: {
-            id: tenantUser.id,
-          },
-          data: {
-            teamId: team.id,
-            tenantId: id,
-            role: "CAPTAIN",
-          },
-        });
-
         return { team, nuevoUsuario: null as null };
       }
 
-      // ----------------------------------------------
-      // 2B. NO EXISTÍA USUARIO -> CREARLO AHORA
-      // ----------------------------------------------
-
+      // No había capitán -> crear User + TenantUser + TeamCaptain
       const nuevoUsuario = await tx.user.create({
         data: {
           name: captain,
@@ -428,40 +480,23 @@ export async function PATCH(
         },
       });
 
-      // ----------------------------------------------
-      // 3B. CREAR O ACTUALIZAR TENANT USER
-      // ----------------------------------------------
+      const tenantUser = await tx.tenantUser.create({
+        data: {
+          userId: nuevoUsuario.id,
+          tenantId: id,
+          role: "CAPTAIN",
+        },
+      });
 
-      if (tenantUser) {
-        // Existía un tenantUser huérfano (sin userId) -> enlazarlo
-        await tx.tenantUser.update({
-          where: {
-            id: tenantUser.id,
-          },
-          data: {
-            userId: nuevoUsuario.id,
-            teamId: team.id,
-            tenantId: id,
-            role: "CAPTAIN",
-          },
-        });
-      } else {
-        await tx.tenantUser.create({
-          data: {
-            userId: nuevoUsuario.id,
-            tenantId: id,
-            teamId: team.id,
-            role: "CAPTAIN",
-          },
-        });
-      }
+      await tx.teamCaptain.create({
+        data: {
+          tenantUserId: tenantUser.id,
+          teamId: team.id,
+        },
+      });
 
       return { team, nuevoUsuario };
     });
-
-    // --------------------------------------------------
-    // RESPUESTA
-    // --------------------------------------------------
 
     return NextResponse.json({
       ok: true,

@@ -184,9 +184,15 @@ export async function POST(
       where: { id: sourceTeamId },
       include: {
         players: true,
+        // captains ahora es TeamCaptain[] (N a N), cada uno
+        // apunta a un TenantUser -> User
         captains: {
           include: {
-            user: true,
+            tenantUser: {
+              include: {
+                user: true,
+              },
+            },
           },
         },
       },
@@ -206,9 +212,10 @@ export async function POST(
       );
     }
 
-    // El TenantUser del capitán en el torneo ORIGEN (si existe)
+    // El TeamCaptain (vínculo) cuyo TenantUser tiene rol CAPTAIN
+    // en el torneo ORIGEN (si existe)
     const capitanOrigen = equipoOrigen.captains.find(
-      (c) => c.role === "CAPTAIN"
+      (c) => c.tenantUser.role === "CAPTAIN"
     );
 
     // --------------------------------------------------
@@ -234,7 +241,7 @@ export async function POST(
     }
 
     // --------------------------------------------------
-    // TRANSACCIÓN: CREAR TEAM + PLAYERS + TENANT USER
+    // TRANSACCIÓN: CREAR TEAM + PLAYERS + TEAMCAPTAIN
     // --------------------------------------------------
 
     const result = await prisma.$transaction(async (tx) => {
@@ -270,37 +277,49 @@ export async function POST(
 
       // ----------------------------------------------
       // 3. ENLAZAR AL MISMO USUARIO CAPITÁN (SI EXISTE)
+      //    Ahora vía TeamCaptain (N a N) en vez de
+      //    TenantUser.teamId
       // ----------------------------------------------
 
       if (capitanOrigen) {
-        const tenantUserExistente =
-          await tx.tenantUser.findUnique({
-            where: {
-              userId_tenantId: {
-                userId: capitanOrigen.userId,
-                tenantId: id,
-              },
-            },
-          });
+        const userId = capitanOrigen.tenantUser.userId;
 
-        if (tenantUserExistente) {
-          // Ya tenía acceso a este torneo -> solo actualizar equipo
-          await tx.tenantUser.update({
-            where: {
-              id: tenantUserExistente.id,
+        // Asegurar TenantUser para ese usuario en el torneo destino
+        let tenantUserDestino = await tx.tenantUser.findUnique({
+          where: {
+            userId_tenantId: {
+              userId,
+              tenantId: id,
             },
+          },
+        });
+
+        if (!tenantUserDestino) {
+          tenantUserDestino = await tx.tenantUser.create({
             data: {
-              teamId: teamNuevo.id,
+              userId,
+              tenantId: id,
               role: "CAPTAIN",
             },
           });
-        } else {
-          await tx.tenantUser.create({
-            data: {
-              userId: capitanOrigen.userId,
-              tenantId: id,
+        }
+
+        // Crear el vínculo TeamCaptain con el equipo nuevo
+        // (si no existía ya, aunque aquí siempre es nuevo)
+        const yaVinculado = await tx.teamCaptain.findUnique({
+          where: {
+            tenantUserId_teamId: {
+              tenantUserId: tenantUserDestino.id,
               teamId: teamNuevo.id,
-              role: "CAPTAIN",
+            },
+          },
+        });
+
+        if (!yaVinculado) {
+          await tx.teamCaptain.create({
+            data: {
+              tenantUserId: tenantUserDestino.id,
+              teamId: teamNuevo.id,
             },
           });
         }

@@ -72,33 +72,43 @@ model User {
 }
 
 model TenantUser {
-  id       String  @id @default(cuid())
-  role     Role    @default(VIEWER)
+  id       String        @id @default(cuid())
+  role     Role          @default(VIEWER)
   userId   String
   tenantId String
-  teamId   String?
-  team     Team?   @relation(fields: [teamId], references: [id])
-  tenant   Tenant  @relation(fields: [tenantId], references: [id])
-  user     User    @relation(fields: [userId], references: [id])
+  tenant   Tenant        @relation(fields: [tenantId], references: [id])
+  user     User          @relation(fields: [userId], references: [id])
+  teams    TeamCaptain[]
 
   @@unique([userId, tenantId])
 }
 
+model TeamCaptain {
+  id           String     @id @default(cuid())
+  tenantUserId String
+  teamId       String
+  createdAt    DateTime   @default(now())
+  tenantUser   TenantUser @relation(fields: [tenantUserId], references: [id])
+  team         Team       @relation(fields: [teamId], references: [id])
+
+  @@unique([tenantUserId, teamId])
+}
+
 model Team {
-  id           String       @id @default(cuid())
+  id           String        @id @default(cuid())
   name         String
   logo         String?
   tenantId     String
   captain      String?
   phone        String?
-  disqualified Boolean      @default(false)
+  disqualified Boolean       @default(false)
   finances     Finance[]
-  awayMatches  Match[]      @relation("AwayTeam")
-  homeMatches  Match[]      @relation("HomeTeam")
+  awayMatches  Match[]       @relation("AwayTeam")
+  homeMatches  Match[]       @relation("HomeTeam")
   players      Player[]
-  tenant       Tenant       @relation(fields: [tenantId], references: [id])
-  captains     TenantUser[]
-  preferredDay String? 
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  captains     TeamCaptain[]
+  preferredDay String?
 }
 
 model Player {
