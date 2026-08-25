@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
+import ResetPasswordButton from "./ResetPasswordButton";
 
 export default async function CapitanesPage() {
   const session = await auth();
@@ -63,8 +64,7 @@ export default async function CapitanesPage() {
 
   const totalEquipos = usuarios.reduce(
     (acc, u) =>
-      acc +
-      u.tenants.reduce((a2, tu) => a2 + tu.teams.length, 0),
+      acc + u.tenants.reduce((a2, tu) => a2 + tu.teams.length, 0),
     0
   );
 
@@ -82,9 +82,7 @@ export default async function CapitanesPage() {
             <p className="text-xs text-gray-500 uppercase tracking-widest">
               Admin
             </p>
-            <h1 className="text-lg font-black text-white">
-              👤 Capitanes
-            </h1>
+            <h1 className="text-lg font-black text-white">👤 Capitanes</h1>
           </div>
         </div>
       </header>
@@ -97,6 +95,12 @@ export default async function CapitanesPage() {
           <p className="text-gray-500 text-sm mt-1">
             {usuarios.length} capitanes · {totalEquipos} equipos en total
           </p>
+        </div>
+
+        <div className="bg-blue-900/20 border border-blue-800 rounded-xl px-4 py-3 text-blue-300 text-xs">
+          🔒 Por seguridad, las contraseñas no se pueden ver una vez creadas.
+          Usa "Restablecer contraseña" para generar una nueva si el capitán la
+          olvidó.
         </div>
 
         {usuarios.length === 0 ? (
@@ -119,7 +123,7 @@ export default async function CapitanesPage() {
                   key={u.id}
                   className="bg-gray-900 border border-gray-800 rounded-2xl p-6"
                 >
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
                     <div>
                       <h3 className="text-white font-bold text-lg">
                         {u.name || "Sin nombre"}
@@ -130,10 +134,14 @@ export default async function CapitanesPage() {
                       </div>
                     </div>
 
-                    <span className="text-xs bg-green-900/30 text-green-400 px-3 py-1.5 rounded-full font-bold self-start">
-                      {totalEquiposUsuario}{" "}
-                      {totalEquiposUsuario === 1 ? "equipo" : "equipos"}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-green-900/30 text-green-400 px-3 py-1.5 rounded-full font-bold">
+                        {totalEquiposUsuario}{" "}
+                        {totalEquiposUsuario === 1 ? "equipo" : "equipos"}
+                      </span>
+
+                      <ResetPasswordButton userId={u.id} />
+                    </div>
                   </div>
 
                   <div className="space-y-3">
