@@ -203,7 +203,12 @@ export default async function AdminPage({
                 >
                   👥 Sub Admins
                 </Link>
-
+                     <Link
+                  href="/admin/capitanes"
+                  className="bg-gray-700 hover:bg-gray-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
+                >
+                  Capitanes
+                </Link>
                 <Link
                   href="/admin/torneos/nuevo"
                   className="bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
