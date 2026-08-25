@@ -47,22 +47,34 @@ export async function POST(
 
     if (!name?.trim()) {
       return NextResponse.json(
-        { error: "El nombre del equipo es obligatorio" },
-        { status: 400 }
+        {
+          error: "El nombre del equipo es obligatorio",
+        },
+        {
+          status: 400,
+        }
       );
     }
 
     if (!captain?.trim()) {
       return NextResponse.json(
-        { error: "El nombre del capitán es obligatorio" },
-        { status: 400 }
+        {
+          error: "El nombre del capitán es obligatorio",
+        },
+        {
+          status: 400,
+        }
       );
     }
 
     if (!phone?.trim()) {
       return NextResponse.json(
-        { error: "El teléfono del capitán es obligatorio" },
-        { status: 400 }
+        {
+          error: "El teléfono del capitán es obligatorio",
+        },
+        {
+          status: 400,
+        }
       );
     }
 
@@ -90,42 +102,29 @@ export async function POST(
     console.log("EMAIL GENERADO:", email);
 
     // ─────────────────────────────────────
-    // COMPROBAR TELÉFONO
+    // BUSCAR USUARIO EXISTENTE
     // ─────────────────────────────────────
 
-    const usuarioExistente = await prisma.user.findUnique({
+    const usuarioExistente = await prisma.user.findFirst({
       where: {
-        phone: telefono,
+        OR: [
+          {
+            phone: telefono,
+          },
+          {
+            email,
+          },
+        ],
       },
     });
 
     if (usuarioExistente) {
-      return NextResponse.json(
-        {
-          error: "Ese teléfono ya está registrado",
-        },
-        { status: 400 }
+      console.log(
+        "USUARIO EXISTENTE ENCONTRADO:",
+        usuarioExistente.id
       );
-    }
-
-    // ─────────────────────────────────────
-    // COMPROBAR EMAIL
-    // ─────────────────────────────────────
-
-    const usuarioEmailExistente = await prisma.user.findUnique({
-      where: {
-        email,
-      },
-    });
-
-    if (usuarioEmailExistente) {
-      return NextResponse.json(
-        {
-          error: "Ese capitán ya tiene un usuario registrado",
-          email,
-        },
-        { status: 400 }
-      );
+    } else {
+      console.log("NO EXISTE USUARIO. SE CREARÁ UNO NUEVO.");
     }
 
     // ─────────────────────────────────────
@@ -137,13 +136,6 @@ export async function POST(
       .slice(-3);
 
     const passwordInicial = `${nombreCapitan}${ultimos3}`;
-
-    const passwordHash = await bcrypt.hash(
-      passwordInicial,
-      10
-    );
-
-    console.log("PASSWORD GENERADA");
 
     // ─────────────────────────────────────
     // TRANSACCIÓN
@@ -168,37 +160,75 @@ export async function POST(
       console.log("TEAM CREADO:", team.id);
 
       // ─────────────────────────────────
-      // 2. CREAR USER
+      // 2. OBTENER O CREAR USER
       // ─────────────────────────────────
 
-      console.log("2. CREANDO USER...");
+      let user;
 
-      const user = await tx.user.create({
-        data: {
-          name: nombreCapitan,
-          email,
-          phone: telefono,
-          password: passwordHash,
-          isSuperAdmin: false,
-        },
-      });
+      if (usuarioExistente) {
+        // =================================
+        // USUARIO YA EXISTE
+        // =================================
 
-      console.log("USER CREADO:", user.id);
+        console.log(
+          "2. USUARIO YA EXISTE. SE REUTILIZARÁ:",
+          usuarioExistente.id
+        );
+
+        user = await tx.user.update({
+          where: {
+            id: usuarioExistente.id,
+          },
+          data: {
+            // Actualizamos nombre/teléfono por si
+            // el administrador introdujo información
+            // más reciente.
+            name: nombreCapitan,
+            phone: telefono,
+          },
+        });
+      } else {
+        // =================================
+        // USUARIO NUEVO
+        // =================================
+
+        console.log("2. CREANDO USER...");
+
+        const passwordHash = await bcrypt.hash(
+          passwordInicial,
+          10
+        );
+
+        user = await tx.user.create({
+          data: {
+            name: nombreCapitan,
+            email,
+            phone: telefono,
+            password: passwordHash,
+            isSuperAdmin: false,
+          },
+        });
+
+        console.log("USER CREADO:", user.id);
+      }
 
       // ─────────────────────────────────
-      // 3. RELACIONAR USER CON TORNEO
+      // 3. CREAR RELACIÓN CON EL TORNEO
       // ─────────────────────────────────
 
-      console.log("3. CREANDO TENANT USER...");
+      console.log(
+        "3. CREANDO TENANT USER..."
+      );
 
-      const tenantUser = await tx.tenantUser.create({
-        data: {
-          userId: user.id,
-          tenantId: id,
-          teamId: team.id,
-          role: "CAPTAIN",
-        },
-      });
+      const tenantUser =
+        await tx.tenantUser.create({
+          data: {
+            userId: user.id,
+            tenantId: id,
+            teamId: team.id,
+            role: "CAPTAIN",
+          },
+        });
 
       console.log(
         "TENANT USER CREADO:",
@@ -213,15 +243,27 @@ export async function POST(
         team,
         user,
         tenantUser,
-        passwordInicial,
+
+        // Si es usuario existente,
+        // no estamos creando una contraseña nueva.
+        passwordInicial: usuarioExistente
+          ? null
+          : passwordInicial,
       };
     });
+
+    // ─────────────────────────────────────
+    // LOG FINAL
+    // ─────────────────────────────────────
 
     console.log("=================================");
     console.log("TODO CREADO CORRECTAMENTE");
     console.log("TEAM:", result.team.id);
     console.log("USER:", result.user.id);
-    console.log("TENANT USER:", result.tenantUser.id);
+    console.log(
+      "TENANT USER:",
+      result.tenantUser.id
+    );
     console.log("=================================");
 
     // ─────────────────────────────────────
@@ -237,10 +279,14 @@ export async function POST(
         name: result.user.name,
         email: result.user.email,
         phone: result.user.phone,
+
+        // null significa que el usuario
+        // ya existía y conserva su contraseña.
         password: result.passwordInicial,
       },
-    });
 
+      existingUser: Boolean(usuarioExistente),
+    });
   } catch (error) {
     // ─────────────────────────────────────
     // ERROR
