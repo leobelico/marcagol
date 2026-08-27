@@ -76,46 +76,60 @@ export default async function CapitanPage({
     equipos.find((t) => t.id === equipoSeleccionadoId) ?? equipos[0];
 
   return (
-    <div>
-      <div className="max-w-5xl mx-auto px-4 pt-6 space-y-3">
-        {/* Selector de liga (solo si tiene más de una) */}
-        {ligasCapitan.length > 1 && (
-          <div className="flex flex-wrap gap-2 bg-gray-900 border border-gray-800 rounded-xl p-1.5 w-fit">
-            {ligasCapitan.map((m) => (
-              <Link
-                key={m.tenantId}
-                href={`/capitan?liga=${m.tenantId}`}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition ${
-                  m.tenantId === ligaActiva.tenantId
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-400 hover:text-white"
-                }`}
-              >
-                {m.tenantName}
-              </Link>
-            ))}
-          </div>
-        )}
+    <div className="min-h-screen bg-gray-950">
+      {(ligasCapitan.length > 1 || equipos.length > 1) && (
+        <div className="bg-gray-900 border-b border-gray-800">
+          <div className="max-w-5xl mx-auto px-4 py-4 space-y-3">
+            {/* Selector de liga (solo si tiene más de una) */}
+            {ligasCapitan.length > 1 && (
+              <div>
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 px-1">
+                  🏆 Tus ligas
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {ligasCapitan.map((m) => (
+                    <Link
+                      key={m.tenantId}
+                      href={`/capitan?liga=${m.tenantId}`}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold transition ${
+                        m.tenantId === ligaActiva.tenantId
+                          ? "bg-blue-600 text-white shadow-lg shadow-blue-900/30"
+                          : "bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700"
+                      }`}
+                    >
+                      {m.tenantName}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {/* Selector de equipo dentro de la liga activa (solo si tiene más de uno) */}
-        {equipos.length > 1 && (
-          <div className="flex flex-wrap gap-2 bg-gray-900 border border-gray-800 rounded-xl p-1.5 w-fit">
-            {equipos.map((t) => (
-              <Link
-                key={t.id}
-                href={`/capitan?liga=${ligaActiva.tenantId}&equipo=${t.id}`}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition ${
-                  t.id === equipoActivo.id
-                    ? "bg-green-600 text-white"
-                    : "text-gray-400 hover:text-white"
-                }`}
-              >
-                {t.name}
-              </Link>
-            ))}
+            {/* Selector de equipo dentro de la liga activa (solo si tiene más de uno) */}
+            {equipos.length > 1 && (
+              <div>
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 px-1">
+                  ⚽ Tus equipos en {ligaActiva.tenantName}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {equipos.map((t) => (
+                    <Link
+                      key={t.id}
+                      href={`/capitan?liga=${ligaActiva.tenantId}&equipo=${t.id}`}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold transition ${
+                        t.id === equipoActivo.id
+                          ? "bg-green-600 text-white shadow-lg shadow-green-900/30"
+                          : "bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700"
+                      }`}
+                    >
+                      {t.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <CapitanClient
         team={equipoActivo}
