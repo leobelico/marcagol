@@ -8,6 +8,7 @@ export async function DELETE(
     params,
   }: {
     params: Promise<{
+      id: string;
       teamId: string;
       playerId: string;
     }>;
@@ -22,18 +23,20 @@ export async function DELETE(
     );
   }
 
-  const { teamId, playerId } = await params;
+  const { id, teamId, playerId } = await params;
 
-  const role = (session.user as any).role;
-  const sessionTeamId = (session.user as any).teamId;
+  const memberships = ((session.user as any).memberships || []) as {
+    tenantId: string;
+    role: string;
+    teamIds: string[];
+  }[];
   const isSuperAdmin = (session.user as any).isSuperAdmin;
-  const sessionTeamIds = (session.user as any).teamIds as
-    | string[]
-    | undefined;
-  // El capitán solamente puede acceder a su equipo
-  if (role === "CAPTAIN") {
-    // Puede agregar jugadores a CUALQUIERA de sus equipos
-    if (!sessionTeamIds || !sessionTeamIds.includes(teamId)) {
+
+  const membership = memberships.find((m) => m.tenantId === id);
+
+  // El capitán solamente puede acceder a su equipo, en su torneo
+  if (membership?.role === "CAPTAIN") {
+    if (!membership.teamIds.includes(teamId)) {
       return NextResponse.json(
         { error: "No tienes permiso para este equipo" },
         { status: 403 }
@@ -41,11 +44,11 @@ export async function DELETE(
     }
   }
 
-  // Solo SUPER_ADMIN, ADMIN o CAPTAIN
+  // Solo SUPER_ADMIN, ADMIN o CAPTAIN (de este torneo)
   if (
     !isSuperAdmin &&
-    role !== "ADMIN" &&
-    role !== "CAPTAIN"
+    membership?.role !== "ADMIN" &&
+    membership?.role !== "CAPTAIN"
   ) {
     return NextResponse.json(
       { error: "No tienes permisos" },
@@ -115,6 +118,7 @@ export async function PATCH(
     params,
   }: {
     params: Promise<{
+      id: string;
       teamId: string;
       playerId: string;
     }>;
@@ -129,18 +133,20 @@ export async function PATCH(
     );
   }
 
-  const { teamId, playerId } = await params;
+  const { id, teamId, playerId } = await params;
 
-  const role = (session.user as any).role;
-  const sessionTeamId = (session.user as any).teamId;
+  const memberships = ((session.user as any).memberships || []) as {
+    tenantId: string;
+    role: string;
+    teamIds: string[];
+  }[];
   const isSuperAdmin = (session.user as any).isSuperAdmin;
-  const sessionTeamIds = (session.user as any).teamIds as
-    | string[]
-    | undefined;
-  // El capitán solamente puede modificar su equipo
-  if (role === "CAPTAIN") {
-    // Puede agregar jugadores a CUALQUIERA de sus equipos
-    if (!sessionTeamIds || !sessionTeamIds.includes(teamId)) {
+
+  const membership = memberships.find((m) => m.tenantId === id);
+
+  // El capitán solamente puede modificar su equipo, en su torneo
+  if (membership?.role === "CAPTAIN") {
+    if (!membership.teamIds.includes(teamId)) {
       return NextResponse.json(
         { error: "No tienes permiso para este equipo" },
         { status: 403 }
@@ -148,11 +154,11 @@ export async function PATCH(
     }
   }
 
-  // Solo SUPER_ADMIN, ADMIN o CAPTAIN
+  // Solo SUPER_ADMIN, ADMIN o CAPTAIN (de este torneo)
   if (
     !isSuperAdmin &&
-    role !== "ADMIN" &&
-    role !== "CAPTAIN"
+    membership?.role !== "ADMIN" &&
+    membership?.role !== "CAPTAIN"
   ) {
     return NextResponse.json(
       { error: "No tienes permisos" },
