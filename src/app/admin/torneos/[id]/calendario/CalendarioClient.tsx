@@ -611,28 +611,40 @@ const away = match.awayTeam.name;
     doc.addImage(logoData, logoFormato, 4, 3, 16, 16);
   }
 
-  doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.text("CÉDULA ARBITRAL", pageW / 2, 10, {
-    align: "center",
-  });
+doc.setFont("helvetica", "bold");
+doc.setFontSize(16);
+doc.text("CÉDULA ARBITRAL", pageW / 2, 9, {
+  align: "center",
+});
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text(
-    `Fecha: ${new Date(match.date).toLocaleDateString("es-MX", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })}`,
-    pageW / 2,
-    17,
-    {
-      align: "center",
-    }
-  );
+// NOMBRE DE LA LIGA / TORNEO
+doc.setFont("helvetica", "bold");
+doc.setFontSize(10);
+doc.text(
+  torneo.name.toUpperCase(),
+  pageW / 2,
+  15,
+  {
+    align: "center",
+  }
+);
+
+// FECHA
+doc.setFont("helvetica", "normal");
+doc.setFontSize(8);
+doc.text(
+  `Fecha: ${new Date(match.date).toLocaleDateString("es-MX", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })}`,
+  pageW / 2,
+  20,
+  {
+    align: "center",
+  }
+);
   // =========================
   // INFO PARTIDO
   // =========================
