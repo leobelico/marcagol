@@ -27,16 +27,18 @@ export async function DELETE(
   const role = (session.user as any).role;
   const sessionTeamId = (session.user as any).teamId;
   const isSuperAdmin = (session.user as any).isSuperAdmin;
-
+  const sessionTeamIds = (session.user as any).teamIds as
+    | string[]
+    | undefined;
   // El capitán solamente puede acceder a su equipo
-  if (
-    role === "CAPTAIN" &&
-    sessionTeamId !== teamId
-  ) {
-    return NextResponse.json(
-      { error: "No tienes permiso para este equipo" },
-      { status: 403 }
-    );
+  if (role === "CAPTAIN") {
+    // Puede agregar jugadores a CUALQUIERA de sus equipos
+    if (!sessionTeamIds || !sessionTeamIds.includes(teamId)) {
+      return NextResponse.json(
+        { error: "No tienes permiso para este equipo" },
+        { status: 403 }
+      );
+    }
   }
 
   // Solo SUPER_ADMIN, ADMIN o CAPTAIN
@@ -132,16 +134,18 @@ export async function PATCH(
   const role = (session.user as any).role;
   const sessionTeamId = (session.user as any).teamId;
   const isSuperAdmin = (session.user as any).isSuperAdmin;
-
+  const sessionTeamIds = (session.user as any).teamIds as
+    | string[]
+    | undefined;
   // El capitán solamente puede modificar su equipo
-  if (
-    role === "CAPTAIN" &&
-    sessionTeamId !== teamId
-  ) {
-    return NextResponse.json(
-      { error: "No tienes permiso para este equipo" },
-      { status: 403 }
-    );
+  if (role === "CAPTAIN") {
+    // Puede agregar jugadores a CUALQUIERA de sus equipos
+    if (!sessionTeamIds || !sessionTeamIds.includes(teamId)) {
+      return NextResponse.json(
+        { error: "No tienes permiso para este equipo" },
+        { status: 403 }
+      );
+    }
   }
 
   // Solo SUPER_ADMIN, ADMIN o CAPTAIN
