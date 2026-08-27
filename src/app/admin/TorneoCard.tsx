@@ -149,12 +149,6 @@ export default function TorneoCard({
           </div>
 
           {/* LOGO UPLOADER */}
-          {isSuperAdmin && (
-            <LogoUploader
-              torneoId={t.id}
-              logoActual={t.logo}
-            />
-          )}
         </div>
       </Link>
 
