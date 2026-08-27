@@ -175,30 +175,43 @@ export default function TorneoCard({
             ⋮
           </button>
 
-          {menuOpen && (
-            <div className="absolute right-0 top-10 z-50 w-52 bg-gray-800 border border-gray-700 rounded-xl shadow-xl overflow-hidden">
+        {menuOpen && (
+          <div className="absolute right-0 top-10 z-50 w-64 bg-gray-800 border border-gray-700 rounded-xl shadow-xl overflow-hidden">
 
-              <button
-                type="button"
-                onClick={handleArchive}
-                disabled={archiving}
-                className={`w-full px-4 py-3 text-left text-sm transition disabled:opacity-50 ${
-                  t.archived
-                    ? "text-green-400 hover:bg-gray-700 hover:text-green-300"
-                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
-                }`}
-              >
-                {archiving
-                  ? t.archived
-                    ? "Desarchivando..."
-                    : "Archivando..."
-                  : t.archived
-                    ? "↩️ Desarchivar torneo"
-                    : "📦 Archivar torneo"}
-              </button>
+            {/* SUBIR / CAMBIAR LOGO */}
+            <div className="px-4 py-3 border-b border-gray-700">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
+                Logo del torneo
+              </p>
 
+              <LogoUploader
+                torneoId={t.id}
+                logoActual={t.logo}
+              />
             </div>
-          )}
+
+            {/* ARCHIVAR / DESARCHIVAR */}
+            <button
+              type="button"
+              onClick={handleArchive}
+              disabled={archiving}
+              className={`w-full px-4 py-3 text-left text-sm transition disabled:opacity-50 ${
+                t.archived
+                  ? "text-green-400 hover:bg-gray-700 hover:text-green-300"
+                  : "text-gray-300 hover:bg-gray-700 hover:text-white"
+              }`}
+            >
+              {archiving
+                ? t.archived
+                  ? "Desarchivando..."
+                  : "Archivando..."
+                : t.archived
+                  ? "↩️ Desarchivar torneo"
+                  : "📦 Archivar torneo"}
+            </button>
+
+          </div>
+        )}
         </div>
       )}
     </div>
