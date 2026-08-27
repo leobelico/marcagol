@@ -42,6 +42,9 @@ export async function POST(
 } = params;
 
   const role = (session.user as any).role;
+    const sessionTeamIds = (session.user as any).teamIds as
+    | string[]
+    | undefined;
   const sessionTeamId = (session.user as any).teamId;
   const sessionTenantId = (session.user as any).tenantId;
   const isSuperAdmin = (session.user as any).isSuperAdmin;
@@ -49,14 +52,14 @@ export async function POST(
   // ─────────────────────────────────────
   // CAPITÁN: SOLO SU EQUIPO
   // ─────────────────────────────────────
-  if (
-    role === "CAPTAIN" &&
-    sessionTeamId !== teamId
-  ) {
-    return NextResponse.json(
-      { error: "No tienes permiso para este equipo" },
-      { status: 403 }
-    );
+  if (role === "CAPTAIN") {
+    // Puede agregar jugadores a CUALQUIERA de sus equipos
+    if (!sessionTeamIds || !sessionTeamIds.includes(teamId)) {
+      return NextResponse.json(
+        { error: "No tienes permiso para este equipo" },
+        { status: 403 }
+      );
+    }
   }
 
   // ─────────────────────────────────────
