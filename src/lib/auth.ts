@@ -17,9 +17,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id;
         token.isSuperAdmin = (user as any).isSuperAdmin;
-        token.role = (user as any).role;
-        token.teamIds = (user as any).teamIds;
-        token.tenantId = (user as any).tenantId;
+        token.memberships = (user as any).memberships;
       }
 
       return token;
@@ -32,14 +30,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         (session.user as any).isSuperAdmin =
           token.isSuperAdmin;
 
-        (session.user as any).role =
-          token.role;
-
-        (session.user as any).teamIds =
-          token.teamIds;
-
-        (session.user as any).tenantId =
-          token.tenantId;
+        (session.user as any).memberships =
+          token.memberships;
       }
 
       return session;
@@ -78,6 +70,7 @@ async authorize(credentials) {
     include: {
       tenants: {
         include: {
+          tenant: true,
           teams: true, // TeamCaptain[] de cada TenantUser
         },
       },
@@ -94,22 +87,22 @@ async authorize(credentials) {
     return null;
   }
 
-  const tenantUser = user.tenants[0];
-
-  // Todos los equipos que este usuario maneja EN ESE torneo
-  // (antes era un solo teamId, ahora puede ser varios)
-  const teamIds = tenantUser
-    ? tenantUser.teams.map((tc) => tc.teamId)
-    : [];
+  // Una membership por CADA torneo/liga donde el usuario tiene
+  // un TenantUser (antes solo se tomaba tenants[0] y se perdían
+  // las demás ligas)
+  const memberships = user.tenants.map((tu) => ({
+    tenantId: tu.tenantId,
+    tenantName: tu.tenant.name,
+    role: tu.role,
+    teamIds: tu.teams.map((tc) => tc.teamId),
+  }));
 
   return {
     id: user.id,
     email: user.email,
     name: user.name,
     isSuperAdmin: user.isSuperAdmin,
-    role: tenantUser?.role ?? null,
-    teamIds,
-    tenantId: tenantUser?.tenantId ?? null,
+    memberships,
   };
 },
     }),

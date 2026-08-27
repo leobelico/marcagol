@@ -25,10 +25,16 @@ export async function GET(
 
   const { id } = await params;
 
-  const role = (session.user as any).role;
+  const memberships = ((session.user as any).memberships || []) as {
+    tenantId: string;
+    role: string;
+    teamIds: string[];
+  }[];
   const isSuperAdmin = (session.user as any).isSuperAdmin;
 
-  if (!isSuperAdmin && role !== "ADMIN") {
+  const membership = memberships.find((m) => m.tenantId === id);
+
+  if (!isSuperAdmin && membership?.role !== "ADMIN") {
     return NextResponse.json(
       { error: "No tienes permisos para buscar equipos" },
       { status: 403 }
@@ -121,24 +127,22 @@ export async function POST(
 
     const { id } = await params;
 
-    const role = (session.user as any).role;
-    const sessionTenantId = (session.user as any).tenantId;
+    const memberships = ((session.user as any).memberships || []) as {
+      tenantId: string;
+      role: string;
+      teamIds: string[];
+    }[];
     const isSuperAdmin = (session.user as any).isSuperAdmin;
+
+    const membership = memberships.find((m) => m.tenantId === id);
 
     // --------------------------------------------------
     // PERMISOS
     // --------------------------------------------------
 
-    if (!isSuperAdmin && role !== "ADMIN") {
+    if (!isSuperAdmin && membership?.role !== "ADMIN") {
       return NextResponse.json(
         { error: "No tienes permisos para importar equipos" },
-        { status: 403 }
-      );
-    }
-
-    if (!isSuperAdmin && sessionTenantId !== id) {
-      return NextResponse.json(
-        { error: "No tienes acceso a este torneo" },
         { status: 403 }
       );
     }
@@ -184,8 +188,6 @@ export async function POST(
       where: { id: sourceTeamId },
       include: {
         players: true,
-        // captains ahora es TeamCaptain[] (N a N), cada uno
-        // apunta a un TenantUser -> User
         captains: {
           include: {
             tenantUser: {
@@ -212,8 +214,6 @@ export async function POST(
       );
     }
 
-    // El TeamCaptain (vínculo) cuyo TenantUser tiene rol CAPTAIN
-    // en el torneo ORIGEN (si existe)
     const capitanOrigen = equipoOrigen.captains.find(
       (c) => c.tenantUser.role === "CAPTAIN"
     );
@@ -245,10 +245,6 @@ export async function POST(
     // --------------------------------------------------
 
     const result = await prisma.$transaction(async (tx) => {
-      // ----------------------------------------------
-      // 1. CREAR TEAM NUEVO EN EL TORNEO DESTINO
-      // ----------------------------------------------
-
       const teamNuevo = await tx.team.create({
         data: {
           name: equipoOrigen.name,
@@ -258,10 +254,6 @@ export async function POST(
           tenantId: id,
         },
       });
-
-      // ----------------------------------------------
-      // 2. CREAR JUGADORES NUEVOS (SIN ESTADÍSTICAS)
-      // ----------------------------------------------
 
       if (equipoOrigen.players.length > 0) {
         await tx.player.createMany({
@@ -275,16 +267,9 @@ export async function POST(
         });
       }
 
-      // ----------------------------------------------
-      // 3. ENLAZAR AL MISMO USUARIO CAPITÁN (SI EXISTE)
-      //    Ahora vía TeamCaptain (N a N) en vez de
-      //    TenantUser.teamId
-      // ----------------------------------------------
-
       if (capitanOrigen) {
         const userId = capitanOrigen.tenantUser.userId;
 
-        // Asegurar TenantUser para ese usuario en el torneo destino
         let tenantUserDestino = await tx.tenantUser.findUnique({
           where: {
             userId_tenantId: {
@@ -304,8 +289,6 @@ export async function POST(
           });
         }
 
-        // Crear el vínculo TeamCaptain con el equipo nuevo
-        // (si no existía ya, aunque aquí siempre es nuevo)
         const yaVinculado = await tx.teamCaptain.findUnique({
           where: {
             tenantUserId_teamId: {

@@ -1,4 +1,4 @@
-// app/api/admin/torneos/[torneoId]/equipos/[teamId]/jugadores/[playerId]/foto/route.ts
+// app/api/admin/torneos/[id]/equipos/[teamId]/jugadores/[playerId]/foto/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
@@ -35,26 +35,22 @@ export async function POST(
 
   const params = await context.params;
 
- const {
-  id,
-  teamId,
-  playerId,
-} = params;
+  const { id, teamId, playerId } = params;
 
-  const role = (session.user as any).role;
-    const sessionTeamIds = (session.user as any).teamIds as
-    | string[]
-    | undefined;
-  const sessionTeamId = (session.user as any).teamId;
-  const sessionTenantId = (session.user as any).tenantId;
+  const memberships = ((session.user as any).memberships || []) as {
+    tenantId: string;
+    role: string;
+    teamIds: string[];
+  }[];
   const isSuperAdmin = (session.user as any).isSuperAdmin;
 
+  const membership = memberships.find((m) => m.tenantId === id);
+
   // ─────────────────────────────────────
-  // CAPITÁN: SOLO SU EQUIPO
+  // CAPITÁN: SOLO SU EQUIPO, DENTRO DE SU TORNEO
   // ─────────────────────────────────────
-  if (role === "CAPTAIN") {
-    // Puede agregar jugadores a CUALQUIERA de sus equipos
-    if (!sessionTeamIds || !sessionTeamIds.includes(teamId)) {
+  if (membership?.role === "CAPTAIN") {
+    if (!membership.teamIds.includes(teamId)) {
       return NextResponse.json(
         { error: "No tienes permiso para este equipo" },
         { status: 403 }
@@ -63,25 +59,12 @@ export async function POST(
   }
 
   // ─────────────────────────────────────
-  // CAPITÁN: SOLO SU TORNEO
-  // ─────────────────────────────────────
-  if (
-    role === "CAPTAIN" &&
-    sessionTenantId !== id
-  ) {
-    return NextResponse.json(
-      { error: "No tienes permiso para este torneo" },
-      { status: 403 }
-    );
-  }
-
-  // ─────────────────────────────────────
   // PERMISOS
   // ─────────────────────────────────────
   if (
     !isSuperAdmin &&
-    role !== "ADMIN" &&
-    role !== "CAPTAIN"
+    membership?.role !== "ADMIN" &&
+    membership?.role !== "CAPTAIN"
   ) {
     return NextResponse.json(
       { error: "No tienes permisos" },
@@ -142,8 +125,6 @@ export async function POST(
     );
   }
 
-  // Opcional pero recomendable:
-  // limitar a imágenes
   if (!file.type.startsWith("image/")) {
     return NextResponse.json(
       { error: "El archivo debe ser una imagen" },

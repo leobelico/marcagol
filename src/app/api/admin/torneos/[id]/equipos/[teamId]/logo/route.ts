@@ -33,35 +33,25 @@ export async function POST(
 
     const { id, teamId } = await context.params;
 
-    const role = (session.user as any).role;
-    const sessionTeamId = (session.user as any).teamId;
-    const sessionTenantId = (session.user as any).tenantId;
+    const memberships = ((session.user as any).memberships || []) as {
+      tenantId: string;
+      role: string;
+      teamIds: string[];
+    }[];
     const isSuperAdmin = (session.user as any).isSuperAdmin;
 
-    // ─────────────────────────────────────
-    // CAPITÁN: SOLO SU EQUIPO
-    // ─────────────────────────────────────
-    if (
-      role === "CAPTAIN" &&
-      sessionTeamId !== teamId
-    ) {
-      return NextResponse.json(
-        { error: "No tienes permiso para este equipo" },
-        { status: 403 }
-      );
-    }
+    const membership = memberships.find((m) => m.tenantId === id);
 
     // ─────────────────────────────────────
-    // CAPITÁN: SOLO SU TORNEO
+    // CAPITÁN: SOLO SU EQUIPO, DENTRO DE SU TORNEO
     // ─────────────────────────────────────
-    if (
-      role === "CAPTAIN" &&
-      sessionTenantId !== id
-    ) {
-      return NextResponse.json(
-        { error: "No tienes permiso para este torneo" },
-        { status: 403 }
-      );
+    if (membership?.role === "CAPTAIN") {
+      if (!membership.teamIds.includes(teamId)) {
+        return NextResponse.json(
+          { error: "No tienes permiso para este equipo" },
+          { status: 403 }
+        );
+      }
     }
 
     // ─────────────────────────────────────
@@ -69,8 +59,8 @@ export async function POST(
     // ─────────────────────────────────────
     if (
       !isSuperAdmin &&
-      role !== "ADMIN" &&
-      role !== "CAPTAIN"
+      membership?.role !== "ADMIN" &&
+      membership?.role !== "CAPTAIN"
     ) {
       return NextResponse.json(
         { error: "No tienes permisos" },

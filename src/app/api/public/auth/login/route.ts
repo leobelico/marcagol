@@ -37,6 +37,7 @@ export async function POST(request: Request) {
       include: {
         tenants: {
           include: {
+            tenant: true,
             teams: true, // TeamCaptain[] de cada TenantUser
           },
         },
@@ -58,22 +59,21 @@ export async function POST(request: Request) {
       );
     }
 
-    const tenantUser = user.tenants[0];
-
-    // Todos los equipos que este usuario maneja EN ESE torneo
-    // (antes era un solo teamId, ahora puede ser varios)
-    const teamIds = tenantUser
-      ? tenantUser.teams.map((tc) => tc.teamId)
-      : [];
+    // Una membership por CADA torneo/liga donde el usuario tiene
+    // un TenantUser (antes solo se tomaba tenants[0])
+    const memberships = user.tenants.map((tu) => ({
+      tenantId: tu.tenantId,
+      tenantName: tu.tenant.name,
+      role: tu.role,
+      teamIds: tu.teams.map((tc) => tc.teamId),
+    }));
 
     const payload = {
       sub: user.id,
       email: user.email,
       name: user.name,
       isSuperAdmin: user.isSuperAdmin,
-      role: tenantUser?.role ?? null,
-      teamIds,
-      tenantId: tenantUser?.tenantId ?? null,
+      memberships,
     };
 
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
         name: user.name,
         email: user.email,
         isSuperAdmin: user.isSuperAdmin,
-        role: tenantUser?.role ?? null,
+        memberships,
       },
     });
   } catch (error) {

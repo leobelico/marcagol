@@ -21,30 +21,24 @@ export async function POST(
 
   const { id, teamId } = await params;
 
-  const role = (session.user as any).role;
-  const sessionTeamIds = (session.user as any).teamIds as
-    | string[]
-    | undefined;
-  const sessionTenantId = (session.user as any).tenantId;
+  const memberships = ((session.user as any).memberships || []) as {
+    tenantId: string;
+    role: string;
+    teamIds: string[];
+  }[];
   const isSuperAdmin = (session.user as any).isSuperAdmin;
+
+  const membership = memberships.find((m) => m.tenantId === id);
 
   // ─────────────────────────────────────
   // CAPITÁN
   // ─────────────────────────────────────
 
-  if (role === "CAPTAIN") {
-    // Puede agregar jugadores a CUALQUIERA de sus equipos
-    if (!sessionTeamIds || !sessionTeamIds.includes(teamId)) {
+  if (membership?.role === "CAPTAIN") {
+    // Puede agregar jugadores a CUALQUIERA de sus equipos EN ESTE torneo
+    if (!membership.teamIds.includes(teamId)) {
       return NextResponse.json(
         { error: "No tienes permiso para este equipo" },
-        { status: 403 }
-      );
-    }
-
-    // El equipo debe pertenecer a su torneo
-    if (sessionTenantId !== id) {
-      return NextResponse.json(
-        { error: "No tienes acceso a este torneo" },
         { status: 403 }
       );
     }
@@ -54,8 +48,8 @@ export async function POST(
   // ADMIN
   // ─────────────────────────────────────
 
-  else if (role === "ADMIN") {
-    if (!isSuperAdmin && sessionTenantId !== id) {
+  else if (membership?.role === "ADMIN") {
+    if (!isSuperAdmin && !membership) {
       return NextResponse.json(
         { error: "No tienes acceso a este torneo" },
         { status: 403 }
