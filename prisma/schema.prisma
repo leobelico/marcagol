@@ -35,20 +35,43 @@ model Tenant {
   rounds         Round[]
   teams          Team[]
   users          TenantUser[]
-  archived Boolean @default(false)
+  archived       Boolean      @default(false)
+
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  // NUEVO
+  folderId       String?
+  folder         TenantFolder? @relation(fields: [folderId], references: [id])
+
+  @@index([folderId])
+  @@index([organizationId])
 }
+
 model Organization {
   id        String       @id @default(cuid())
   name      String
   slug      String       @unique
   logo      String?
   createdAt DateTime     @default(now())
-  tenants   Tenant[]
-  users     OrgUser[]
-}
 
+  tenants  Tenant[]
+  users    OrgUser[]
+  folders  TenantFolder[]
+}
+model TenantFolder {
+  id             String       @id @default(cuid())
+  name           String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  tenants        Tenant[]
+
+  @@index([organizationId])
+}
 model OrgUser {
   id             String       @id @default(cuid())
   role           Role         @default(VIEWER)
