@@ -143,6 +143,8 @@ model Player {
   teamId   String
   team     Team        @relation(fields: [teamId], references: [id])
   stats    PlayerStat[]
+  ineUrl   String?
+  documentoOficialUrl  String?
 }
 
 model Round {

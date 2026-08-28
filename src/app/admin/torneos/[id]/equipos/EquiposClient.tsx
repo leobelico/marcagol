@@ -9,6 +9,8 @@ type Player = {
   number: number | null;
   position: string | null;
   photo?: string | null;
+  ineUrl?: string | null;
+  documentoOficialUrl?: string | null;
 };
 
 type Team = {
@@ -143,6 +145,24 @@ export default function EquiposClient({
   const logoInputRefs =
     useRef<Record<string, HTMLInputElement | null>>({});
 
+  // =========================
+  // DOCUMENTOS (INE / DOC. OFICIAL)
+  // =========================
+
+  const [documentos, setDocumentos] = useState<
+    Record<string, { ineUrl?: string; documentoOficialUrl?: string }>
+  >({});
+
+  const [subiendoDocumento, setSubiendoDocumento] = useState<
+    string | null
+  >(null); // `${playerId}-${tipo}`
+
+  const ineInputRefs =
+    useRef<Record<string, HTMLInputElement | null>>({});
+
+  const documentoOficialInputRefs =
+    useRef<Record<string, HTMLInputElement | null>>({});
+
   const POSICIONES = ["Portero", "Defensa", "Mediocampista", "Delantero"];
 
   async function buscarCapitanes(
@@ -225,6 +245,68 @@ export default function EquiposClient({
     } catch (error) {
       console.error(error);
       alert("Error al subir la foto");
+    }
+  }
+
+  // ============================================================
+  // SUBIR DOCUMENTO (INE / DOCUMENTO OFICIAL)
+  // ============================================================
+
+  function handleIneClick(playerId: string) {
+    ineInputRefs.current[playerId]?.click();
+  }
+
+  function handleDocumentoOficialClick(playerId: string) {
+    documentoOficialInputRefs.current[playerId]?.click();
+  }
+
+  async function handleDocumentoChange(
+    playerId: string,
+    teamId: string,
+    tipo: "ine" | "documentoOficial",
+    file: File
+  ) {
+    const key = `${playerId}-${tipo}`;
+
+    try {
+      setSubiendoDocumento(key);
+
+      const formData = new FormData();
+      formData.append("documento", file);
+      formData.append("tipo", tipo);
+
+      const res = await fetch(
+        `/api/admin/torneos/${torneo.id}/equipos/${teamId}/jugadores/${playerId}/documento`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Error subiendo documento");
+      }
+
+      const data = await res.json();
+
+      setDocumentos((prev) => ({
+        ...prev,
+        [playerId]: {
+          ...prev[playerId],
+          [tipo === "ine" ? "ineUrl" : "documentoOficialUrl"]: data.url,
+        },
+      }));
+
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+      alert(
+        tipo === "ine"
+          ? "Error al subir el INE"
+          : "Error al subir el documento oficial"
+      );
+    } finally {
+      setSubiendoDocumento(null);
     }
   }
 
@@ -1503,158 +1585,253 @@ export default function EquiposClient({
                 {team.players.length === 0 ? (
                   <p className="px-6 py-4 text-gray-600 text-sm">Sin jugadores aún</p>
                 ) : (
-                  team.players.map((player) => (
-                    <div
-                      key={player.id}
-                      className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-6 py-3"
-                    >
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="relative w-9 h-9 rounded-lg overflow-hidden bg-gray-800 border border-gray-700 flex-shrink-0">
-                          {fotos[player.id] || player.photo ? (
-                            <img
-                              src={fotos[player.id] || player.photo!}
-                              alt={player.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">
-                              👤
+                  team.players.map((player) => {
+                    const ineActual =
+                      documentos[player.id]?.ineUrl ?? player.ineUrl;
+                    const documentoOficialActual =
+                      documentos[player.id]?.documentoOficialUrl ??
+                      player.documentoOficialUrl;
+
+                    return (
+                      <div
+                        key={player.id}
+                        className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-6 py-3"
+                      >
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="relative w-9 h-9 rounded-lg overflow-hidden bg-gray-800 border border-gray-700 flex-shrink-0">
+                            {fotos[player.id] || player.photo ? (
+                              <img
+                                src={fotos[player.id] || player.photo!}
+                                alt={player.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">
+                                👤
+                              </div>
+                            )}
+                          </div>
+
+                          {editandoJugador === player.id ? (
+                            <div className="flex flex-wrap items-center gap-2 flex-1">
+                              <input
+                                autoFocus
+                                value={jugadorEdit.name}
+                                onChange={(e) =>
+                                  setJugadorEdit({
+                                    ...jugadorEdit,
+                                    name: e.target.value,
+                                  })
+                                }
+                                placeholder="Nombre"
+                                className="bg-gray-800 border border-blue-600 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none w-40"
+                              />
+
+                              <input
+                                type="number"
+                                value={jugadorEdit.number}
+                                onChange={(e) =>
+                                  setJugadorEdit({
+                                    ...jugadorEdit,
+                                    number: e.target.value,
+                                  })
+                                }
+                                placeholder="#"
+                                className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-white text-sm focus:outline-none w-16"
+                              />
+
+                              <select
+                                value={jugadorEdit.position}
+                                onChange={(e) =>
+                                  setJugadorEdit({
+                                    ...jugadorEdit,
+                                    position: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-white text-sm focus:outline-none"
+                              >
+                                <option value="">Sin posición</option>
+
+                                {POSICIONES.map((posicion) => (
+                                  <option key={posicion} value={posicion}>
+                                    {posicion}
+                                  </option>
+                                ))}
+                              </select>
+
+                              <button
+                                onClick={() => guardarJugador(team.id, player.id)}
+                                disabled={loading}
+                                className="text-green-400 hover:text-green-300 text-sm font-bold"
+                              >
+                                ✓
+                              </button>
+
+                              <button
+                                onClick={() => setEditandoJugador(null)}
+                                className="text-gray-500 hover:text-gray-300 text-sm"
+                              >
+                                ✕
+                              </button>
                             </div>
+                          ) : (
+                            <>
+                              <span className="text-gray-600 text-sm w-6 text-center font-mono flex-shrink-0">
+                                {player.number ?? "-"}
+                              </span>
+
+                              <div
+                                onClick={() => {
+                                  setEditandoJugador(player.id);
+
+                                  setJugadorEdit({
+                                    name: player.name,
+                                    number: player.number?.toString() ?? "",
+                                    position: player.position ?? "",
+                                  });
+                                }}
+                                className="cursor-pointer hover:text-green-400 transition min-w-0"
+                                title="Clic para editar"
+                              >
+                                <p className="text-white text-sm font-medium truncate">
+                                  {player.name}{" "}
+                                  <span className="text-gray-600 text-xs font-normal">✏️</span>
+                                </p>
+
+                                <p className="text-gray-500 text-xs">
+                                  {player.position ?? "Sin posición"}
+                                </p>
+                              </div>
+                            </>
                           )}
                         </div>
 
-                        {editandoJugador === player.id ? (
-                          <div className="flex flex-wrap items-center gap-2 flex-1">
-                            <input
-                              autoFocus
-                              value={jugadorEdit.name}
-                              onChange={(e) =>
-                                setJugadorEdit({
-                                  ...jugadorEdit,
-                                  name: e.target.value,
-                                })
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            onClick={() => handleFotoClick(player.id)}
+                            className="text-xs bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1"
+                          >
+                            📷{" "}
+                            {fotos[player.id] || player.photo ? "Cambiar foto" : "Subir foto"}
+                          </button>
+
+                          <input
+                            ref={(el) => {
+                              fileInputRefs.current[player.id] = el;
+                            }}
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+
+                              if (file) {
+                                handleFotoChange(player.id, team.id, file);
                               }
-                              placeholder="Nombre"
-                              className="bg-gray-800 border border-blue-600 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none w-40"
-                            />
 
-                            <input
-                              type="number"
-                              value={jugadorEdit.number}
-                              onChange={(e) =>
-                                setJugadorEdit({
-                                  ...jugadorEdit,
-                                  number: e.target.value,
-                                })
-                              }
-                              placeholder="#"
-                              className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-white text-sm focus:outline-none w-16"
-                            />
+                              e.target.value = "";
+                            }}
+                          />
 
-                            <select
-                              value={jugadorEdit.position}
-                              onChange={(e) =>
-                                setJugadorEdit({
-                                  ...jugadorEdit,
-                                  position: e.target.value,
-                                })
-                              }
-                              className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-white text-sm focus:outline-none"
-                            >
-                              <option value="">Sin posición</option>
+                          {/* INE (opcional) */}
 
-                              {POSICIONES.map((posicion) => (
-                                <option key={posicion} value={posicion}>
-                                  {posicion}
-                                </option>
-                              ))}
-                            </select>
-
-                            <button
-                              onClick={() => guardarJugador(team.id, player.id)}
-                              disabled={loading}
-                              className="text-green-400 hover:text-green-300 text-sm font-bold"
-                            >
-                              ✓
-                            </button>
-
-                            <button
-                              onClick={() => setEditandoJugador(null)}
-                              className="text-gray-500 hover:text-gray-300 text-sm"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ) : (
-                          <>
-                            <span className="text-gray-600 text-sm w-6 text-center font-mono flex-shrink-0">
-                              {player.number ?? "-"}
-                            </span>
-
-                            <div
-                              onClick={() => {
-                                setEditandoJugador(player.id);
-
-                                setJugadorEdit({
-                                  name: player.name,
-                                  number: player.number?.toString() ?? "",
-                                  position: player.position ?? "",
-                                });
-                              }}
-                              className="cursor-pointer hover:text-green-400 transition min-w-0"
-                              title="Clic para editar"
-                            >
-                              <p className="text-white text-sm font-medium truncate">
-                                {player.name}{" "}
-                                <span className="text-gray-600 text-xs font-normal">✏️</span>
-                              </p>
-
-                              <p className="text-gray-500 text-xs">
-                                {player.position ?? "Sin posición"}
-                              </p>
-                            </div>
-                          </>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleFotoClick(player.id)}
-                          className="text-xs bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1"
-                        >
-                          📷{" "}
-                          {fotos[player.id] || player.photo ? "Cambiar foto" : "Subir foto"}
-                        </button>
-
-                        <input
-                          ref={(el) => {
-                            fileInputRefs.current[player.id] = el;
-                          }}
-                          type="file"
-                          accept="image/*"
-                          capture="environment"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-
-                            if (file) {
-                              handleFotoChange(player.id, team.id, file);
+                          <button
+                            onClick={() => handleIneClick(player.id)}
+                            disabled={
+                              subiendoDocumento === `${player.id}-ine`
                             }
+                            className="text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 disabled:opacity-50"
+                          >
+                            🪪{" "}
+                            {subiendoDocumento === `${player.id}-ine`
+                              ? "Subiendo..."
+                              : ineActual
+                              ? "Cambiar INE"
+                              : "Subir INE"}
+                          </button>
 
-                            e.target.value = "";
-                          }}
-                        />
+                          <input
+                            ref={(el) => {
+                              ineInputRefs.current[player.id] = el;
+                            }}
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
 
-                        <button
-                          onClick={() => eliminarJugador(team.id, player.id)}
-                          disabled={loading}
-                          className="text-xs text-red-400 hover:text-red-300 transition disabled:opacity-50"
-                        >
-                          Eliminar
-                        </button>
+                              if (file) {
+                                handleDocumentoChange(
+                                  player.id,
+                                  team.id,
+                                  "ine",
+                                  file
+                                );
+                              }
+
+                              e.target.value = "";
+                            }}
+                          />
+
+                          {/* DOCUMENTO OFICIAL (opcional) */}
+
+                          <button
+                            onClick={() =>
+                              handleDocumentoOficialClick(player.id)
+                            }
+                            disabled={
+                              subiendoDocumento ===
+                              `${player.id}-documentoOficial`
+                            }
+                            className="text-xs bg-teal-900/30 hover:bg-teal-900/50 text-teal-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 disabled:opacity-50"
+                          >
+                            📄{" "}
+                            {subiendoDocumento ===
+                            `${player.id}-documentoOficial`
+                              ? "Subiendo..."
+                              : documentoOficialActual
+                              ? "Cambiar documento"
+                              : "Subir documento"}
+                          </button>
+
+                          <input
+                            ref={(el) => {
+                              documentoOficialInputRefs.current[player.id] =
+                                el;
+                            }}
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+
+                              if (file) {
+                                handleDocumentoChange(
+                                  player.id,
+                                  team.id,
+                                  "documentoOficial",
+                                  file
+                                );
+                              }
+
+                              e.target.value = "";
+                            }}
+                          />
+
+                          <button
+                            onClick={() => eliminarJugador(team.id, player.id)}
+                            disabled={loading}
+                            className="text-xs text-red-400 hover:text-red-300 transition disabled:opacity-50"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
