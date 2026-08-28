@@ -605,6 +605,7 @@ const away = match.awayTeam.name;
   // =========================
   doc.setFillColor(0, 80, 0);
   doc.rect(0, 0, pageW, 22, "F");
+doc.setTextColor(255, 255, 255);
 
   // Logo
   if (logoData) {
