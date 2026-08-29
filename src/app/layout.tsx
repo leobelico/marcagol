@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,7 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Marcagol",
-  description: "Administra tus torneos de fútbol amateur con facilidad. Crea calendarios, gestiona equipos y jugadores, y mantén a todos informados con nuestra plataforma todo en uno.",
+  description:
+    "Administra tus torneos de fútbol amateur con facilidad. Crea calendarios, gestiona equipos y jugadores, y mantén a todos informados con nuestra plataforma todo en uno.",
 };
 
 export default function RootLayout({
@@ -23,11 +25,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );
