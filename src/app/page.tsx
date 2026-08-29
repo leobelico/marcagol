@@ -44,7 +44,7 @@ const features = [
   {
     icon: "🧢",
     title: "Capitanes",
-    desc: "Permite que los capitanes gestionen la información correspondiente a sus propios equipos sin acceder a otros.",
+    desc: "Permite que los capitanes gestionen la información correspondiente a sus propios equipos, incluso si manejan varios.",
   },
   {
     icon: "💰",
@@ -72,6 +72,30 @@ const organizationFeatures = [
   "Escala conforme crece tu organización",
 ];
 
+const testimonios = [
+  {
+    liga: "Liga Norte Intersemanal",
+    rol: "Organizador",
+    equipos: "18 equipos",
+    texto:
+      "Antes llevábamos todo en hojas de cálculo distintas para cada torneo. Ahora tengo mis 4 ligas organizadas en un solo lugar y genero el calendario en minutos.",
+  },
+  {
+    liga: "Liga Femenil Infantil",
+    rol: "Capitana",
+    equipos: "1 equipo",
+    texto:
+      "Puedo subir la foto y la documentación de cada jugadora desde el celular. Ya no tengo que mandarle todo por WhatsApp al organizador.",
+  },
+  {
+    liga: "Copa Regional Veteranos",
+    rol: "Organizador",
+    equipos: "32 equipos",
+    texto:
+      "Lo que más me sirvió fue poder traer un equipo completo de un torneo anterior con un clic, en vez de capturar jugador por jugador otra vez.",
+  },
+];
+
 const faqs = [
   {
     q: "¿Cuánto cuesta Marcagol?",
@@ -79,7 +103,7 @@ const faqs = [
   },
   {
     q: "¿Puedo administrar varios torneos?",
-    a: "Sí. Marcagol está pensado para organizaciones que administran uno o varios torneos.",
+    a: "Sí. Marcagol está pensado para organizaciones que administran uno o varios torneos, e incluso te permite organizarlos en carpetas.",
   },
   {
     q: "¿Cuántos equipos puedo registrar?",
@@ -87,11 +111,15 @@ const faqs = [
   },
   {
     q: "¿Los capitanes tienen acceso a todo?",
-    a: "No. Los permisos se pueden controlar por rol y los capitanes están limitados a los equipos que tienen asignados.",
+    a: "No. Los permisos se pueden controlar por rol y los capitanes están limitados a los equipos que tienen asignados, incluso si manejan varios equipos o participan en varias ligas.",
   },
   {
     q: "¿Puedo guardar documentos de jugadores?",
-    a: "Sí. Puedes gestionar documentación de jugadores y almacenarla de forma organizada.",
+    a: "Sí. Puedes gestionar documentación de jugadores, incluyendo INE y documento oficial, y almacenarla de forma organizada.",
+  },
+  {
+    q: "¿Puedo traer un equipo de un torneo anterior?",
+    a: "Sí. Puedes importar un equipo completo con sus jugadores y capitán desde cualquier otro torneo, sin volver a capturar todo desde cero.",
   },
   {
     q: "¿Puedo cancelar?",
@@ -176,6 +204,25 @@ export default function LandingPage() {
             rgba(0,255,135,.015)
           );
         }
+
+        .mock-window {
+          border: 1px solid var(--border);
+          background: #0B0E14;
+          border-radius: 1.25rem;
+          overflow: hidden;
+          box-shadow: 0 30px 90px rgba(0,0,0,.5);
+        }
+
+        .mock-titlebar {
+          background: #10141C;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .mock-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 999px;
+        }
       `}</style>
 
       {/* NAVBAR */}
@@ -190,8 +237,14 @@ export default function LandingPage() {
           </Link>
 
           <div className="hidden items-center gap-8 text-sm text-gray-400 md:flex">
+            <a href="#producto" className="transition hover:text-white">
+              Producto
+            </a>
             <a href="#funcionalidades" className="transition hover:text-white">
               Funcionalidades
+            </a>
+            <a href="#testimonios" className="transition hover:text-white">
+              Testimonios
             </a>
             <a href="#organizaciones" className="transition hover:text-white">
               Organizaciones
@@ -257,10 +310,10 @@ export default function LandingPage() {
             </Link>
 
             <a
-              href="#funcionalidades"
+              href="#producto"
               className="rounded-2xl border border-[#1A1F2E] px-9 py-4 text-base text-gray-400 transition hover:border-gray-600 hover:text-white"
             >
-              Ver funcionalidades
+              Ver el panel
             </a>
           </div>
 
@@ -290,6 +343,186 @@ export default function LandingPage() {
               </div>
               <div className="mt-1 text-xs text-gray-500">
                 plataforma
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* MOCKUP DEL PANEL — EQUIPOS */}
+      <section id="producto" className="px-6 py-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-14 max-w-2xl">
+            <p className="mb-4 text-xs font-bold uppercase tracking-[.2em] text-[#00FF87]">
+              El panel
+            </p>
+
+            <h2 className="display text-6xl leading-none md:text-8xl">
+              ASÍ SE VE
+              <br />
+              <span className="text-[#00FF87]">
+                POR DENTRO.
+              </span>
+            </h2>
+
+            <p className="mt-6 text-lg text-gray-500">
+              Un panel real para administrar equipos, jugadores y toda la
+              operación de tu torneo, sin curva de aprendizaje.
+            </p>
+          </div>
+
+          <div className="mock-window">
+            <div className="mock-titlebar flex items-center gap-2 px-5 py-3">
+              <span className="mock-dot bg-[#FF5F57]" />
+              <span className="mock-dot bg-[#FEBC2E]" />
+              <span className="mock-dot bg-[#28C840]" />
+              <span className="ml-4 text-xs text-gray-500">
+                marcagol.site/admin/torneos
+              </span>
+            </div>
+
+            <div className="p-6 md:p-10">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-black text-white">Equipos</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    24 equipos registrados
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <span className="rounded-xl border border-[#1A1F2E] bg-[#0E1117] px-4 py-2 text-xs font-bold text-gray-400">
+                    📥 Traer Equipo
+                  </span>
+                  <span className="green-button rounded-xl px-4 py-2 text-xs">
+                    + Agregar Equipo
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {[
+                  { nombre: "Halcones FC", jugadores: 16, capitan: "Diego R." },
+                  { nombre: "Deportivo Norte", jugadores: 14, capitan: "Ana P." },
+                  { nombre: "Atlético Rayos", jugadores: 15, capitan: "Marco L." },
+                ].map((eq) => (
+                  <div
+                    key={eq.nombre}
+                    className="flex items-center justify-between rounded-2xl border border-[#1A1F2E] bg-[#0E1117] px-5 py-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#1A1F2E] bg-[#080A0F] text-lg">
+                        ⚽
+                      </div>
+                      <div>
+                        <p className="font-bold text-white">{eq.nombre}</p>
+                        <p className="text-xs text-gray-500">
+                          {eq.jugadores} jugadores · 👤 {eq.capitan}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="hidden gap-2 sm:flex">
+                      <span className="rounded-lg bg-[rgba(59,130,246,.12)] px-3 py-1.5 text-[11px] font-bold text-blue-400">
+                        + Jugador
+                      </span>
+                      <span className="rounded-lg bg-[rgba(234,179,8,.12)] px-3 py-1.5 text-[11px] font-bold text-yellow-400">
+                        🪪 Credenciales
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* MOCKUP — CALENDARIO Y CAPITANES */}
+      <section className="px-6 pb-28">
+        <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-2">
+          {/* Calendario */}
+          <div className="mock-window">
+            <div className="mock-titlebar flex items-center gap-2 px-5 py-3">
+              <span className="mock-dot bg-[#FF5F57]" />
+              <span className="mock-dot bg-[#FEBC2E]" />
+              <span className="mock-dot bg-[#28C840]" />
+              <span className="ml-4 text-xs text-gray-500">Calendario</span>
+            </div>
+
+            <div className="p-6">
+              <div className="mb-4 flex gap-2">
+                <span className="green-button rounded-lg px-3 py-1.5 text-xs">
+                  🤖 Automático
+                </span>
+                <span className="rounded-lg border border-[#1A1F2E] px-3 py-1.5 text-xs text-gray-500">
+                  ✏️ Manual
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                {[
+                  { local: "Halcones FC", visita: "Rayos", hora: "18:00", cancha: 1 },
+                  { local: "Deportivo Norte", visita: "Águilas", hora: "19:30", cancha: 2 },
+                  { local: "Titanes", visita: "Cóndores", hora: "18:00", cancha: 3 },
+                ].map((m, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between rounded-xl border border-[#1A1F2E] bg-[#0E1117] px-4 py-3 text-xs"
+                  >
+                    <span className="font-bold text-white">
+                      {m.local} <span className="text-gray-600">vs</span> {m.visita}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="rounded bg-[#080A0F] px-2 py-1 text-gray-500">
+                        C{m.cancha}
+                      </span>
+                      <span className="rounded-lg border border-[rgba(0,255,135,.25)] bg-[rgba(0,255,135,.08)] px-2 py-1 font-bold text-[#00FF87]">
+                        🕒 {m.hora}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Capitanes */}
+          <div className="mock-window">
+            <div className="mock-titlebar flex items-center gap-2 px-5 py-3">
+              <span className="mock-dot bg-[#FF5F57]" />
+              <span className="mock-dot bg-[#FEBC2E]" />
+              <span className="mock-dot bg-[#28C840]" />
+              <span className="ml-4 text-xs text-gray-500">Capitanes</span>
+            </div>
+
+            <div className="p-6">
+              <div className="space-y-3">
+                {[
+                  { nombre: "Diego Ramírez", ligas: "3 ligas", equipos: "4 equipos" },
+                  { nombre: "Ana Pérez", ligas: "1 liga", equipos: "1 equipo" },
+                ].map((cap) => (
+                  <div
+                    key={cap.nombre}
+                    className="rounded-xl border border-[#1A1F2E] bg-[#0E1117] p-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-bold text-white">
+                        {cap.nombre}
+                      </p>
+                      <span className="rounded-full bg-[rgba(0,255,135,.1)] px-2.5 py-1 text-[10px] font-bold text-[#00FF87]">
+                        {cap.equipos}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-gray-500">
+                      {cap.ligas} · acceso solo a sus equipos
+                    </p>
+                  </div>
+                ))}
+
+                <div className="rounded-xl border border-dashed border-[#1A1F2E] p-4 text-center text-[11px] text-gray-600">
+                  Cada capitán ve únicamente lo que le corresponde
+                </div>
               </div>
             </div>
           </div>
@@ -379,6 +612,53 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* TESTIMONIOS */}
+      <section id="testimonios" className="px-6 py-28">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-16 max-w-2xl">
+            <p className="mb-4 text-xs font-bold uppercase tracking-[.2em] text-[#00FF87]">
+              Casos de uso
+            </p>
+
+            <h2 className="display text-6xl leading-none md:text-8xl">
+              LIGAS COMO
+              <br />
+              <span className="text-[#00FF87]">
+                LA TUYA.
+              </span>
+            </h2>
+
+            <p className="mt-6 text-lg text-gray-500">
+              Ejemplos de cómo distintos tipos de organizador usan Marcagol
+              en el día a día.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {testimonios.map((t) => (
+              <div key={t.liga} className="card rounded-2xl p-7">
+                <div className="mb-5 text-3xl text-[#00FF87]">"</div>
+
+                <p className="text-sm leading-relaxed text-gray-300">
+                  {t.texto}
+                </p>
+
+                <div className="mt-6 border-t border-[#1A1F2E] pt-4">
+                  <p className="text-sm font-bold text-white">{t.liga}</p>
+                  <p className="text-xs text-gray-500">
+                    {t.rol} · {t.equipos}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-6 text-center text-xs text-gray-700">
+            Ejemplos ilustrativos de casos de uso típicos en la plataforma.
+          </p>
+        </div>
+      </section>
+
       {/* ORGANIZACIONES */}
       <section id="organizaciones" className="px-6 py-28">
         <div className="mx-auto max-w-6xl">
@@ -399,8 +679,8 @@ export default function LandingPage() {
 
                 <p className="mt-6 leading-relaxed text-gray-400">
                   Si administras varios torneos, Marcagol te permite
-                  centralizar toda tu operación y crecer sin multiplicar el
-                  trabajo administrativo.
+                  centralizar toda tu operación, organizar tus ligas en
+                  carpetas y crecer sin multiplicar el trabajo administrativo.
                 </p>
 
                 <Link
@@ -474,7 +754,8 @@ export default function LandingPage() {
               <div className="text-3xl">🧢</div>
               <h3 className="mt-5 text-xl font-bold">Capitán</h3>
               <p className="mt-3 text-sm leading-relaxed text-gray-500">
-                Accede únicamente a los equipos que tiene asignados.
+                Accede únicamente a los equipos que tiene asignados, aunque
+                maneje más de uno o participe en varias ligas.
               </p>
             </div>
 
@@ -713,6 +994,10 @@ export default function LandingPage() {
           <div className="flex gap-6 text-sm text-gray-600">
             <a href="#funcionalidades" className="hover:text-white">
               Funcionalidades
+            </a>
+
+            <a href="#testimonios" className="hover:text-white">
+              Testimonios
             </a>
 
             <a href="#precio" className="hover:text-white">
