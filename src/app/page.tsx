@@ -1,349 +1,738 @@
 import Link from "next/link";
 
+const features = [
+  {
+    icon: "🏆",
+    title: "Todos tus torneos",
+    desc: "Administra múltiples torneos desde una misma plataforma. Cada torneo tiene su propia información, equipos, jugadores y competición.",
+  },
+  {
+    icon: "📅",
+    title: "Calendario automático",
+    desc: "Genera el fixture de tu torneo y organiza jornadas, partidos, días y horarios sin depender de Excel.",
+  },
+  {
+    icon: "⚽",
+    title: "Partidos y resultados",
+    desc: "Registra resultados y mantén la información de cada partido actualizada para tus equipos y aficionados.",
+  },
+  {
+    icon: "📊",
+    title: "Tabla de posiciones",
+    desc: "La clasificación se actualiza automáticamente con los resultados de los partidos.",
+  },
+  {
+    icon: "👥",
+    title: "Equipos y plantillas",
+    desc: "Registra equipos, administra sus plantillas y mantén toda la información organizada.",
+  },
+  {
+    icon: "🧑‍🤝‍🧑",
+    title: "Jugadores",
+    desc: "Gestiona perfiles de jugadores, número, posición, fotografía y la información necesaria para competir.",
+  },
+  {
+    icon: "🪪",
+    title: "Documentación",
+    desc: "Carga y administra documentos de los jugadores, incluyendo INE y documentación oficial.",
+  },
+  {
+    icon: "🔐",
+    title: "Roles y permisos",
+    desc: "Controla quién puede administrar cada torneo y equipo mediante diferentes niveles de acceso.",
+  },
+  {
+    icon: "🧢",
+    title: "Capitanes",
+    desc: "Permite que los capitanes gestionen la información correspondiente a sus propios equipos sin acceder a otros.",
+  },
+  {
+    icon: "💰",
+    title: "Finanzas",
+    desc: "Mantén el control de cuotas, gastos y movimientos relacionados con la operación del torneo.",
+  },
+  {
+    icon: "🟨",
+    title: "Árbitros",
+    desc: "Administra árbitros, asignaciones y pagos relacionados con los partidos.",
+  },
+  {
+    icon: "🌐",
+    title: "Página pública",
+    desc: "Cada torneo puede tener una presencia pública para compartir información con equipos y aficionados.",
+  },
+];
+
+const organizationFeatures = [
+  "Administra varios torneos",
+  "Centraliza equipos y jugadores",
+  "Controla accesos y permisos",
+  "Mantén la documentación organizada",
+  "Consulta toda tu operación desde un solo lugar",
+  "Escala conforme crece tu organización",
+];
+
+const faqs = [
+  {
+    q: "¿Cuánto cuesta Marcagol?",
+    a: "Marcagol cuesta $200 MXN al mes por torneo. Si administras varios torneos, puedes tenerlos todos dentro de tu organización.",
+  },
+  {
+    q: "¿Puedo administrar varios torneos?",
+    a: "Sí. Marcagol está pensado para organizaciones que administran uno o varios torneos.",
+  },
+  {
+    q: "¿Cuántos equipos puedo registrar?",
+    a: "La plataforma está diseñada para que puedas administrar tus equipos y jugadores sin tener que llevar la información manualmente en diferentes archivos.",
+  },
+  {
+    q: "¿Los capitanes tienen acceso a todo?",
+    a: "No. Los permisos se pueden controlar por rol y los capitanes están limitados a los equipos que tienen asignados.",
+  },
+  {
+    q: "¿Puedo guardar documentos de jugadores?",
+    a: "Sí. Puedes gestionar documentación de jugadores y almacenarla de forma organizada.",
+  },
+  {
+    q: "¿Puedo cancelar?",
+    a: "Sí. Puedes cancelar cuando quieras de acuerdo con las condiciones de tu servicio.",
+  },
+];
+
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#080A0F] text-white overflow-x-hidden" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-
-      {/* Google Fonts */}
+    <main className="min-h-screen overflow-x-hidden bg-[#080A0F] text-white">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;0,9..40,900;1,9..40,300&family=Bebas+Neue&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800;900&family=Bebas+Neue&display=swap');
 
         :root {
           --green: #00FF87;
-          --green-dim: #00C96A;
-          --dark: #080A0F;
+          --green-dark: #00C96A;
+          --bg: #080A0F;
           --card: #0E1117;
           --border: #1A1F2E;
         }
 
-        .font-display { font-family: 'Bebas Neue', sans-serif; }
-
-        .glow {
-          text-shadow: 0 0 80px rgba(0,255,135,0.4), 0 0 160px rgba(0,255,135,0.15);
+        * {
+          box-sizing: border-box;
         }
 
-        .card-glow {
-          box-shadow: 0 0 0 1px var(--border), 0 20px 60px rgba(0,0,0,0.5);
-          transition: box-shadow 0.3s ease, transform 0.3s ease;
-        }
-        .card-glow:hover {
-          box-shadow: 0 0 0 1px rgba(0,255,135,0.3), 0 20px 60px rgba(0,255,135,0.08);
-          transform: translateY(-4px);
+        html {
+          scroll-behavior: smooth;
         }
 
-        .grain {
-          position: fixed;
-          inset: 0;
-          pointer-events: none;
-          z-index: 100;
-          opacity: 0.025;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        body {
+          margin: 0;
+          background: var(--bg);
+          font-family: "DM Sans", sans-serif;
         }
 
-        .hero-grid {
-          background-image: linear-gradient(rgba(0,255,135,0.03) 1px, transparent 1px),
-                            linear-gradient(90deg, rgba(0,255,135,0.03) 1px, transparent 1px);
+        .display {
+          font-family: "Bebas Neue", sans-serif;
+        }
+
+        .grid-bg {
+          background-image:
+            linear-gradient(rgba(0,255,135,.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,255,135,.035) 1px, transparent 1px);
           background-size: 60px 60px;
         }
 
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-12px); }
-        }
-        .float { animation: float 4s ease-in-out infinite; }
-
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .fade-up { animation: fadeUp 0.8s ease forwards; }
-        .fade-up-2 { animation: fadeUp 0.8s 0.15s ease forwards; opacity: 0; }
-        .fade-up-3 { animation: fadeUp 0.8s 0.3s ease forwards; opacity: 0; }
-        .fade-up-4 { animation: fadeUp 0.8s 0.45s ease forwards; opacity: 0; }
-
-        .pill {
-          background: linear-gradient(135deg, rgba(0,255,135,0.1), rgba(0,255,135,0.05));
-          border: 1px solid rgba(0,255,135,0.2);
+        .glow {
+          text-shadow:
+            0 0 70px rgba(0,255,135,.35),
+            0 0 140px rgba(0,255,135,.12);
         }
 
-        .btn-primary {
+        .card {
+          border: 1px solid var(--border);
+          background: rgba(14,17,23,.8);
+          transition: all .25s ease;
+        }
+
+        .card:hover {
+          transform: translateY(-4px);
+          border-color: rgba(0,255,135,.28);
+          box-shadow: 0 20px 60px rgba(0,0,0,.35);
+        }
+
+        .green-button {
           background: var(--green);
           color: #000;
-          font-weight: 700;
-          transition: all 0.2s ease;
-          position: relative;
-          overflow: hidden;
-        }
-        .btn-primary::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: white;
-          opacity: 0;
-          transition: opacity 0.2s;
-        }
-        .btn-primary:hover::after { opacity: 0.1; }
-        .btn-primary:hover { transform: scale(1.02); box-shadow: 0 0 30px rgba(0,255,135,0.4); }
-
-        .feature-icon {
-          background: linear-gradient(135deg, rgba(0,255,135,0.15), rgba(0,255,135,0.05));
-          border: 1px solid rgba(0,255,135,0.2);
+          font-weight: 800;
+          transition: all .2s ease;
         }
 
-        details summary { cursor: pointer; list-style: none; }
-        details summary::-webkit-details-marker { display: none; }
-        details[open] summary .faq-icon { transform: rotate(45deg); }
-        .faq-icon { transition: transform 0.2s ease; }
+        .green-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 0 35px rgba(0,255,135,.35);
+        }
+
+        .green-border {
+          border: 1px solid rgba(0,255,135,.28);
+          background: linear-gradient(
+            135deg,
+            rgba(0,255,135,.08),
+            rgba(0,255,135,.015)
+          );
+        }
       `}</style>
 
-      {/* Grain overlay */}
-      <div className="grain" />
+      {/* NAVBAR */}
+      <nav className="fixed left-0 right-0 top-0 z-50 border-b border-[#1A1F2E] bg-[#080A0F]/85 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+          <Link
+            href="/"
+            className="display text-3xl tracking-widest"
+            style={{ color: "var(--green)" }}
+          >
+            MARCAGOL
+          </Link>
 
-      {/* ── NAVBAR ─────────────────────────────── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#1A1F2E] backdrop-blur-xl bg-[#080A0F]/80">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <span className="font-display text-2xl tracking-wider" style={{ color: "var(--green)" }}>MARCAGOL</span>
-          <div className="hidden md:flex items-center gap-8 text-sm text-gray-400">
-            <a href="#features" className="hover:text-white transition">Funcionalidades</a>
-            <a href="#precios" className="hover:text-white transition">Precios</a>
-            <a href="#faq" className="hover:text-white transition">FAQ</a>
+          <div className="hidden items-center gap-8 text-sm text-gray-400 md:flex">
+            <a href="#funcionalidades" className="transition hover:text-white">
+              Funcionalidades
+            </a>
+            <a href="#organizaciones" className="transition hover:text-white">
+              Organizaciones
+            </a>
+            <a href="#precio" className="transition hover:text-white">
+              Precio
+            </a>
+            <a href="#faq" className="transition hover:text-white">
+              FAQ
+            </a>
           </div>
-          <div className="flex items-center gap-3">
-            <Link href="/login" className="text-sm text-gray-400 hover:text-white transition px-4 py-2">
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/login"
+              className="px-4 py-2 text-sm text-gray-400 transition hover:text-white"
+            >
               Entrar
             </Link>
-            <Link href="/login" className="btn-primary text-sm px-5 py-2.5 rounded-xl">
-              Empezar gratis
+
+            <Link
+              href="/login"
+              className="green-button rounded-xl px-5 py-2.5 text-sm"
+            >
+              Empezar
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* ── HERO ───────────────────────────────── */}
-      <section className="hero-grid min-h-screen flex flex-col items-center justify-center text-center px-6 pt-20 relative">
-        {/* Glow orb */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(0,255,135,0.06) 0%, transparent 70%)" }} />
+      {/* HERO */}
+      <section className="grid-bg relative flex min-h-screen items-center justify-center px-6 pt-24">
+        <div className="absolute left-1/2 top-1/2 h-[650px] w-[650px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(0,255,135,.07),transparent_68%)]" />
 
-        <div className="fade-up">
-          <span className="pill text-xs font-bold tracking-widest uppercase px-4 py-2 rounded-full inline-block mb-8" style={{ color: "var(--green)" }}>
-            ⚡ 1 mes gratis — sin tarjeta
-          </span>
-        </div>
-
-        <h1 className="font-display text-7xl md:text-[10rem] leading-none tracking-wider glow fade-up-2" style={{ color: "var(--green)" }}>
-          MARCAGOL
-        </h1>
-        <p className="text-2xl md:text-3xl font-light text-gray-300 mt-4 fade-up-3 max-w-2xl">
-          Gestiona tu liga de fútbol como un profesional.
-          <span className="text-white font-medium"> Calendario, resultados, estadísticas y más.</span>
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-4 mt-10 fade-up-4">
-          <Link href="/login" className="btn-primary px-8 py-4 rounded-2xl text-base font-bold">
-            Crear mi torneo gratis →
-          </Link>
-          <a href="#features" className="px-8 py-4 rounded-2xl text-base font-medium text-gray-400 hover:text-white border border-[#1A1F2E] hover:border-gray-600 transition">
-            Ver funcionalidades
-          </a>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-8 mt-20 fade-up-4">
-          {[
-            { n: "100%", label: "Gratis el primer mes" },
-            { n: "$200", label: "MXN / mes después" },
-            { n: "∞", label: "Equipos y jugadores" },
-          ].map((s) => (
-            <div key={s.label} className="text-center">
-              <p className="font-display text-5xl tracking-wider" style={{ color: "var(--green)" }}>{s.n}</p>
-              <p className="text-gray-500 text-sm mt-1">{s.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── FEATURES ───────────────────────────── */}
-      <section id="features" className="max-w-6xl mx-auto px-6 py-32">
-        <div className="text-center mb-16">
-          <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "var(--green)" }}>Funcionalidades</p>
-          <h2 className="font-display text-6xl md:text-7xl tracking-wider text-white">TODO LO QUE</h2>
-          <h2 className="font-display text-6xl md:text-7xl tracking-wider" style={{ color: "var(--green)" }}>NECESITAS</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[
-            { icon: "📅", title: "Calendario automático", desc: "Genera el fixture completo en segundos. Round-robin, ida y vuelta, días y horarios personalizados." },
-            { icon: "⚽", title: "Resultados en vivo", desc: "Carga marcadores, goleadores y asistencias partido a partido. Estadísticas en tiempo real." },
-            { icon: "🏆", title: "Tabla de posiciones", desc: "Actualización automática al cargar resultados. Puntos, goles, diferencia — todo calculado al instante." },
-            { icon: "👥", title: "Equipos y jugadores", desc: "Registra equipos, jugadores, números y posiciones. Agrega más equipos en cualquier momento." },
-            { icon: "💰", title: "Finanzas del torneo", desc: "Lleva el control de cuotas, pagos de árbitros, gastos de cancha y premios. Balance siempre visible." },
-            { icon: "🟨", title: "Gestión de árbitros", desc: "Registra árbitros, asígnalos a partidos y lleva su historial y pago por partido." },
-            { icon: "🎨", title: "Flyer digital", desc: "Tu torneo tiene su propia página pública con info, equipos inscritos, lugares disponibles y contacto." },
-            { icon: "📱", title: "Notificaciones WhatsApp", desc: "Envía el calendario y avisos de partidos directamente al WhatsApp de los capitanes. (Próximamente)" },
-            { icon: "🌐", title: "Subdominio propio", desc: "Cada torneo tiene su propio subdominio. Liga-regia.marcagol.com.mx — profesional y fácil de compartir." },
-          ].map((f) => (
-            <div key={f.title} className="card-glow bg-[#0E1117] rounded-2xl p-6">
-              <div className="feature-icon w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4">{f.icon}</div>
-              <h3 className="text-white font-bold text-lg mb-2">{f.title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── PRECIOS ────────────────────────────── */}
-      <section id="precios" className="max-w-4xl mx-auto px-6 py-32">
-        <div className="text-center mb-16">
-          <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "var(--green)" }}>Precios</p>
-          <h2 className="font-display text-6xl md:text-7xl tracking-wider text-white">SIMPLE Y</h2>
-          <h2 className="font-display text-6xl md:text-7xl tracking-wider" style={{ color: "var(--green)" }}>TRANSPARENTE</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Plan gratis */}
-          <div className="card-glow bg-[#0E1117] rounded-2xl p-8">
-            <p className="text-xs font-bold tracking-widest uppercase text-gray-500 mb-4">Primer mes</p>
-            <p className="font-display text-6xl tracking-wider text-white">GRATIS</p>
-            <p className="text-gray-500 text-sm mt-2 mb-8">Sin tarjeta de crédito. Sin compromisos.</p>
-            <ul className="space-y-3 mb-8">
-              {[
-                "Torneos ilimitados",
-                "Equipos y jugadores ilimitados",
-                "Calendario automático",
-                "Resultados y estadísticas",
-                "Flyer digital",
-                "Subdominio propio",
-              ].map((f) => (
-                <li key={f} className="flex items-center gap-3 text-sm text-gray-300">
-                  <span style={{ color: "var(--green)" }}>✓</span> {f}
-                </li>
-              ))}
-            </ul>
-            <Link href="/login" className="btn-primary w-full py-3 rounded-xl text-center block font-bold">
-              Empezar gratis →
-            </Link>
+        <div className="relative mx-auto max-w-5xl text-center">
+          <div className="mb-8 inline-flex rounded-full border border-[rgba(0,255,135,.2)] bg-[rgba(0,255,135,.06)] px-4 py-2 text-xs font-bold uppercase tracking-[.18em] text-[#00FF87]">
+            Gestión profesional de torneos
           </div>
 
-          {/* Plan pro */}
-          <div className="rounded-2xl p-8 relative overflow-hidden"
-            style={{ background: "linear-gradient(135deg, rgba(0,255,135,0.08), rgba(0,255,135,0.02))", border: "1px solid rgba(0,255,135,0.3)" }}>
-            <div className="absolute top-4 right-4">
-              <span className="pill text-xs font-bold px-3 py-1 rounded-full" style={{ color: "var(--green)" }}>Más popular</span>
-            </div>
-            <p className="text-xs font-bold tracking-widest uppercase mb-4" style={{ color: "var(--green)" }}>Después del mes gratis</p>
-            <div className="flex items-end gap-2">
-              <p className="font-display text-6xl tracking-wider text-white">$200</p>
-              <p className="text-gray-400 mb-2">MXN / mes</p>
-            </div>
-            <p className="text-gray-500 text-sm mt-2 mb-8">Todo incluido. Sin sorpresas.</p>
-            <ul className="space-y-3 mb-8">
-              {[
-                "Todo del plan gratis",
-                "Finanzas del torneo",
-                "Gestión de árbitros",
-                "Notificaciones WhatsApp",
-                "Soporte prioritario",
-                "Acceso a nuevas funciones",
-              ].map((f) => (
-                <li key={f} className="flex items-center gap-3 text-sm text-gray-300">
-                  <span style={{ color: "var(--green)" }}>✓</span> {f}
-                </li>
-              ))}
-            </ul>
-            <Link href="/login" className="btn-primary w-full py-3 rounded-xl text-center block font-bold">
-              Empezar gratis →
+          <h1 className="display text-7xl leading-[.85] tracking-wider text-white md:text-[10rem]">
+            TU LIGA.
+            <br />
+            <span className="glow text-[#00FF87]">
+              TODO EN UN LUGAR.
+            </span>
+          </h1>
+
+          <p className="mx-auto mt-8 max-w-3xl text-xl font-light leading-relaxed text-gray-400 md:text-2xl">
+            Administra torneos, equipos, jugadores, partidos y documentación
+            desde una sola plataforma.
+            <span className="font-medium text-white">
+              {" "}
+              Sin Excel. Sin información perdida. Sin caos.
+            </span>
+          </p>
+
+          <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
+            <Link
+              href="/login"
+              className="green-button rounded-2xl px-9 py-4 text-base"
+            >
+              Crear mi torneo →
             </Link>
+
+            <a
+              href="#funcionalidades"
+              className="rounded-2xl border border-[#1A1F2E] px-9 py-4 text-base text-gray-400 transition hover:border-gray-600 hover:text-white"
+            >
+              Ver funcionalidades
+            </a>
           </div>
-        </div>
-      </section>
 
-      {/* ── TESTIMONIOS ────────────────────────── */}
-      <section className="max-w-6xl mx-auto px-6 py-32">
-        <div className="text-center mb-16">
-          <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "var(--green)" }}>Testimonios</p>
-          <h2 className="font-display text-6xl md:text-7xl tracking-wider text-white">LO QUE DICEN</h2>
-          <h2 className="font-display text-6xl md:text-7xl tracking-wider" style={{ color: "var(--green)" }}>LOS ADMINS</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { name: "Carlos M.", role: "Organizador Liga Regia", text: "Antes llevaba todo en Excel y WhatsApp. Con Marcagol el calendario se genera solo y los resultados se actualizan al instante. Mis equipos están felices." },
-            { name: "Roberto S.", role: "Admin Torneo Norte", text: "El módulo de finanzas me salvó. Ya sé exactamente cuánto entra de cuotas y cuánto se va en árbitros y cancha. Todo en un solo lugar." },
-            { name: "Miguel T.", role: "Coordinador Liga 5v5", text: "Los equipos tienen su propio subdominio y flyer. Se ve muy profesional. Ya varios equipos me preguntaron cómo lo hice." },
-          ].map((t) => (
-            <div key={t.name} className="card-glow bg-[#0E1117] rounded-2xl p-6">
-              <p className="text-gray-300 text-sm leading-relaxed mb-6">"{t.text}"</p>
-              <div>
-                <p className="text-white font-bold text-sm">{t.name}</p>
-                <p className="text-gray-500 text-xs mt-0.5">{t.role}</p>
+          {/* KPIs */}
+          <div className="mx-auto mt-20 grid max-w-3xl grid-cols-3 border-y border-[#1A1F2E] py-8">
+            <div>
+              <div className="display text-5xl text-[#00FF87]">
+                $200
+              </div>
+              <div className="mt-1 text-xs text-gray-500">
+                MXN / torneo / mes
               </div>
             </div>
-          ))}
+
+            <div className="border-x border-[#1A1F2E]">
+              <div className="display text-5xl text-[#00FF87]">
+                ∞
+              </div>
+              <div className="mt-1 text-xs text-gray-500">
+                torneos
+              </div>
+            </div>
+
+            <div>
+              <div className="display text-5xl text-[#00FF87]">
+                1
+              </div>
+              <div className="mt-1 text-xs text-gray-500">
+                plataforma
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ── FAQ ────────────────────────────────── */}
-      <section id="faq" className="max-w-3xl mx-auto px-6 py-32">
-        <div className="text-center mb-16">
-          <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "var(--green)" }}>FAQ</p>
-          <h2 className="font-display text-6xl md:text-7xl tracking-wider text-white">PREGUNTAS</h2>
-          <h2 className="font-display text-6xl md:text-7xl tracking-wider" style={{ color: "var(--green)" }}>FRECUENTES</h2>
-        </div>
+      {/* PROBLEMA */}
+      <section className="px-6 py-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid items-center gap-16 md:grid-cols-2">
+            <div>
+              <p className="mb-4 text-xs font-bold uppercase tracking-[.2em] text-[#00FF87]">
+                El problema
+              </p>
 
-        <div className="space-y-3">
-          {[
-            { q: "¿Necesito tarjeta de crédito para empezar?", a: "No. El primer mes es completamente gratis sin necesidad de ingresar datos de pago." },
-            { q: "¿Cuántos equipos puedo agregar?", a: "Ilimitados. No hay restricción en la cantidad de equipos, jugadores o partidos que puedes registrar." },
-            { q: "¿Puedo agregar equipos después de generar el calendario?", a: "Sí. Puedes agregar equipos en cualquier momento y regenerar el calendario automáticamente." },
-            { q: "¿Cómo funciona el subdominio?", a: "Cada torneo tiene su propio subdominio personalizado. Por ejemplo: mi-liga.marcagol.app. Fácil de compartir con tus equipos." },
-            { q: "¿Las notificaciones de WhatsApp están incluidas?", a: "Las notificaciones por WhatsApp estarán disponibles próximamente en el plan de $200/mes." },
-            { q: "¿Qué pasa si cancelo?", a: "Puedes cancelar cuando quieras. No hay contratos ni penalizaciones. Tus datos permanecen disponibles por 30 días." },
-          ].map((faq) => (
-            <details key={faq.q} className="bg-[#0E1117] border border-[#1A1F2E] rounded-2xl overflow-hidden group">
-              <summary className="flex items-center justify-between px-6 py-5 text-white font-medium text-sm hover:text-green-400 transition">
-                {faq.q}
-                <span className="faq-icon text-gray-500 text-xl ml-4 flex-shrink-0">+</span>
-              </summary>
-              <p className="px-6 pb-5 text-gray-400 text-sm leading-relaxed">{faq.a}</p>
-            </details>
-          ))}
-        </div>
-      </section>
+              <h2 className="display text-6xl leading-none md:text-8xl">
+                DEJA ATRÁS
+                <br />
+                <span className="text-[#00FF87]">
+                  EL EXCEL.
+                </span>
+              </h2>
+            </div>
 
-      {/* ── CTA FINAL ──────────────────────────── */}
-      <section className="max-w-4xl mx-auto px-6 py-32 text-center">
-        <div className="rounded-3xl p-16 relative overflow-hidden"
-          style={{ background: "linear-gradient(135deg, rgba(0,255,135,0.08), rgba(0,255,135,0.02))", border: "1px solid rgba(0,255,135,0.2)" }}>
-          <div className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse at center, rgba(0,255,135,0.05) 0%, transparent 70%)" }} />
-          <p className="text-xs font-bold tracking-widest uppercase mb-4" style={{ color: "var(--green)" }}>Empieza hoy</p>
-          <h2 className="font-display text-6xl md:text-8xl tracking-wider text-white leading-none">TU LIGA</h2>
-          <h2 className="font-display text-6xl md:text-8xl tracking-wider leading-none glow" style={{ color: "var(--green)" }}>PROFESIONAL</h2>
-          <p className="text-gray-400 mt-6 mb-10 text-lg">1 mes gratis. Sin tarjeta. Sin complicaciones.</p>
-          <Link href="/login" className="btn-primary inline-block px-12 py-5 rounded-2xl text-lg font-bold">
-            Crear mi torneo gratis →
-          </Link>
+            <div className="space-y-4 text-gray-400">
+              <p>
+                Organizar una liga significa manejar equipos, jugadores,
+                calendarios, resultados, estadísticas, documentos y pagos.
+              </p>
+
+              <p>
+                Cuando todo está repartido entre Excel, WhatsApp, fotos y
+                diferentes archivos, los errores aparecen rápidamente.
+              </p>
+
+              <p className="text-lg font-medium text-white">
+                Marcagol centraliza la operación de tu torneo en un solo
+                sistema.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ── FOOTER ─────────────────────────────── */}
-      <footer className="border-t border-[#1A1F2E] max-w-6xl mx-auto px-6 py-12">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+      {/* FUNCIONALIDADES */}
+      <section id="funcionalidades" className="px-6 py-28">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-16 max-w-3xl">
+            <p className="mb-4 text-xs font-bold uppercase tracking-[.2em] text-[#00FF87]">
+              Plataforma
+            </p>
+
+            <h2 className="display text-6xl leading-none md:text-8xl">
+              TODO LO QUE
+              <br />
+              <span className="text-[#00FF87]">
+                NECESITAS.
+              </span>
+            </h2>
+
+            <p className="mt-6 text-lg text-gray-500">
+              Desde la inscripción de jugadores hasta la administración de
+              partidos y documentos.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {features.map((feature) => (
+              <div
+                key={feature.title}
+                className="card rounded-2xl p-6"
+              >
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-[rgba(0,255,135,.2)] bg-[rgba(0,255,135,.06)] text-2xl">
+                  {feature.icon}
+                </div>
+
+                <h3 className="mb-2 text-lg font-bold text-white">
+                  {feature.title}
+                </h3>
+
+                <p className="text-sm leading-relaxed text-gray-500">
+                  {feature.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ORGANIZACIONES */}
+      <section id="organizaciones" className="px-6 py-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="green-border overflow-hidden rounded-[2rem]">
+            <div className="grid md:grid-cols-2">
+              <div className="p-8 md:p-14">
+                <p className="mb-4 text-xs font-bold uppercase tracking-[.2em] text-[#00FF87]">
+                  Para organizaciones
+                </p>
+
+                <h2 className="display text-6xl leading-none md:text-8xl">
+                  UNA LIGA
+                  <br />
+                  <span className="text-[#00FF87]">
+                    NO ES SUFICIENTE.
+                  </span>
+                </h2>
+
+                <p className="mt-6 leading-relaxed text-gray-400">
+                  Si administras varios torneos, Marcagol te permite
+                  centralizar toda tu operación y crecer sin multiplicar el
+                  trabajo administrativo.
+                </p>
+
+                <Link
+                  href="/login"
+                  className="green-button mt-8 inline-block rounded-xl px-7 py-3"
+                >
+                  Administrar mis torneos →
+                </Link>
+              </div>
+
+              <div className="border-t border-[rgba(0,255,135,.15)] p-8 md:border-l md:border-t-0 md:p-14">
+                <div className="space-y-5">
+                  {organizationFeatures.map((item) => (
+                    <div
+                      key={item}
+                      className="flex items-center gap-4"
+                    >
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#00FF87] text-sm font-black text-black">
+                        ✓
+                      </span>
+
+                      <span className="text-gray-300">
+                        {item}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-12 border-t border-[#1A1F2E] pt-8">
+                  <div className="display text-6xl text-[#00FF87]">
+                    $2,000
+                  </div>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    ejemplo: 10 torneos activos
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ROLES */}
+      <section className="px-6 py-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-14 text-center">
+            <p className="mb-4 text-xs font-bold uppercase tracking-[.2em] text-[#00FF87]">
+              Control de acceso
+            </p>
+
+            <h2 className="display text-6xl md:text-8xl">
+              CADA PERSONA
+              <br />
+              <span className="text-[#00FF87]">
+                VE LO QUE NECESITA.
+              </span>
+            </h2>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="card rounded-2xl p-7">
+              <div className="text-3xl">👑</div>
+              <h3 className="mt-5 text-xl font-bold">Administrador</h3>
+              <p className="mt-3 text-sm leading-relaxed text-gray-500">
+                Gestiona la operación del torneo y sus recursos.
+              </p>
+            </div>
+
+            <div className="card rounded-2xl p-7">
+              <div className="text-3xl">🧢</div>
+              <h3 className="mt-5 text-xl font-bold">Capitán</h3>
+              <p className="mt-3 text-sm leading-relaxed text-gray-500">
+                Accede únicamente a los equipos que tiene asignados.
+              </p>
+            </div>
+
+            <div className="card rounded-2xl p-7">
+              <div className="text-3xl">⚡</div>
+              <h3 className="mt-5 text-xl font-bold">Superadministrador</h3>
+              <p className="mt-3 text-sm leading-relaxed text-gray-500">
+                Control centralizado de la plataforma.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* DOCUMENTOS */}
+      <section className="px-6 py-28">
+        <div className="mx-auto grid max-w-6xl items-center gap-16 md:grid-cols-2">
           <div>
-            <span className="font-display text-3xl tracking-wider" style={{ color: "var(--green)" }}>MARCAGOL</span>
-            <p className="text-gray-600 text-xs mt-1">Gestión profesional de ligas de fútbol</p>
+            <p className="mb-4 text-xs font-bold uppercase tracking-[.2em] text-[#00FF87]">
+              Documentación
+            </p>
+
+            <h2 className="display text-6xl leading-none md:text-8xl">
+              JUGADORES
+              <br />
+              <span className="text-[#00FF87]">
+                EN ORDEN.
+              </span>
+            </h2>
+
+            <p className="mt-6 leading-relaxed text-gray-500">
+              Centraliza la información y documentación de tus jugadores en
+              lugar de depender de fotografías y archivos dispersos.
+            </p>
           </div>
-          <div className="flex gap-8 text-sm text-gray-500">
-            <a href="#features" className="hover:text-white transition">Funcionalidades</a>
-            <a href="#precios" className="hover:text-white transition">Precios</a>
-            <a href="#faq" className="hover:text-white transition">FAQ</a>
-            <Link href="/login" className="hover:text-white transition">Entrar</Link>
+
+          <div className="card rounded-3xl p-8">
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-[#1A1F2E] bg-[#080A0F] p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-bold">Jugador</p>
+                    <p className="text-sm text-gray-500">
+                      Información del jugador
+                    </p>
+                  </div>
+
+                  <span className="rounded-full bg-[rgba(0,255,135,.1)] px-3 py-1 text-xs text-[#00FF87]">
+                    Registrado
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-2xl border border-[#1A1F2E] bg-[#080A0F] p-5">
+                  <div className="text-2xl">🪪</div>
+                  <p className="mt-3 text-sm font-bold">INE</p>
+                  <p className="mt-1 text-xs text-gray-600">
+                    Documento almacenado
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-[#1A1F2E] bg-[#080A0F] p-5">
+                  <div className="text-2xl">📄</div>
+                  <p className="mt-3 text-sm font-bold">
+                    Documento oficial
+                  </p>
+                  <p className="mt-1 text-xs text-gray-600">
+                    Documento almacenado
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="text-gray-600 text-xs">© 2026 Marcagol. San Luis Potosí, México.</p>
+        </div>
+      </section>
+
+      {/* PRECIO */}
+      <section id="precio" className="px-6 py-28">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-14 text-center">
+            <p className="mb-4 text-xs font-bold uppercase tracking-[.2em] text-[#00FF87]">
+              Precio
+            </p>
+
+            <h2 className="display text-6xl md:text-8xl">
+              PAGA POR LO QUE
+              <br />
+              <span className="text-[#00FF87]">
+                ADMINISTRAS.
+              </span>
+            </h2>
+
+            <p className="mx-auto mt-5 max-w-xl text-gray-500">
+              Sin paquetes complicados. Tu costo crece conforme crece tu
+              operación.
+            </p>
+          </div>
+
+          <div className="green-border rounded-3xl p-8 md:p-12">
+            <div className="flex flex-col justify-between gap-10 md:flex-row md:items-center">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[.2em] text-[#00FF87]">
+                  Por torneo
+                </p>
+
+                <div className="mt-3 flex items-end gap-3">
+                  <span className="display text-8xl">
+                    $200
+                  </span>
+
+                  <span className="mb-4 text-gray-500">
+                    MXN / mes
+                  </span>
+                </div>
+
+                <p className="max-w-md text-gray-500">
+                  Administra tantos torneos como necesites y escala tu
+                  operación conforme crece tu organización.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {[
+                  "Torneos",
+                  "Equipos",
+                  "Jugadores",
+                  "Calendarios",
+                  "Resultados",
+                  "Documentación",
+                  "Roles y permisos",
+                ].map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-center gap-3 text-sm text-gray-300"
+                  >
+                    <span className="text-[#00FF87]">✓</span>
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Link
+              href="/login"
+              className="green-button mt-10 block rounded-2xl px-8 py-4 text-center"
+            >
+              Empezar con Marcagol →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="px-6 py-28">
+        <div className="mx-auto max-w-3xl">
+          <div className="mb-14 text-center">
+            <p className="mb-4 text-xs font-bold uppercase tracking-[.2em] text-[#00FF87]">
+              FAQ
+            </p>
+
+            <h2 className="display text-6xl md:text-8xl">
+              PREGUNTAS
+              <br />
+              <span className="text-[#00FF87]">
+                FRECUENTES.
+              </span>
+            </h2>
+          </div>
+
+          <div className="space-y-3">
+            {faqs.map((faq) => (
+              <details
+                key={faq.q}
+                className="card overflow-hidden rounded-2xl"
+              >
+                <summary className="cursor-pointer px-6 py-5 font-semibold text-white">
+                  {faq.q}
+                </summary>
+
+                <p className="px-6 pb-6 text-sm leading-relaxed text-gray-500">
+                  {faq.a}
+                </p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="px-6 py-28">
+        <div className="green-border relative mx-auto max-w-5xl overflow-hidden rounded-[2rem] p-10 text-center md:p-20">
+          <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(0,255,135,.08),transparent_68%)]" />
+
+          <div className="relative">
+            <p className="text-xs font-bold uppercase tracking-[.2em] text-[#00FF87]">
+              Tu siguiente torneo
+            </p>
+
+            <h2 className="display mt-4 text-7xl leading-none md:text-[9rem]">
+              ORGANÍZALO
+              <br />
+              <span className="glow text-[#00FF87]">
+                PROFESIONALMENTE.
+              </span>
+            </h2>
+
+            <p className="mx-auto mt-7 max-w-xl text-gray-400">
+              Deja de administrar tu liga en diferentes archivos.
+              Centraliza todo con Marcagol.
+            </p>
+
+            <Link
+              href="/login"
+              className="green-button mt-9 inline-block rounded-2xl px-10 py-4 text-lg"
+            >
+              Crear mi torneo →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="border-t border-[#1A1F2E] px-6 py-12">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 md:flex-row">
+          <div>
+            <div className="display text-3xl tracking-widest text-[#00FF87]">
+              MARCAGOL
+            </div>
+
+            <p className="mt-1 text-xs text-gray-600">
+              Gestión profesional de torneos deportivos
+            </p>
+          </div>
+
+          <div className="flex gap-6 text-sm text-gray-600">
+            <a href="#funcionalidades" className="hover:text-white">
+              Funcionalidades
+            </a>
+
+            <a href="#precio" className="hover:text-white">
+              Precio
+            </a>
+
+            <a href="#faq" className="hover:text-white">
+              FAQ
+            </a>
+
+            <Link href="/login" className="hover:text-white">
+              Entrar
+            </Link>
+          </div>
+
+          <p className="text-xs text-gray-700">
+            © 2026 Marcagol
+          </p>
         </div>
       </footer>
-
-    </div>
+    </main>
   );
 }
