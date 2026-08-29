@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-
+import { Analytics } from "@vercel/analytics/next"
 export default async function NuevaCarpetaPage() {
   const session = await auth();
 
