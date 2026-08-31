@@ -617,21 +617,6 @@ export default function CapitanClient({
                             ? "📷 Cambiar foto"
                             : "📷 Subir foto"}
                         </button>
-
-                        <button
-                          type="button"
-                          onClick={() => eliminarJugador(player.id)}
-                          disabled={loading}
-                          className="text-xs text-red-400 hover:text-red-300 px-2"
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* DOCUMENTOS: INE / DOCUMENTO OFICIAL */}
-
-                    <div className="flex items-center gap-2 flex-wrap">
                       <button
                         type="button"
                         onClick={() => handleIneClick(player.id)}
@@ -645,6 +630,35 @@ export default function CapitanClient({
                           ? "Cambiar INE"
                           : "Subir INE"}
                       </button>
+                        <button
+                        type="button"
+                        onClick={() => handleDocumentoOficialClick(player.id)}
+                        disabled={
+                          subiendoDocumento ===
+                          `${player.id}-documentoOficial`
+                        }
+                        className="text-xs bg-teal-900/30 hover:bg-teal-900/50 text-teal-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 disabled:opacity-50"
+                      >
+                        📄{" "}
+                        {subiendoDocumento ===
+                        `${player.id}-documentoOficial`
+                          ? "Subiendo..."
+                          : documentoOficialActual
+                          ? "Cambiar documento"
+                          : "Subir documento"}
+                      </button>
+                        <button
+                          type="button"
+                          onClick={() => eliminarJugador(player.id)}
+                          disabled={loading}
+                          className="text-xs text-red-400 hover:text-red-300 px-2"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* DOCUMENTOS: INE / DOCUMENTO OFICIAL */}
 
                       <input
                         ref={(el) => {
@@ -669,24 +683,6 @@ export default function CapitanClient({
                         }}
                       />
 
-                      <button
-                        type="button"
-                        onClick={() => handleDocumentoOficialClick(player.id)}
-                        disabled={
-                          subiendoDocumento ===
-                          `${player.id}-documentoOficial`
-                        }
-                        className="text-xs bg-teal-900/30 hover:bg-teal-900/50 text-teal-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 disabled:opacity-50"
-                      >
-                        📄{" "}
-                        {subiendoDocumento ===
-                        `${player.id}-documentoOficial`
-                          ? "Subiendo..."
-                          : documentoOficialActual
-                          ? "Cambiar documento"
-                          : "Subir documento"}
-                      </button>
-
                       <input
                         ref={(el) => {
                           documentoOficialInputRefs.current[player.id] = el;
@@ -709,7 +705,7 @@ export default function CapitanClient({
                           e.target.value = "";
                         }}
                       />
-                    </div>
+
                   </div>
                 );
               })}
