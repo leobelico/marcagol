@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 // ======================================================
-// POST - RESTABLECER CONTRASEÑA DE UN CAPITÁN
+// POST - CAMBIAR CONTRASEÑA DE UN CAPITÁN
 // ======================================================
 
 export async function POST(
@@ -27,7 +27,7 @@ export async function POST(
 
     const isSuperAdmin = (session.user as any).isSuperAdmin;
 
-    // Solo super admin puede resetear contraseñas de capitanes
+    // Solo super admin puede cambiar contraseñas
     if (!isSuperAdmin) {
       return NextResponse.json(
         { error: "No tienes permisos para esta acción" },
@@ -36,6 +36,8 @@ export async function POST(
     }
 
     const { userId } = await params;
+
+    const body = await req.json().catch(() => ({}));
 
     const usuario = await prisma.user.findUnique({
       where: { id: userId },
@@ -48,23 +50,68 @@ export async function POST(
       );
     }
 
-    if (!usuario.phone) {
+    // ======================================================
+    // CONTRASEÑA PERSONALIZADA
+    // ======================================================
+
+    let passwordNueva = "";
+
+    if (
+      typeof body.password === "string" &&
+      body.password.trim()
+    ) {
+      passwordNueva = body.password.trim();
+    } else {
+      // ======================================================
+      // CONTRASEÑA AUTOMÁTICA
+      // nombre + últimos 3 dígitos del teléfono
+      // ======================================================
+
+      if (!usuario.phone) {
+        return NextResponse.json(
+          {
+            error:
+              "Este usuario no tiene teléfono registrado y no se proporcionó una contraseña personalizada.",
+          },
+          { status: 400 }
+        );
+      }
+
+      const ultimos3 = usuario.phone
+        .replace(/\D/g, "")
+        .slice(-3);
+
+      const nombreBase = (usuario.name || "capitan").trim();
+
+      passwordNueva = `${nombreBase}${ultimos3}`;
+    }
+
+    // ======================================================
+    // VALIDAR CONTRASEÑA
+    // ======================================================
+
+    if (passwordNueva.length < 6) {
       return NextResponse.json(
         {
           error:
-            "Este usuario no tiene teléfono registrado, no se puede generar una contraseña con el patrón habitual",
+            "La contraseña debe tener al menos 6 caracteres.",
         },
         { status: 400 }
       );
     }
 
-    // Mismo patrón que al crear: nombre + últimos 3 dígitos del teléfono
-    const ultimos3 = usuario.phone.replace(/\D/g, "").slice(-3);
-    const nombreBase = (usuario.name || "capitan").trim();
+    // ======================================================
+    // GENERAR HASH
+    // ======================================================
 
-    const passwordNueva = `${nombreBase}${ultimos3}`;
+    const passwordHash = await bcrypt.hash(
+      passwordNueva,
+      10
+    );
 
-    const passwordHash = await bcrypt.hash(passwordNueva, 10);
+    // ======================================================
+    // ACTUALIZAR USUARIO
+    // ======================================================
 
     await prisma.user.update({
       where: { id: userId },
@@ -83,13 +130,16 @@ export async function POST(
       },
     });
   } catch (error: any) {
-    console.error("ERROR RESETEANDO CONTRASEÑA:", error);
+    console.error(
+      "ERROR CAMBIANDO CONTRASEÑA:",
+      error
+    );
 
     return NextResponse.json(
       {
         error:
           error?.message ||
-          "Error interno al restablecer la contraseña",
+          "Error interno al cambiar la contraseña",
       },
       { status: 500 }
     );
