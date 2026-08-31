@@ -9,6 +9,8 @@ type Player = {
   number: number | null;
   position: string | null;
   photo: string | null;
+  ineUrl?: string | null;
+  documentoOficialUrl?: string | null;
 };
 
 type Team = {
@@ -27,12 +29,7 @@ type Props = {
   email: string | null;
 };
 
-const POSICIONES = [
-  "Portero",
-  "Defensa",
-  "Mediocampista",
-  "Delantero",
-];
+const POSICIONES = ["Portero", "Defensa", "Mediocampista", "Delantero"];
 
 export default function CapitanClient({
   team: initialTeam,
@@ -56,9 +53,25 @@ export default function CapitanClient({
 
   const logoInputRef = useRef<HTMLInputElement | null>(null);
 
-  const fotoInputRefs = useRef<
+  // =========================
+  // DOCUMENTOS (INE / DOC. OFICIAL)
+  // =========================
+
+  const [documentos, setDocumentos] = useState<
+    Record<string, { ineUrl?: string; documentoOficialUrl?: string }>
+  >({});
+
+  const [subiendoDocumento, setSubiendoDocumento] = useState<string | null>(
+    null
+  ); // `${playerId}-${tipo}`
+
+  const ineInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const documentoOficialInputRefs = useRef<
     Record<string, HTMLInputElement | null>
   >({});
+
+  const fotoInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => {
     setTeam(initialTeam);
@@ -86,9 +99,7 @@ export default function CapitanClient({
           },
           body: JSON.stringify({
             name: nuevoJugador.name.trim(),
-            number: nuevoJugador.number
-              ? Number(nuevoJugador.number)
-              : null,
+            number: nuevoJugador.number ? Number(nuevoJugador.number) : null,
             position: nuevoJugador.position || null,
           }),
         }
@@ -111,11 +122,7 @@ export default function CapitanClient({
       router.refresh();
     } catch (error) {
       console.error(error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Error creando jugador"
-      );
+      alert(error instanceof Error ? error.message : "Error creando jugador");
     } finally {
       setLoading(false);
     }
@@ -143,9 +150,7 @@ export default function CapitanClient({
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(
-          data.error || "No se pudo subir la foto"
-        );
+        throw new Error(data.error || "No se pudo subir la foto");
       }
 
       // Actualizar inmediatamente la foto en pantalla
@@ -165,11 +170,7 @@ export default function CapitanClient({
     } catch (error) {
       console.error(error);
 
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Error subiendo foto"
-      );
+      alert(error instanceof Error ? error.message : "Error subiendo foto");
     } finally {
       setSubiendoFoto(null);
     }
@@ -197,9 +198,7 @@ export default function CapitanClient({
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(
-          data.error || "No se pudo subir el logo"
-        );
+        throw new Error(data.error || "No se pudo subir el logo");
       }
 
       setTeam((prev) => ({
@@ -211,13 +210,71 @@ export default function CapitanClient({
     } catch (error) {
       console.error(error);
 
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Error subiendo logo"
-      );
+      alert(error instanceof Error ? error.message : "Error subiendo logo");
     } finally {
       setSubiendoLogo(false);
+    }
+  }
+
+  // ============================================================
+  // SUBIR DOCUMENTO (INE / DOCUMENTO OFICIAL)
+  // ============================================================
+
+  function handleIneClick(playerId: string) {
+    ineInputRefs.current[playerId]?.click();
+  }
+
+  function handleDocumentoOficialClick(playerId: string) {
+    documentoOficialInputRefs.current[playerId]?.click();
+  }
+
+  async function handleDocumentoChange(
+    playerId: string,
+    teamId: string,
+    tipo: "ine" | "documentoOficial",
+    file: File
+  ) {
+    const key = `${playerId}-${tipo}`;
+
+    try {
+      setSubiendoDocumento(key);
+
+      const formData = new FormData();
+      formData.append("documento", file);
+      formData.append("tipo", tipo);
+
+      const res = await fetch(
+        `/api/admin/torneos/${tenant.id}/equipos/${teamId}/jugadores/${playerId}/documento`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Error subiendo documento");
+      }
+
+      const data = await res.json();
+
+      setDocumentos((prev) => ({
+        ...prev,
+        [playerId]: {
+          ...prev[playerId],
+          [tipo === "ine" ? "ineUrl" : "documentoOficialUrl"]: data.url,
+        },
+      }));
+
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+      alert(
+        tipo === "ine"
+          ? "Error al subir el INE"
+          : "Error al subir el documento oficial"
+      );
+    } finally {
+      setSubiendoDocumento(null);
     }
   }
 
@@ -241,16 +298,12 @@ export default function CapitanClient({
       const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        throw new Error(
-          data?.error || "No se pudo eliminar el jugador"
-        );
+        throw new Error(data?.error || "No se pudo eliminar el jugador");
       }
 
       setTeam((prev) => ({
         ...prev,
-        players: prev.players.filter(
-          (player) => player.id !== playerId
-        ),
+        players: prev.players.filter((player) => player.id !== playerId),
       }));
 
       router.refresh();
@@ -258,9 +311,7 @@ export default function CapitanClient({
       console.error(error);
 
       alert(
-        error instanceof Error
-          ? error.message
-          : "Error eliminando jugador"
+        error instanceof Error ? error.message : "Error eliminando jugador"
       );
     } finally {
       setLoading(false);
@@ -278,19 +329,13 @@ export default function CapitanClient({
               Panel del Capitán
             </p>
 
-            <h1 className="text-2xl font-black mt-1">
-              ⚽ {team.name}
-            </h1>
+            <h1 className="text-2xl font-black mt-1">⚽ {team.name}</h1>
 
-            <p className="text-sm text-gray-500 mt-1">
-              {tenant.name}
-            </p>
+            <p className="text-sm text-gray-500 mt-1">{tenant.name}</p>
           </div>
 
           <div className="text-right">
-            <p className="text-sm text-gray-400">
-              {email}
-            </p>
+            <p className="text-sm text-gray-400">{email}</p>
 
             <a
               href="/api/auth/signout"
@@ -324,9 +369,7 @@ export default function CapitanClient({
               ) : (
                 <div className="text-center">
                   <div className="text-3xl">⚽</div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Subir logo
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Subir logo</p>
                 </div>
               )}
             </button>
@@ -348,9 +391,7 @@ export default function CapitanClient({
             />
 
             <div>
-              <h2 className="text-2xl font-black">
-                {team.name}
-              </h2>
+              <h2 className="text-2xl font-black">{team.name}</h2>
 
               <p className="text-gray-500 text-sm mt-1">
                 {team.players.length} jugadores registrados
@@ -377,9 +418,7 @@ export default function CapitanClient({
         <section className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
           <div className="px-6 py-5 border-b border-gray-800 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-black">
-                Jugadores
-              </h2>
+              <h2 className="text-xl font-black">Jugadores</h2>
 
               <p className="text-sm text-gray-500 mt-1">
                 Agrega y administra los jugadores de tu equipo.
@@ -388,9 +427,7 @@ export default function CapitanClient({
 
             <button
               type="button"
-              onClick={() =>
-                setMostrarNuevoJugador(!mostrarNuevoJugador)
-              }
+              onClick={() => setMostrarNuevoJugador(!mostrarNuevoJugador)}
               className="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm"
             >
               + Jugador
@@ -442,15 +479,10 @@ export default function CapitanClient({
                   }
                   className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white outline-none focus:border-green-500"
                 >
-                  <option value="">
-                    Posición
-                  </option>
+                  <option value="">Posición</option>
 
                   {POSICIONES.map((posicion) => (
-                    <option
-                      key={posicion}
-                      value={posicion}
-                    >
+                    <option key={posicion} value={posicion}>
                       {posicion}
                     </option>
                   ))}
@@ -469,9 +501,7 @@ export default function CapitanClient({
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setMostrarNuevoJugador(false)
-                  }
+                  onClick={() => setMostrarNuevoJugador(false)}
                   className="bg-gray-700 hover:bg-gray-600 px-5 py-2.5 rounded-xl font-bold text-sm"
                 >
                   Cancelar
@@ -484,13 +514,9 @@ export default function CapitanClient({
 
           {team.players.length === 0 ? (
             <div className="text-center py-16">
-              <div className="text-4xl mb-3">
-                👥
-              </div>
+              <div className="text-4xl mb-3">👥</div>
 
-              <p className="text-gray-400">
-                Todavía no tienes jugadores.
-              </p>
+              <p className="text-gray-400">Todavía no tienes jugadores.</p>
 
               <p className="text-gray-600 text-sm mt-1">
                 Agrega el primer jugador de tu equipo.
@@ -498,121 +524,195 @@ export default function CapitanClient({
             </div>
           ) : (
             <div className="divide-y divide-gray-800">
-              {team.players.map((player) => (
-                <div
-                  key={player.id}
-                  className="px-6 py-4 flex items-center justify-between gap-4"
-                >
-                  <div className="flex items-center gap-4 min-w-0">
-                    {/* FOTO */}
+              {team.players.map((player) => {
+                const ineActual =
+                  documentos[player.id]?.ineUrl ?? player.ineUrl;
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        fotoInputRefs.current[
-                          player.id
-                        ]?.click()
-                      }
-                      disabled={
-                        subiendoFoto === player.id
-                      }
-                      className="w-14 h-14 rounded-xl overflow-hidden bg-gray-800 border border-gray-700 flex-shrink-0 hover:border-green-500 transition"
-                    >
-                      {player.photo ? (
-                        <img
-                          src={player.photo}
-                          alt={player.name}
-                          className="w-full h-full object-cover"
+                const documentoOficialActual =
+                  documentos[player.id]?.documentoOficialUrl ??
+                  player.documentoOficialUrl;
+
+                return (
+                  <div
+                    key={player.id}
+                    className="px-6 py-4 flex flex-col gap-3"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4 min-w-0">
+                        {/* FOTO */}
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            fotoInputRefs.current[player.id]?.click()
+                          }
+                          disabled={subiendoFoto === player.id}
+                          className="w-14 h-14 rounded-xl overflow-hidden bg-gray-800 border border-gray-700 flex-shrink-0 hover:border-green-500 transition"
+                        >
+                          {player.photo ? (
+                            <img
+                              src={player.photo}
+                              alt={player.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-600">
+                              👤
+                            </div>
+                          )}
+                        </button>
+
+                        <input
+                          ref={(el) => {
+                            fotoInputRefs.current[player.id] = el;
+                          }}
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+
+                            if (file) {
+                              subirFoto(player.id, file);
+                            }
+
+                            e.target.value = "";
+                          }}
                         />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-600">
-                          👤
+
+                        {/* DATOS */}
+
+                        <div className="min-w-0">
+                          <p className="font-bold text-white truncate">
+                            {player.name}
+                          </p>
+
+                          <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                            {player.number !== null && (
+                              <span>#{player.number}</span>
+                            )}
+
+                            {player.position && (
+                              <span>{player.position}</span>
+                            )}
+                          </div>
                         </div>
-                      )}
-                    </button>
+                      </div>
 
-                    <input
-                      ref={(el) => {
-                        fotoInputRefs.current[player.id] =
-                          el;
-                      }}
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file =
-                          e.target.files?.[0];
+                      {/* ACCIONES */}
 
-                        if (file) {
-                          subirFoto(
-                            player.id,
-                            file
-                          );
-                        }
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            fotoInputRefs.current[player.id]?.click()
+                          }
+                          disabled={subiendoFoto === player.id}
+                          className="text-xs bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-400 font-bold px-3 py-2 rounded-lg"
+                        >
+                          {subiendoFoto === player.id
+                            ? "Subiendo..."
+                            : player.photo
+                            ? "📷 Cambiar foto"
+                            : "📷 Subir foto"}
+                        </button>
 
-                        e.target.value = "";
-                      }}
-                    />
-
-                    {/* DATOS */}
-
-                    <div className="min-w-0">
-                      <p className="font-bold text-white truncate">
-                        {player.name}
-                      </p>
-
-                      <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                        {player.number !== null && (
-                          <span>
-                            #{player.number}
-                          </span>
-                        )}
-
-                        {player.position && (
-                          <span>
-                            {player.position}
-                          </span>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => eliminarJugador(player.id)}
+                          disabled={loading}
+                          className="text-xs text-red-400 hover:text-red-300 px-2"
+                        >
+                          Eliminar
+                        </button>
                       </div>
                     </div>
+
+                    {/* DOCUMENTOS: INE / DOCUMENTO OFICIAL */}
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => handleIneClick(player.id)}
+                        disabled={subiendoDocumento === `${player.id}-ine`}
+                        className="text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 disabled:opacity-50"
+                      >
+                        🪪{" "}
+                        {subiendoDocumento === `${player.id}-ine`
+                          ? "Subiendo..."
+                          : ineActual
+                          ? "Cambiar INE"
+                          : "Subir INE"}
+                      </button>
+
+                      <input
+                        ref={(el) => {
+                          ineInputRefs.current[player.id] = el;
+                        }}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+
+                          if (file) {
+                            handleDocumentoChange(
+                              player.id,
+                              team.id,
+                              "ine",
+                              file
+                            );
+                          }
+
+                          e.target.value = "";
+                        }}
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => handleDocumentoOficialClick(player.id)}
+                        disabled={
+                          subiendoDocumento ===
+                          `${player.id}-documentoOficial`
+                        }
+                        className="text-xs bg-teal-900/30 hover:bg-teal-900/50 text-teal-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 disabled:opacity-50"
+                      >
+                        📄{" "}
+                        {subiendoDocumento ===
+                        `${player.id}-documentoOficial`
+                          ? "Subiendo..."
+                          : documentoOficialActual
+                          ? "Cambiar documento"
+                          : "Subir documento"}
+                      </button>
+
+                      <input
+                        ref={(el) => {
+                          documentoOficialInputRefs.current[player.id] = el;
+                        }}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+
+                          if (file) {
+                            handleDocumentoChange(
+                              player.id,
+                              team.id,
+                              "documentoOficial",
+                              file
+                            );
+                          }
+
+                          e.target.value = "";
+                        }}
+                      />
+                    </div>
                   </div>
-
-                  {/* ACCIONES */}
-
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        fotoInputRefs.current[
-                          player.id
-                        ]?.click()
-                      }
-                      disabled={
-                        subiendoFoto === player.id
-                      }
-                      className="text-xs bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-400 font-bold px-3 py-2 rounded-lg"
-                    >
-                      {subiendoFoto === player.id
-                        ? "Subiendo..."
-                        : player.photo
-                        ? "📷 Cambiar foto"
-                        : "📷 Subir foto"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        eliminarJugador(player.id)
-                      }
-                      disabled={loading}
-                      className="text-xs text-red-400 hover:text-red-300 px-2"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
