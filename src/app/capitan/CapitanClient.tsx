@@ -323,19 +323,21 @@ export default function CapitanClient({
       {/* HEADER */}
 
       <header className="border-b border-gray-800 bg-gray-900">
-        <div className="max-w-5xl mx-auto px-4 py-5 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 py-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0 sm:justify-between">
           <div>
             <p className="text-xs text-green-400 font-bold uppercase tracking-widest">
               Panel del Capitán
             </p>
 
-            <h1 className="text-2xl font-black mt-1">⚽ {team.name}</h1>
+            <h1 className="text-xl sm:text-2xl font-black mt-1 break-words">
+              ⚽ {team.name}
+            </h1>
 
             <p className="text-sm text-gray-500 mt-1">{tenant.name}</p>
           </div>
 
-          <div className="text-right">
-            <p className="text-sm text-gray-400">{email}</p>
+          <div className="text-left sm:text-right">
+            <p className="text-sm text-gray-400 truncate">{email}</p>
 
             <a
               href="/api/auth/signout"
@@ -347,18 +349,18 @@ export default function CapitanClient({
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+      <main className="max-w-5xl mx-auto px-4 py-6 sm:py-8 space-y-6">
         {/* INFORMACIÓN EQUIPO */}
 
-        <section className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+        <section className="bg-gray-900 border border-gray-800 rounded-2xl p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center items-center sm:items-start text-center sm:text-left gap-5">
             {/* LOGO */}
 
             <button
               type="button"
               onClick={() => logoInputRef.current?.click()}
               disabled={subiendoLogo}
-              className="w-28 h-28 rounded-2xl overflow-hidden bg-gray-800 border-2 border-gray-700 hover:border-green-500 transition flex items-center justify-center"
+              className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-gray-800 border-2 border-gray-700 hover:border-green-500 transition flex items-center justify-center flex-shrink-0"
             >
               {team.logo ? (
                 <img
@@ -416,7 +418,7 @@ export default function CapitanClient({
         {/* JUGADORES */}
 
         <section className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-800 flex items-center justify-between">
+          <div className="px-4 sm:px-6 py-5 border-b border-gray-800 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
             <div>
               <h2 className="text-xl font-black">Jugadores</h2>
 
@@ -428,7 +430,7 @@ export default function CapitanClient({
             <button
               type="button"
               onClick={() => setMostrarNuevoJugador(!mostrarNuevoJugador)}
-              className="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm"
+              className="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm w-full sm:w-auto"
             >
               + Jugador
             </button>
@@ -437,12 +439,12 @@ export default function CapitanClient({
           {/* NUEVO JUGADOR */}
 
           {mostrarNuevoJugador && (
-            <div className="p-6 bg-gray-800/40 border-b border-gray-800">
+            <div className="p-4 sm:p-6 bg-gray-800/40 border-b border-gray-800">
               <h3 className="text-sm font-bold text-gray-300 mb-4">
                 Nuevo jugador
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <input
                   type="text"
                   placeholder="Nombre completo *"
@@ -489,12 +491,12 @@ export default function CapitanClient({
                 </select>
               </div>
 
-              <div className="flex gap-2 mt-4">
+              <div className="flex flex-col sm:flex-row gap-2 mt-4">
                 <button
                   type="button"
                   onClick={agregarJugador}
                   disabled={loading}
-                  className="bg-green-600 hover:bg-green-500 disabled:opacity-50 px-5 py-2.5 rounded-xl font-bold text-sm"
+                  className="bg-green-600 hover:bg-green-500 disabled:opacity-50 px-5 py-2.5 rounded-xl font-bold text-sm w-full sm:w-auto"
                 >
                   {loading ? "Agregando..." : "Agregar jugador"}
                 </button>
@@ -502,7 +504,7 @@ export default function CapitanClient({
                 <button
                   type="button"
                   onClick={() => setMostrarNuevoJugador(false)}
-                  className="bg-gray-700 hover:bg-gray-600 px-5 py-2.5 rounded-xl font-bold text-sm"
+                  className="bg-gray-700 hover:bg-gray-600 px-5 py-2.5 rounded-xl font-bold text-sm w-full sm:w-auto"
                 >
                   Cancelar
                 </button>
@@ -535,9 +537,9 @@ export default function CapitanClient({
                 return (
                   <div
                     key={player.id}
-                    className="px-6 py-4 flex flex-col gap-3"
+                    className="px-4 sm:px-6 py-4 flex flex-col gap-3"
                   >
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                       <div className="flex items-center gap-4 min-w-0">
                         {/* FOTO */}
 
@@ -568,6 +570,7 @@ export default function CapitanClient({
                           }}
                           type="file"
                           accept="image/*"
+                          capture="environment"
                           className="hidden"
                           onChange={(e) => {
                             const file = e.target.files?.[0];
@@ -601,7 +604,7 @@ export default function CapitanClient({
 
                       {/* ACCIONES */}
 
-                      <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:flex-shrink-0">
                         <button
                           type="button"
                           onClick={() =>
@@ -616,11 +619,26 @@ export default function CapitanClient({
                             ? "📷 Cambiar foto"
                             : "📷 Subir foto"}
                         </button>
+
+                        <button
+                          type="button"
+                          onClick={() => eliminarJugador(player.id)}
+                          disabled={loading}
+                          className="text-xs text-red-400 hover:text-red-300 px-2 py-2"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* DOCUMENTOS: INE / DOCUMENTO OFICIAL */}
+
+                    <div className="flex items-center gap-2 flex-wrap">
                       <button
                         type="button"
                         onClick={() => handleIneClick(player.id)}
                         disabled={subiendoDocumento === `${player.id}-ine`}
-                        className="text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 disabled:opacity-50"
+                        className="text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center justify-center gap-1 disabled:opacity-50 flex-1 sm:flex-none min-w-[calc(50%-4px)] sm:min-w-0"
                       >
                         🪪{" "}
                         {subiendoDocumento === `${player.id}-ine`
@@ -629,35 +647,6 @@ export default function CapitanClient({
                           ? "Cambiar INE"
                           : "Subir INE"}
                       </button>
-                        <button
-                        type="button"
-                        onClick={() => handleDocumentoOficialClick(player.id)}
-                        disabled={
-                          subiendoDocumento ===
-                          `${player.id}-documentoOficial`
-                        }
-                        className="text-xs bg-teal-900/30 hover:bg-teal-900/50 text-teal-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 disabled:opacity-50"
-                      >
-                        📄{" "}
-                        {subiendoDocumento ===
-                        `${player.id}-documentoOficial`
-                          ? "Subiendo..."
-                          : documentoOficialActual
-                          ? "Cambiar documento"
-                          : "Subir documento"}
-                      </button>
-                        <button
-                          type="button"
-                          onClick={() => eliminarJugador(player.id)}
-                          disabled={loading}
-                          className="text-xs text-red-400 hover:text-red-300 px-2"
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* DOCUMENTOS: INE / DOCUMENTO OFICIAL */}
 
                       <input
                         ref={(el) => {
@@ -682,6 +671,24 @@ export default function CapitanClient({
                         }}
                       />
 
+                      <button
+                        type="button"
+                        onClick={() => handleDocumentoOficialClick(player.id)}
+                        disabled={
+                          subiendoDocumento ===
+                          `${player.id}-documentoOficial`
+                        }
+                        className="text-xs bg-teal-900/30 hover:bg-teal-900/50 text-teal-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center justify-center gap-1 disabled:opacity-50 flex-1 sm:flex-none min-w-[calc(50%-4px)] sm:min-w-0"
+                      >
+                        📄{" "}
+                        {subiendoDocumento ===
+                        `${player.id}-documentoOficial`
+                          ? "Subiendo..."
+                          : documentoOficialActual
+                          ? "Cambiar documento"
+                          : "Subir documento"}
+                      </button>
+
                       <input
                         ref={(el) => {
                           documentoOficialInputRefs.current[player.id] = el;
@@ -704,7 +711,7 @@ export default function CapitanClient({
                           e.target.value = "";
                         }}
                       />
-
+                    </div>
                   </div>
                 );
               })}

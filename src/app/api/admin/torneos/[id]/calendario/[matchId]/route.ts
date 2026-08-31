@@ -18,7 +18,7 @@ export async function DELETE(
   });
 
   await prisma.matchEvent.deleteMany({ where: { matchId } });
-  await prisma.match.delete({ where: { id: matchId, tenantId: id } });
+  await prisma.match.delete({ where: { id: matchId, tenantId: id } }); 
 
   // Si la jornada se quedó sin partidos, la eliminamos también
   if (match?.roundId) {

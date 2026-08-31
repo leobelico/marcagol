@@ -22,31 +22,36 @@ export async function DELETE(
 
   const { id, teamId } = await params;
 
-  const role = (session.user as any).role;
-  const sessionTenantId = (session.user as any).tenantId;
+  const memberships = ((session.user as any).memberships || []) as {
+    tenantId: string;
+    role: string;
+    teamIds: string[];
+  }[];
   const isSuperAdmin = (session.user as any).isSuperAdmin;
+
+  const membership = memberships.find((m) => m.tenantId === id);
 
   // --------------------------------------------------
   // PERMISOS
   // --------------------------------------------------
 
-  if (role === "CAPTAIN") {
+  if (membership?.role === "CAPTAIN") {
     return NextResponse.json(
       { error: "El capitán no puede eliminar equipos" },
       { status: 403 }
     );
   }
 
-  if (!isSuperAdmin && role !== "ADMIN") {
+  if (!isSuperAdmin && !membership) {
     return NextResponse.json(
-      { error: "No tienes permisos para eliminar equipos" },
+      { error: "No tienes acceso a este torneo" },
       { status: 403 }
     );
   }
 
-  if (!isSuperAdmin && sessionTenantId !== id) {
+  if (!isSuperAdmin && membership?.role !== "ADMIN") {
     return NextResponse.json(
-      { error: "No tienes acceso a este torneo" },
+      { error: "No tienes permisos para eliminar equipos" },
       { status: 403 }
     );
   }
@@ -74,7 +79,6 @@ export async function DELETE(
   // --------------------------------------------------
 
   await prisma.$transaction(async (tx) => {
-    // Estadísticas de jugadores
     await tx.playerStat.deleteMany({
       where: {
         player: {
@@ -83,21 +87,18 @@ export async function DELETE(
       },
     });
 
-    // Jugadores
     await tx.player.deleteMany({
       where: {
         teamId,
       },
     });
 
-    // Vínculos de capitanes con este equipo (N a N)
     await tx.teamCaptain.deleteMany({
       where: {
         teamId,
       },
     });
 
-    // Finalmente eliminar equipo
     await tx.team.delete({
       where: {
         id: teamId,
@@ -135,12 +136,14 @@ export async function PATCH(
 
     const { id, teamId } = await params;
 
-    const role = (session.user as any).role;
-    const sessionTeamIds = (session.user as any).teamIds as
-      | string[]
-      | undefined;
-    const sessionTenantId = (session.user as any).tenantId;
+    const memberships = ((session.user as any).memberships || []) as {
+      tenantId: string;
+      role: string;
+      teamIds: string[];
+    }[];
     const isSuperAdmin = (session.user as any).isSuperAdmin;
+
+    const membership = memberships.find((m) => m.tenantId === id);
 
     // --------------------------------------------------
     // LEER DATOS
@@ -163,9 +166,6 @@ export async function PATCH(
         ? body.phone.trim()
         : "";
 
-    // Si viene, se está reasignando el equipo a un capitán
-    // YA EXISTENTE (distinto flujo que capturar nombre/teléfono
-    // nuevos)
     const capitanUserId: string | null =
       typeof body.capitanUserId === "string" && body.capitanUserId
         ? body.capitanUserId
@@ -199,43 +199,24 @@ export async function PATCH(
     }
 
     // --------------------------------------------------
-    // PERMISOS CAPITÁN
+    // PERMISOS
     // --------------------------------------------------
 
-    if (role === "CAPTAIN") {
-      if (!sessionTeamIds || !sessionTeamIds.includes(teamId)) {
+    if (!isSuperAdmin && !membership) {
+      return NextResponse.json(
+        { error: "No tienes acceso a este torneo" },
+        { status: 403 }
+      );
+    }
+
+    if (membership?.role === "CAPTAIN") {
+      if (!membership.teamIds.includes(teamId)) {
         return NextResponse.json(
           { error: "No puedes modificar otro equipo" },
           { status: 403 }
         );
       }
-
-      if (sessionTenantId !== id) {
-        return NextResponse.json(
-          { error: "No tienes acceso a este torneo" },
-          { status: 403 }
-        );
-      }
-    }
-
-    // --------------------------------------------------
-    // PERMISOS ADMIN
-    // --------------------------------------------------
-
-    else if (role === "ADMIN") {
-      if (!isSuperAdmin && sessionTenantId !== id) {
-        return NextResponse.json(
-          { error: "No tienes acceso a este torneo" },
-          { status: 403 }
-        );
-      }
-    }
-
-    // --------------------------------------------------
-    // SUPER ADMIN
-    // --------------------------------------------------
-
-    else if (!isSuperAdmin) {
+    } else if (!isSuperAdmin && membership?.role !== "ADMIN") {
       return NextResponse.json(
         { error: "No tienes permisos para modificar equipos" },
         { status: 403 }
@@ -294,7 +275,6 @@ export async function PATCH(
       }
 
       const result = await prisma.$transaction(async (tx) => {
-        // 1. Actualizar equipo (nombre + snapshot de capitán/tel)
         const team = await tx.team.update({
           where: { id: teamId },
           data: {
@@ -304,9 +284,6 @@ export async function PATCH(
           },
         });
 
-        // 2. Quitar el vínculo del capitán anterior (si había
-        //    uno distinto) — NO tocamos sus datos de User,
-        //    porque puede seguir manejando otros equipos.
         if (
           teamCaptainActual &&
           teamCaptainActual.tenantUser.userId !== usuarioNuevo.id
@@ -316,7 +293,6 @@ export async function PATCH(
           });
         }
 
-        // 3. Asegurar TenantUser para el usuario nuevo en este torneo
         let tenantUser = await tx.tenantUser.findUnique({
           where: {
             userId_tenantId: {
@@ -336,7 +312,6 @@ export async function PATCH(
           });
         }
 
-        // 4. Crear el vínculo nuevo (si no existía ya)
         const yaVinculado = await tx.teamCaptain.findUnique({
           where: {
             tenantUserId_teamId: {
@@ -366,10 +341,9 @@ export async function PATCH(
 
     // ====================================================
     // FLUJO B: EDITAR DATOS DEL CAPITÁN ACTUAL (o crear uno
-    // nuevo si el equipo no tenía) — comportamiento original
+    // nuevo si el equipo no tenía)
     // ====================================================
 
-    // Comprobar teléfono duplicado (solo si cambió)
     if (phone !== existingTeam.phone) {
       const usuarioConEseTelefono = await prisma.user.findFirst({
         where: {
@@ -454,9 +428,6 @@ export async function PATCH(
         },
       });
 
-      // Si ya había capitán vinculado a ESTE equipo, actualizamos
-      // sus datos de User (nombre/teléfono) — su relación con
-      // otros equipos no se toca.
       if (teamCaptainActual) {
         await tx.user.update({
           where: { id: teamCaptainActual.tenantUser.userId },
@@ -469,7 +440,6 @@ export async function PATCH(
         return { team, nuevoUsuario: null as null };
       }
 
-      // No había capitán -> crear User + TenantUser + TeamCaptain
       const nuevoUsuario = await tx.user.create({
         data: {
           name: captain,
