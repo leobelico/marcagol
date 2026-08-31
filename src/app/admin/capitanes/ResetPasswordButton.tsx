@@ -37,7 +37,7 @@ export default function ResetPasswordButton({
       setLoading(true);
 
       const res = await fetch(
-        `/api/admin/capitanes/${userId}/reset-password`,
+       `/api/admin/capitanes/${userId}`,
         {
           method: "POST",
           headers: {
