@@ -24,7 +24,7 @@ export default async function AdminPage({
   const carpetaId = params.carpeta || null;
 
   const isSuperAdmin = (session.user as any).isSuperAdmin;
-
+const organizationId = (session.user as any).organizationId;
   // =========================================================
   // VALIDAR PERMISOS
   // =========================================================
@@ -308,12 +308,12 @@ export default async function AdminPage({
 
             {/* CARPETAS */}
             {!verArchivados && !carpetaActual && isSuperAdmin && (
-              <Link
-                href="/admin/carpetas/nueva"
-                className="bg-purple-700 hover:bg-purple-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
-              >
-                📁 Nueva carpeta
-              </Link>
+            <Link
+              href={`/admin/carpetas/nueva?organizationId=${organizationId}`}
+              className="..."
+            >
+              📁 Nueva carpeta
+            </Link>
             )}
 
             {/* ACTIVOS / ARCHIVADOS */}
