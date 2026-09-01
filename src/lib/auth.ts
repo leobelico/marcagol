@@ -18,6 +18,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id;
         token.isSuperAdmin = (user as any).isSuperAdmin;
         token.memberships = (user as any).memberships;
+
+        token.organizationId =
+          (user as any).memberships?.[0]?.organizationId;
+
+        token.organizationName =
+          (user as any).memberships?.[0]?.organizationName;
       }
 
       return token;
@@ -32,6 +38,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         (session.user as any).memberships =
           token.memberships;
+
+        (session.user as any).organizationId =
+          token.organizationId;
+
+        (session.user as any).organizationName =
+          token.organizationName;
       }
 
       return session;
@@ -52,59 +64,97 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         },
       },
 
-async authorize(credentials) {
-  if (!credentials?.identifier || !credentials?.password) {
-    return null;
-  }
+      async authorize(credentials) {
+        if (
+          !credentials?.identifier ||
+          !credentials?.password
+        ) {
+          return null;
+        }
 
-  const identifier = String(credentials.identifier).trim().toLowerCase();
-  const password = String(credentials.password);
+        const identifier = String(
+          credentials.identifier
+        )
+          .trim()
+          .toLowerCase();
 
-  const user = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { email: identifier },
-        { phone: identifier },
-      ],
-    },
-    include: {
-      tenants: {
-        include: {
-          tenant: true,
-          teams: true, // TeamCaptain[] de cada TenantUser
-        },
+        const password = String(
+          credentials.password
+        );
+
+        const user = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { email: identifier },
+              { phone: identifier },
+            ],
+          },
+
+          include: {
+            tenants: {
+              include: {
+                tenant: {
+                  include: {
+                    organization: true,
+                  },
+                },
+
+                teams: true,
+              },
+            },
+          },
+        });
+
+        if (!user || !user.password) {
+          return null;
+        }
+
+        const valid = await bcrypt.compare(
+          password,
+          user.password
+        );
+
+        if (!valid) {
+          return null;
+        }
+
+        const memberships = user.tenants.map((tu) => ({
+          tenantId: tu.tenantId,
+
+          tenantName: tu.tenant.name,
+
+          organizationId:
+            tu.tenant.organizationId,
+
+          organizationName:
+            tu.tenant.organization?.name ?? null,
+
+          role: tu.role,
+
+          teamIds: tu.teams.map(
+            (tc) => tc.teamId
+          ),
+        }));
+
+        return {
+          id: user.id,
+
+          email: user.email,
+
+          name: user.name,
+
+          isSuperAdmin:
+            user.isSuperAdmin,
+
+          memberships,
+
+          organizationId:
+            memberships[0]?.organizationId,
+
+          organizationName:
+            memberships[0]?.organizationName,
+        };
       },
-    },
-  });
-
-  if (!user || !user.password) {
-    return null;
-  }
-
-  const valid = await bcrypt.compare(password, user.password);
-
-  if (!valid) {
-    return null;
-  }
-
-  // Una membership por CADA torneo/liga donde el usuario tiene
-  // un TenantUser (antes solo se tomaba tenants[0] y se perdían
-  // las demás ligas)
-  const memberships = user.tenants.map((tu) => ({
-    tenantId: tu.tenantId,
-    tenantName: tu.tenant.name,
-    role: tu.role,
-    teamIds: tu.teams.map((tc) => tc.teamId),
-  }));
-
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    isSuperAdmin: user.isSuperAdmin,
-    memberships,
-  };
-},
     }),
   ],
 });

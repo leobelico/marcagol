@@ -24,7 +24,8 @@ export default async function AdminPage({
   const carpetaId = params.carpeta || null;
 
   const isSuperAdmin = (session.user as any).isSuperAdmin;
-const organizationId = (session.user as any).organizationId;
+const organizationId =
+  (session.user as any).organizationId;
   // =========================================================
   // VALIDAR PERMISOS
   // =========================================================
@@ -310,7 +311,7 @@ const organizationId = (session.user as any).organizationId;
             {!verArchivados && !carpetaActual && isSuperAdmin && (
             <Link
               href={`/admin/carpetas/nueva?organizationId=${organizationId}`}
-              className="..."
+              className="bg-blue-700 hover:bg-blue-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
             >
               📁 Nueva carpeta
             </Link>
