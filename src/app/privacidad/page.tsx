@@ -16,7 +16,7 @@ export default function PrivacidadPage() {
         Política de Privacidad de MarcaGol
       </h1>
       <p className="text-sm text-gray-500 mb-10">
-        Última actualización: [COMPLETAR FECHA ANTES DE PUBLICAR]
+        Última actualización: 04/09/2026
       </p>
 
       <section className="space-y-4 mb-10">
@@ -160,7 +160,7 @@ export default function PrivacidadPage() {
           en:
         </p>
         <p className="font-semibold text-white">
-          [COMPLETAR: tu correo de contacto/soporte]
+          ldj821@gmail.com
         </p>
       </section>
     </div>
