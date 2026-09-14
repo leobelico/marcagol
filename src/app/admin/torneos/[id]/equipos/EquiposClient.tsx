@@ -1732,91 +1732,93 @@ export default function EquiposClient({
                               e.target.value = "";
                             }}
                           />
+{/* INE (opcional) */}
 
-                          {/* INE (opcional) */}
-
-                          <button
-                            onClick={() => handleIneClick(player.id)}
-                            disabled={
-                              subiendoDocumento === `${player.id}-ine`
-                            }
-                            className="text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 disabled:opacity-50"
+                        {ineActual && (
+                          <a
+                            href={ineActual}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs bg-purple-900/10 hover:bg-purple-900/30 text-purple-300 border border-purple-900/40 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1"
                           >
-                            🪪{" "}
-                            {subiendoDocumento === `${player.id}-ine`
-                              ? "Subiendo..."
-                              : ineActual
-                              ? "Cambiar INE"
-                              : "Subir INE"}
-                          </button>
+                            👁️ Ver INE
+                          </a>
+                        )}
 
-                          <input
-                            ref={(el) => {
-                              ineInputRefs.current[player.id] = el;
-                            }}
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
+                        <button
+                          onClick={() => handleIneClick(player.id)}
+                          disabled={subiendoDocumento === `${player.id}-ine`}
+                          className="text-xs bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 disabled:opacity-50"
+                        >
+                          🪪{" "}
+                          {subiendoDocumento === `${player.id}-ine`
+                            ? "Subiendo..."
+                            : ineActual
+                            ? "Cambiar INE"
+                            : "Subir INE"}
+                        </button>
 
-                              if (file) {
-                                handleDocumentoChange(
-                                  player.id,
-                                  team.id,
-                                  "ine",
-                                  file
-                                );
-                              }
+                        <input
+                          ref={(el) => {
+                            ineInputRefs.current[player.id] = el;
+                          }}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
 
-                              e.target.value = "";
-                            }}
-                          />
-
-                          {/* DOCUMENTO OFICIAL (opcional) */}
-
-                          <button
-                            onClick={() =>
-                              handleDocumentoOficialClick(player.id)
+                            if (file) {
+                              handleDocumentoChange(player.id, team.id, "ine", file);
                             }
-                            disabled={
-                              subiendoDocumento ===
-                              `${player.id}-documentoOficial`
-                            }
-                            className="text-xs bg-teal-900/30 hover:bg-teal-900/50 text-teal-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 disabled:opacity-50"
+
+                            e.target.value = "";
+                          }}
+                        />
+
+                        {/* DOCUMENTO OFICIAL (opcional) */}
+
+                        {documentoOficialActual && (
+                          <a
+                            href={documentoOficialActual}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs bg-teal-900/10 hover:bg-teal-900/30 text-teal-300 border border-teal-900/40 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1"
                           >
-                            📄{" "}
-                            {subiendoDocumento ===
-                            `${player.id}-documentoOficial`
-                              ? "Subiendo..."
-                              : documentoOficialActual
-                              ? "Cambiar documento"
-                              : "Subir documento"}
-                          </button>
+                            👁️ Ver documento
+                          </a>
+                        )}
 
-                          <input
-                            ref={(el) => {
-                              documentoOficialInputRefs.current[player.id] =
-                                el;
-                            }}
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
+                        <button
+                          onClick={() => handleDocumentoOficialClick(player.id)}
+                          disabled={subiendoDocumento === `${player.id}-documentoOficial`}
+                          className="text-xs bg-teal-900/30 hover:bg-teal-900/50 text-teal-400 font-bold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 disabled:opacity-50"
+                        >
+                          📄{" "}
+                          {subiendoDocumento === `${player.id}-documentoOficial`
+                            ? "Subiendo..."
+                            : documentoOficialActual
+                            ? "Cambiar documento"
+                            : "Subir documento"}
+                        </button>
 
-                              if (file) {
-                                handleDocumentoChange(
-                                  player.id,
-                                  team.id,
-                                  "documentoOficial",
-                                  file
-                                );
-                              }
+                        <input
+                          ref={(el) => {
+                            documentoOficialInputRefs.current[player.id] = el;
+                          }}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
 
-                              e.target.value = "";
-                            }}
-                          />
+                            if (file) {
+                              handleDocumentoChange(player.id, team.id, "documentoOficial", file);
+                            }
+
+                            e.target.value = "";
+                          }}
+                        />
 
                           <button
                             onClick={() => eliminarJugador(team.id, player.id)}
