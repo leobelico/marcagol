@@ -559,7 +559,7 @@ async function toggleDescalificado(teamId: string, actual: boolean) {
   }
 }
 
-async function generarCedula(match: Match) {
+async function generarCedula(match: Match, roundNumber: number) {
   const { jsPDF } = await import("jspdf");
 
   const doc = new jsPDF({
@@ -670,106 +670,125 @@ doc.text(
   const colWidth = pageW / 2 - 20;
 
   function dibujarEquipo(
-    nombre: string,
-    jugadores: Player[],
-    x: number,
-    startY: number
-  ) {
-    doc.setFillColor(0, 80, 0);
-    doc.rect(x, startY, colWidth, 8, "F");
+  nombre: string,
+  jugadores: Player[],
+  x: number,
+  startY: number,
+  roundNumber: number
+) {
+  doc.setFillColor(0, 80, 0);
+  doc.rect(x, startY, colWidth, 8, "F");
 
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.text(nombre.toUpperCase(), x + colWidth / 2, startY + 5.5, {
-      align: "center",
-    });
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.text(nombre.toUpperCase(), x + colWidth / 2, startY + 5.5, {
+    align: "center",
+  });
 
-    let y = startY + 12;
+  let y = startY + 12;
 
-    doc.setTextColor(80, 80, 80);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
-    doc.text("#", x + 2, y);
-    doc.text("Nombre", x + 10, y);
-    doc.text("Pos", x + colWidth - 22, y);
-    doc.text("G", x + colWidth - 10, y);
-    doc.text("TA", x + colWidth - 5, y);
+  doc.setTextColor(80, 80, 80);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.text("#", x + 2, y);
+  doc.text("Nombre", x + 10, y);
+  doc.text("Pos", x + colWidth - 22, y);
+  doc.text("G", x + colWidth - 10, y);
+  doc.text("TA", x + colWidth - 5, y);
 
-    doc.setDrawColor(220, 220, 220);
-    doc.line(x, y + 2, x + colWidth, y + 2);
+  doc.setDrawColor(220, 220, 220);
+  doc.line(x, y + 2, x + colWidth, y + 2);
 
-    y += 6;
+  y += 6;
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(0, 0, 0);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(0, 0, 0);
 
-    const jugadoresOrdenados = [...jugadores].sort(
-      (a, b) => (a.number ?? 99) - (b.number ?? 99)
-    );
+  const jugadoresOrdenados = [...jugadores].sort(
+    (a, b) => (a.number ?? 99) - (b.number ?? 99)
+  );
 
-    const maxJugadores = Math.max(jugadoresOrdenados.length, 15);
+  const maxJugadores = Math.max(jugadoresOrdenados.length, 15);
 
-    for (let i = 0; i < maxJugadores; i++) {
-      const j = jugadoresOrdenados[i];
-      const rowY = y + i * 7;
+  for (let i = 0; i < maxJugadores; i++) {
+    const j = jugadoresOrdenados[i];
+    const rowY = y + i * 7;
 
-      if (i % 2 === 0) {
-        doc.setFillColor(245, 245, 245);
-        doc.rect(x, rowY - 4, colWidth, 7, "F");
-      }
-
-      if (j) {
-        doc.setTextColor(0, 0, 0);
-        doc.text(j.number != null ? String(j.number) : "-", x + 2, rowY);
-
-        const nombreCorto =
-          j.name.length > 22 ? j.name.substring(0, 20) + "…" : j.name;
-
-        doc.text(nombreCorto, x + 10, rowY);
-
-        if (j.position) {
-          const pos =
-            j.position === "Portero"
-              ? "POR"
-              : j.position === "Defensa"
-              ? "DEF"
-              : j.position === "Mediocampista"
-              ? "MED"
-              : "DEL";
-
-          doc.text(pos, x + colWidth - 22, rowY);
-        }
-      } else {
-        doc.setTextColor(180, 180, 180);
-        doc.text("___", x + 2, rowY);
-        doc.text("_______________________", x + 10, rowY);
-      }
-
-      doc.setTextColor(0, 0, 0);
-      doc.text("__", x + colWidth - 10, rowY);
-      doc.text("__", x + colWidth - 5, rowY);
+    if (i % 2 === 0) {
+      doc.setFillColor(245, 245, 245);
+      doc.rect(x, rowY - 4, colWidth, 7, "F");
     }
 
-    const finalY = y + maxJugadores * 7;
+    const suspendido =
+      !!j && j.suspendedUntil != null && roundNumber <= j.suspendedUntil;
 
-    doc.setFillColor(240, 240, 240);
-    doc.rect(x, finalY, colWidth, 10, "F");
+    if (j) {
+      doc.setTextColor(suspendido ? 200 : 0, 0, 0);
 
-    doc.setDrawColor(180, 180, 180);
-    doc.rect(x, finalY, colWidth, 10);
+      doc.text(j.number != null ? String(j.number) : "-", x + 2, rowY);
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.text("GOLES:", x + 3, finalY + 6.5);
-    doc.text("_____", x + 22, finalY + 6.5);
+      const nombreCorto =
+        j.name.length > 22 ? j.name.substring(0, 20) + "…" : j.name;
 
-    return finalY + 14;
+      doc.text(nombreCorto, x + 10, rowY);
+
+      if (suspendido) {
+        // línea de tachado sobre el nombre
+        const anchoTexto = doc.getTextWidth(nombreCorto);
+        doc.setDrawColor(200, 0, 0);
+        doc.setLineWidth(0.4);
+        doc.line(x + 10, rowY - 1.3, x + 10 + anchoTexto, rowY - 1.3);
+
+        // en vez de la posición, muestra "SUSP"
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(6.5);
+        doc.setTextColor(200, 0, 0);
+        doc.text("SUSP", x + colWidth - 22, rowY);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+      } else if (j.position) {
+        const pos =
+          j.position === "Portero"
+            ? "POR"
+            : j.position === "Defensa"
+            ? "DEF"
+            : j.position === "Mediocampista"
+            ? "MED"
+            : "DEL";
+
+        doc.setTextColor(0, 0, 0);
+        doc.text(pos, x + colWidth - 22, rowY);
+      }
+    } else {
+      doc.setTextColor(180, 180, 180);
+      doc.text("___", x + 2, rowY);
+      doc.text("_______________________", x + 10, rowY);
+    }
+
+    doc.setTextColor(0, 0, 0);
+    doc.text("__", x + colWidth - 10, rowY);
+    doc.text("__", x + colWidth - 5, rowY);
   }
 
-  const endY = dibujarEquipo(home, homePlayers, colLeft, 38);
-  dibujarEquipo(away, awayPlayers, colRight, 38);
+  const finalY = y + maxJugadores * 7;
+
+  doc.setFillColor(240, 240, 240);
+  doc.rect(x, finalY, colWidth, 10, "F");
+
+  doc.setDrawColor(180, 180, 180);
+  doc.rect(x, finalY, colWidth, 10);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.text("GOLES:", x + 3, finalY + 6.5);
+  doc.text("_____", x + 22, finalY + 6.5);
+
+  return finalY + 14;
+}
+const endY = dibujarEquipo(home, homePlayers, colLeft, 38, roundNumber);
+dibujarEquipo(away, awayPlayers, colRight, 38, roundNumber);
 
   doc.setDrawColor(220, 220, 220);
   doc.line(pageW / 2, 38, pageW / 2, endY - 14);
@@ -1116,10 +1135,10 @@ doc.text(
             <span className="bg-green-900/40 border border-green-700 text-green-300 font-bold text-sm px-2.5 py-1 rounded-lg tracking-wide">
               🕒 {new Date(m.date).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", timeZone: "America/Mexico_City" })}
             </span>
-            <button onClick={() => generarCedula(m)}
-                    className="bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 font-bold px-3 py-1 rounded-lg transition">
-                    📄 Cédula
-                  </button>
+          <button onClick={() => generarCedula(m, round.number)}
+                  className="bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 font-bold px-3 py-1 rounded-lg transition">
+                  📄 Cédula
+                </button>
             
                   {/* NUEVO: Mover jornada */}
                   <select
