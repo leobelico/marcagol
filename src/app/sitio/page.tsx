@@ -180,7 +180,11 @@ const bracketRounds = await prisma.round.findMany({
                   {recentMatches.map((m) => (
                     <tr key={m.id} className="border-t border-gray-800 first:border-0 hover:bg-gray-800/50 transition">
                       <td className="px-4 py-3 text-gray-500 text-xs w-20">
-                        {new Date(m.date).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
+                        {new Date(m.date).toLocaleDateString("es-MX", {
+                          day: "numeric",
+                          month: "short",
+                          timeZone: "America/Mexico_City",
+                        })}
                       </td>
                       <td className="px-4 py-3 text-right font-semibold">
                         <span className={(m.homeScore ?? 0) > (m.awayScore ?? 0) ? "text-white" : "text-gray-500"}>
@@ -217,7 +221,19 @@ const bracketRounds = await prisma.round.findMany({
               {upcomingMatches.map((m) => (
                 <div key={m.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
                   <p className="text-xs text-gray-600 font-semibold uppercase mb-3">
-                    {new Date(m.date).toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "short" })}
+                    {new Date(m.date).toLocaleDateString("es-MX", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "short",
+                      timeZone: "America/Mexico_City",
+                    })}
+                    {" · "}
+                    {new Date(m.date).toLocaleTimeString("es-MX", {
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                      timeZone: "America/Mexico_City",
+                    })}
                   </p>
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-white font-semibold text-sm text-right flex-1 truncate">{m.homeTeam.name}</span>
