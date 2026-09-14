@@ -2,7 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-type Player = { id: string; name: string; number: number | null; position: string | null; suspendedUntil?: number | null; };
+type Player = {
+  id: string;
+  name: string;
+  number: number | null;
+  position: string | null;
+  photo: string | null;
+  teamId: string;
+  ineUrl: string | null;
+  documentoOficialUrl: string | null;
+  suspendedUntil: number | null;
+};
 type Team = { id: string; name: string; players: Player[]; disqualified?: boolean | null };
 type Match = { id: string; date: Date; homeTeam: Team; awayTeam: Team; status: string; cancha?: number | null; homeScore?: number | null; awayScore?: number | null; bracketOrder?: number | null; };
 type Round = { id: string; number: number; name: string | null; matches: Match[]; bracketStage?: number | null; bracketLabel?: string | null; };

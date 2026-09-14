@@ -144,9 +144,11 @@ model Player {
   team     Team        @relation(fields: [teamId], references: [id])
   stats    PlayerStat[]
   ineUrl   String?
-  documentoOficialUrl  String?
-}
+  documentoOficialUrl String?
 
+  // Jornada hasta la que está suspendido
+  suspendedUntil Int?
+}
 model Round {
   id           String  @id @default(cuid())
   number       Int
