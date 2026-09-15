@@ -86,6 +86,8 @@ export async function GET(
       photo: p.photo,
       goals: p.stats[0]?.goals ?? 0,
       assists: p.stats[0]?.assists ?? 0,
+      yellow: p.stats[0]?.yellow ?? 0,
+      red: p.stats[0]?.red ?? 0,
     }));
 
     return NextResponse.json({
