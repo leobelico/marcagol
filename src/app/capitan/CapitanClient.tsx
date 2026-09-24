@@ -18,6 +18,7 @@ type Team = {
   name: string;
   logo: string | null;
   players: Player[];
+  allowLateRegistration?: boolean | null;
 };
 
 type Props = {
@@ -25,6 +26,7 @@ type Props = {
   tenant: {
     id: string;
     name: string;
+    registrationOpen?: boolean;
   };
   email: string | null;
 };
@@ -76,6 +78,13 @@ export default function CapitanClient({
   useEffect(() => {
     setTeam(initialTeam);
   }, [initialTeam]);
+
+  // ─────────────────────────────────────
+  // INSCRIPCIONES ABIERTAS / CERRADAS
+  // ─────────────────────────────────────
+
+  const inscripcionesAbiertas =
+    (tenant.registrationOpen ?? true) || !!team.allowLateRegistration;
 
   // ─────────────────────────────────────
   // AGREGAR JUGADOR
@@ -350,6 +359,16 @@ export default function CapitanClient({
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-6 sm:py-8 space-y-6">
+        {/* AVISO DE INSCRIPCIONES CERRADAS */}
+
+        {!inscripcionesAbiertas && (
+          <div className="bg-yellow-900/20 border border-yellow-800 rounded-2xl px-4 py-3 text-yellow-400 text-sm">
+            🔒 Las inscripciones están cerradas para este torneo. No podrás
+            agregar nuevos jugadores. Si necesitas hacerlo, contacta al
+            organizador.
+          </div>
+        )}
+
         {/* INFORMACIÓN EQUIPO */}
 
         <section className="bg-gray-900 border border-gray-800 rounded-2xl p-4 sm:p-6">
@@ -430,7 +449,13 @@ export default function CapitanClient({
             <button
               type="button"
               onClick={() => setMostrarNuevoJugador(!mostrarNuevoJugador)}
-              className="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm w-full sm:w-auto"
+              disabled={!inscripcionesAbiertas}
+              title={
+                !inscripcionesAbiertas
+                  ? "Las inscripciones están cerradas"
+                  : undefined
+              }
+              className="bg-green-600 hover:bg-green-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white font-bold px-4 py-2.5 rounded-xl text-sm w-full sm:w-auto"
             >
               + Jugador
             </button>
@@ -438,7 +463,7 @@ export default function CapitanClient({
 
           {/* NUEVO JUGADOR */}
 
-          {mostrarNuevoJugador && (
+          {mostrarNuevoJugador && inscripcionesAbiertas && (
             <div className="p-4 sm:p-6 bg-gray-800/40 border-b border-gray-800">
               <h3 className="text-sm font-bold text-gray-300 mb-4">
                 Nuevo jugador

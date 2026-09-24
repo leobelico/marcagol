@@ -28,6 +28,29 @@ export async function POST(
     const { id } = await params;
 
     // ─────────────────────────────────────
+    // VERIFICAR SI LAS INSCRIPCIONES ESTÁN ABIERTAS
+    // ─────────────────────────────────────
+
+    const tenant = await prisma.tenant.findUnique({
+      where: { id },
+      select: { registrationOpen: true },
+    });
+
+    if (!tenant) {
+      return NextResponse.json(
+        { error: "Torneo no encontrado" },
+        { status: 404 }
+      );
+    }
+
+    if (!tenant.registrationOpen) {
+      return NextResponse.json(
+        { error: "Las inscripciones están cerradas para este torneo" },
+        { status: 403 }
+      );
+    }
+
+    // ─────────────────────────────────────
     // LEER DATOS
     // ─────────────────────────────────────
 

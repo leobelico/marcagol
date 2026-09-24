@@ -30,6 +30,7 @@ type Torneo = {
   name: string;
   teams: Team[];
   logo?: string | null;
+  registrationOpen: boolean | null;
 };
 
 type EquipoBusqueda = {
@@ -936,13 +937,30 @@ export default function EquiposClient({
         </div>
 
         <div className="flex gap-2">
-          <button
-            onClick={() => setShowTraerEquipo(true)}
-            className="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
-          >
-            📥 Traer Equipo
-          </button>
-
+                  <button
+                    onClick={() => setShowTraerEquipo(true)}
+                    className="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
+                  >
+                    📥 Traer Equipo
+                  </button>
+                  <button
+          onClick={async () => {
+            const nuevo = !torneo.registrationOpen;
+            await fetch(`/api/admin/torneos/${torneo.id}/registro`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ registrationOpen: nuevo }),
+            });
+            router.refresh();
+          }}
+          className={`font-bold px-5 py-2.5 rounded-xl transition text-sm ${
+            torneo.registrationOpen
+              ? "bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-800"
+              : "bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-800"
+          }`}
+        >
+          {torneo.registrationOpen ? "🔓 Inscripciones abiertas" : "🔒 Inscripciones cerradas"}
+        </button>
           <button
             onClick={() => setShowNuevoEquipo(true)}
             className="bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"

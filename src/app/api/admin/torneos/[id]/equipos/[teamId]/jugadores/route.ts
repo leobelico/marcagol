@@ -82,13 +82,18 @@ export async function POST(
   }
 
   // ─────────────────────────────────────
-  // VERIFICAR EQUIPO
+  // VERIFICAR EQUIPO Y ESTADO DE INSCRIPCIONES
   // ─────────────────────────────────────
 
   const team = await prisma.team.findFirst({
     where: {
       id: teamId,
       tenantId: id,
+    },
+    include: {
+      tenant: {
+        select: { registrationOpen: true },
+      },
     },
   });
 
@@ -99,6 +104,21 @@ export async function POST(
     );
   }
 
+  // El candado de inscripciones SOLO aplica a capitanes.
+  // Admin y súper admin siempre pueden agregar jugadores.
+  const esCapitan = membership?.role === "CAPTAIN";
+
+  if (esCapitan) {
+    const puedeInscribir =
+      team.tenant.registrationOpen || team.allowLateRegistration;
+
+    if (!puedeInscribir) {
+      return NextResponse.json(
+        { error: "Las inscripciones están cerradas para este torneo" },
+        { status: 403 }
+      );
+    }
+  }
   // ─────────────────────────────────────
   // CREAR JUGADOR
   // ─────────────────────────────────────

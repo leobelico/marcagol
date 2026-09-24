@@ -43,7 +43,7 @@ model Tenant {
   // NUEVO
   folderId       String?
   folder         TenantFolder? @relation(fields: [folderId], references: [id])
-
+  registrationOpen Boolean @default(true)
   @@index([folderId])
   @@index([organizationId])
 }
@@ -132,6 +132,7 @@ model Team {
   tenant       Tenant        @relation(fields: [tenantId], references: [id])
   captains     TeamCaptain[]
   preferredDay String?
+  allowLateRegistration Boolean @default(false)
 }
 
 model Player {
