@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 type Player = {
   id: string;
@@ -26,6 +26,15 @@ type Torneo = {
   matchesPerDay: number;
   roundTrip: boolean;
    logo?: string | null;
+};
+type Encuesta = {
+  id: string;
+  matchId: string;
+  teamId: string;
+  arbitro: string | null;
+  q1: number; q2: number; q3: number; q4: number; q5: number;
+  comentarios: string | null;
+  createdAt: string;
 };
 const DIAS_LABEL: Record<string, string> = {
   MONDAY: "Lunes", TUESDAY: "Martes", WEDNESDAY: "Miércoles",
@@ -80,7 +89,23 @@ const [showSiguienteRonda, setShowSiguienteRonda] = useState(false);
   >([]);
   const [generandoSiguiente, setGenerandoSiguiente] = useState(false);
   const [errorSiguiente, setErrorSiguiente] = useState("");
+const [encuestas, setEncuestas] = useState<Encuesta[]>([]);
+const [resultadosMatchId, setResultadosMatchId] = useState<string | null>(null);
 
+useEffect(() => {
+  fetch(`/api/admin/torneos/${torneo.id}/encuestas`)
+    .then((r) => (r.ok ? r.json() : { encuestas: [] }))
+    .then((j) => setEncuestas(j.encuestas ?? []))
+    .catch(() => {});
+}, [torneo.id]);
+
+function encuestasDe(matchId: string) {
+  return encuestas.filter((e) => e.matchId === matchId);
+}
+
+function promedio(arr: number[]) {
+  return arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1) : "-";
+}
   // =========================
   // OPCIONES DE GENERACIÓN (hora inicio + preferencias)
   // =========================
@@ -813,7 +838,24 @@ dibujarEquipo(away, awayPlayers, colRight, 38, roundNumber);
 
   doc.line(pageW / 2 - 35, endY + 20, pageW / 2 + 35, endY + 20);
   doc.text("Firma árbitro", pageW / 2, endY + 25, { align: "center" });
-
+  // =========================
+  // QR ENCUESTA ARBITRAL
+  // =========================
+  try {
+    const QRCode = (await import("qrcode")).default;
+    const urlEncuesta = `${window.location.origin}/encuesta/${match.id}`;
+    const qrData = await QRCode.toDataURL(urlEncuesta, { margin: 1, width: 300 });
+    const qrSize = 28;
+    const qrX = pageW / 2 - qrSize / 2;
+    const qrY = endY + 32;
+    doc.addImage(qrData, "PNG", qrX, qrY, qrSize, qrSize);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(80, 80, 80);
+    doc.text("Escanea para evaluar al árbitro", pageW / 2, qrY + qrSize + 4, { align: "center" });
+  } catch (err) {
+    console.error("Error generando QR", err);
+  }
   doc.save(`Cedula_${home}_vs_${away}.pdf`);
 }
   return (
@@ -1149,7 +1191,13 @@ dibujarEquipo(away, awayPlayers, colRight, 38, roundNumber);
                   className="bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-400 font-bold px-3 py-1 rounded-lg transition">
                   📄 Cédula
                 </button>
-            
+            {encuestasDe(m.id).length > 0 && (
+                <button
+                  onClick={() => setResultadosMatchId(m.id)}
+                  className="bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-400 font-bold px-3 py-1 rounded-lg transition">
+                  📊 Ver resultados ({encuestasDe(m.id).length})
+                </button>
+              )}
                   {/* NUEVO: Mover jornada */}
                   <select
                     defaultValue=""
@@ -1420,7 +1468,68 @@ dibujarEquipo(away, awayPlayers, colRight, 38, roundNumber);
           </div>
         </div>
       )}
+{/* Modal Resultados Encuesta Arbitral */}
+{resultadosMatchId && (() => {
+  const match = torneo.rounds.flatMap((r) => r.matches).find((m) => m.id === resultadosMatchId);
+  const lista = encuestasDe(resultadosMatchId);
+  const PREG = ["Puntualidad y preparación", "Aplicación del reglamento", "Control del partido", "Trato y comunicación", "Calificación general"];
+  const keys = ["q1", "q2", "q3", "q4", "q5"] as const;
+  const nombreEquipo = (id: string) => torneo.teams.find((t) => t.id === id)?.name ?? "Equipo";
+  const arbitro = lista.find((e) => e.arbitro)?.arbitro;
 
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4 overflow-y-auto py-8">
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-2xl w-full space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-black text-white">📊 Evaluación arbitral</h3>
+            {match && (
+              <p className="text-gray-400 text-sm mt-1">
+                {match.homeTeam.name} vs {match.awayTeam.name}
+                {arbitro ? ` · Árbitro: ${arbitro}` : ""}
+              </p>
+            )}
+          </div>
+          <button onClick={() => setResultadosMatchId(null)}
+            className="text-gray-500 hover:text-white text-2xl">×</button>
+        </div>
+
+        {/* Promedios generales */}
+        <div className="space-y-2">
+          <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+            Promedio ({lista.length} {lista.length === 1 ? "respuesta" : "respuestas"})
+          </h4>
+          {keys.map((k, i) => (
+            <div key={k} className="flex items-center justify-between bg-gray-800/50 rounded-xl px-4 py-2">
+              <span className="text-sm text-gray-300">{i + 1}. {PREG[i]}</span>
+              <span className="text-green-400 font-black">{promedio(lista.map((e) => e[k]))} / 5</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Detalle por equipo */}
+        <div className="space-y-3">
+          <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Detalle por equipo</h4>
+          {lista.map((e) => (
+            <div key={e.id} className="bg-gray-800/50 border border-gray-800 rounded-xl p-4 space-y-2">
+              <p className="text-white font-semibold text-sm">{nombreEquipo(e.teamId)}</p>
+              <div className="flex gap-2 flex-wrap text-xs">
+                {keys.map((k, i) => (
+                  <span key={k} className="bg-gray-800 text-gray-300 px-2 py-1 rounded">
+                    P{i + 1}: <b className="text-white">{e[k]}</b>
+                  </span>
+                ))}
+              </div>
+              {e.comentarios && (
+                <p className="text-gray-400 text-sm italic">"{e.comentarios}"</p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+})()}
       {/* Modal Generar Siguiente Ronda - independiente */}
       {showSiguienteRonda && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4 overflow-y-auto py-8">
