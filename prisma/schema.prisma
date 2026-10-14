@@ -168,6 +168,8 @@ model EncuestaArbitral {
   match       Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
   teamId      String
   arbitro     String?
+  refereeId   String?
+  referee     Referee? @relation(fields: [refereeId], references: [id])
   q1          Int
   q2          Int
   q3          Int
@@ -177,6 +179,7 @@ model EncuestaArbitral {
   createdAt   DateTime @default(now())
 
   @@unique([matchId, teamId])
+  @@index([refereeId])
 }
 model Match {
   id           String       @id @default(cuid())
@@ -231,9 +234,9 @@ model Referee {
   payPerMatch Float   @default(0)
   phone       String?
   matches     Match[]
+  encuestas   EncuestaArbitral[]
   tenant      Tenant  @relation(fields: [tenantId], references: [id])
 }
-
 model Finance {
   id          String          @id @default(cuid())
   type        FinanceType

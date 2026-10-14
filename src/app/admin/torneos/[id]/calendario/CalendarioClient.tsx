@@ -27,6 +27,7 @@ type Torneo = {
   roundTrip: boolean;
    logo?: string | null;
 };
+
 type Encuesta = {
   id: string;
   matchId: string;
@@ -40,6 +41,16 @@ const DIAS_LABEL: Record<string, string> = {
   MONDAY: "Lunes", TUESDAY: "Martes", WEDNESDAY: "Miércoles",
   THURSDAY: "Jueves", FRIDAY: "Viernes", SATURDAY: "Sábado", SUNDAY: "Domingo",
 };
+type RankingArbitro = {
+  refereeId: string; nombre: string; respuestas: number; partidos: number; partidosEvaluados: number;
+  p1: number; p2: number; p3: number; p4: number; p5: number; general: number;
+  comentarios: { matchId: string; texto: string }[];
+};
+
+const [showRanking, setShowRanking] = useState(false);
+const [ranking, setRanking] = useState<RankingArbitro[]>([]);
+const [cargandoRanking, setCargandoRanking] = useState(false);
+const [minEvaluaciones, setMinEvaluaciones] = useState(3);
 
 export default function CalendarioClient({ torneo }: { torneo: Torneo }) {
   const router = useRouter();
@@ -103,6 +114,17 @@ function encuestasDe(matchId: string) {
   return encuestas.filter((e) => e.matchId === matchId);
 }
 
+async function abrirRanking() {
+  setShowRanking(true);
+  setCargandoRanking(true);
+  try {
+    const res = await fetch(`/api/admin/torneos/${torneo.id}/arbitros/ranking`);
+    const json = await res.json();
+    setRanking(json.ranking ?? []);
+  } finally {
+    setCargandoRanking(false);
+  }
+}
 function promedio(arr: number[]) {
   return arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1) : "-";
 }
@@ -913,6 +935,10 @@ dibujarEquipo(away, awayPlayers, colRight, 38, roundNumber);
             className="bg-red-800 hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
             🚫 Descalificar equipos
           </button>
+          <button onClick={abrirRanking}
+            className="bg-emerald-800 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
+            🏅 Ranking árbitros
+          </button>
         </div>
         
       </div>
@@ -1328,7 +1354,88 @@ dibujarEquipo(away, awayPlayers, colRight, 38, roundNumber);
           </div>
         </div>
       )}
+{showRanking && (() => {
+  const elegibles = ranking.filter((r) => r.partidosEvaluados >= minEvaluaciones);
+  const noElegibles = ranking.filter((r) => r.partidosEvaluados < minEvaluaciones);
+  const ganador = elegibles[0];
+  const PREG = ["Puntualidad", "Reglamento", "Control", "Trato", "General"];
 
+  const fila = (r: RankingArbitro, pos: number | null) => (
+    <div key={r.refereeId} className="bg-gray-800/50 border border-gray-800 rounded-xl p-4 space-y-2">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-white font-semibold text-sm">
+          {pos != null && <span className="text-gray-500 mr-2">#{pos}</span>}
+          {r.nombre}
+        </p>
+        <span className="text-green-400 font-black text-lg">{r.general.toFixed(2)} / 5</span>
+      </div>
+      <p className="text-gray-500 text-xs">
+        {r.partidosEvaluados} de {r.partidos} partidos evaluados · {r.respuestas} respuestas
+      </p>
+      <div className="flex gap-2 flex-wrap text-xs">
+        {[r.p1, r.p2, r.p3, r.p4, r.p5].map((v, i) => (
+          <span key={i} className="bg-gray-800 text-gray-300 px-2 py-1 rounded">
+            {PREG[i]}: <b className="text-white">{v.toFixed(1)}</b>
+          </span>
+        ))}
+      </div>
+      {r.comentarios.length > 0 && (
+        <details className="text-xs text-gray-400">
+          <summary className="cursor-pointer">Comentarios ({r.comentarios.length})</summary>
+          <ul className="mt-2 space-y-1 italic">
+            {r.comentarios.map((c, i) => <li key={i}>"{c.texto}"</li>)}
+          </ul>
+        </details>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4 overflow-y-auto py-8">
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-2xl w-full space-y-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-black text-white">🏅 Ranking de árbitros</h3>
+          <button onClick={() => setShowRanking(false)} className="text-gray-500 hover:text-white text-2xl">×</button>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <label className="text-xs text-gray-400 uppercase tracking-widest">
+            Mínimo de partidos evaluados para competir
+          </label>
+          <input type="number" min={1} value={minEvaluaciones}
+            onChange={(e) => setMinEvaluaciones(Math.max(1, Number(e.target.value)))}
+            className="w-20 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-white text-sm" />
+        </div>
+
+        {cargandoRanking && <p className="text-gray-400 text-sm">Cargando...</p>}
+
+        {!cargandoRanking && ganador && (
+          <div className="bg-yellow-900/20 border border-yellow-700 rounded-2xl p-5 text-center">
+            <p className="text-3xl">🏆</p>
+            <p className="text-yellow-400 text-xs uppercase tracking-widest mt-1">Mejor árbitro del torneo</p>
+            <p className="text-white font-black text-xl">{ganador.nombre}</p>
+            <p className="text-yellow-300 font-bold">{ganador.general.toFixed(2)} / 5</p>
+          </div>
+        )}
+
+        {!cargandoRanking && ranking.length === 0 && (
+          <p className="text-gray-500 text-sm">Todavía no hay encuestas con árbitro asignado.</p>
+        )}
+
+        <div className="space-y-3">{elegibles.map((r, i) => fila(r, i + 1))}</div>
+
+        {noElegibles.length > 0 && (
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+              Sin evaluaciones suficientes (no compiten)
+            </h4>
+            {noElegibles.map((r) => fila(r, null))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+})()}
       {/* Modal Descalificar equipos - independiente */}
       {showDescalificar && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4 overflow-y-auto py-8">
