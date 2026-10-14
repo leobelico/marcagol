@@ -47,10 +47,6 @@ type RankingArbitro = {
   comentarios: { matchId: string; texto: string }[];
 };
 
-const [showRanking, setShowRanking] = useState(false);
-const [ranking, setRanking] = useState<RankingArbitro[]>([]);
-const [cargandoRanking, setCargandoRanking] = useState(false);
-const [minEvaluaciones, setMinEvaluaciones] = useState(3);
 
 export default function CalendarioClient({ torneo }: { torneo: Torneo }) {
   const router = useRouter();
@@ -103,6 +99,10 @@ const [showSiguienteRonda, setShowSiguienteRonda] = useState(false);
 const [encuestas, setEncuestas] = useState<Encuesta[]>([]);
 const [resultadosMatchId, setResultadosMatchId] = useState<string | null>(null);
 
+const [showRanking, setShowRanking] = useState(false);
+const [ranking, setRanking] = useState<RankingArbitro[]>([]);
+const [cargandoRanking, setCargandoRanking] = useState(false);
+const [minEvaluaciones, setMinEvaluaciones] = useState(3);
 useEffect(() => {
   fetch(`/api/admin/torneos/${torneo.id}/encuestas`)
     .then((r) => (r.ok ? r.json() : { encuestas: [] }))
