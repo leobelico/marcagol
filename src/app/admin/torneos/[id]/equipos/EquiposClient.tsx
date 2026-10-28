@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-
+import JugadoresSimilares from "../../../../components/JugadoresSimilares";
 type Player = {
   id: string;
   name: string;
@@ -969,7 +969,7 @@ export default function EquiposClient({
           </button>
         </div>
       </div>
-
+           {torneo.teams.length > 0 && <JugadoresSimilares teams={torneo.teams} />}
       {showTraerEquipo && (
         <div className="bg-gray-900 border border-blue-800 rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
@@ -1231,6 +1231,7 @@ export default function EquiposClient({
           {torneo.teams.map((team) => (
             <div
               key={team.id}
+              id={`equipo-${team.id}`}
               className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden"
             >
               <div className="px-6 py-4 border-b border-gray-800">
