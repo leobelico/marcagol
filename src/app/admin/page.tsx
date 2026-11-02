@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import CarpetaAcciones from "./CarpetaAcciones";
 import { auth } from "@/lib/auth";
 import TorneoCard from "./TorneoCard";
 
@@ -307,10 +308,14 @@ const organizationId =
               </Link>
             )}
 
+            {carpetaActual && isSuperAdmin && (
+              <CarpetaAcciones id={carpetaActual.id} nombre={carpetaActual.name} />
+            )}
+
             {/* CARPETAS */}
             {!verArchivados && !carpetaActual && isSuperAdmin && (
             <Link
-              href={`/admin/carpetas/nueva?organizationId=${organizationId}`}
+              href={organizationId ? `/admin/carpetas/nueva?organizationId=${organizationId}` : "/admin/carpetas/nueva"}
               className="bg-blue-700 hover:bg-blue-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
             >
               📁 Nueva carpeta

@@ -1,14 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export default function NuevaCarpetaPage() {
-  const searchParams = useSearchParams();
+export default function NuevaCarpetaPage({
+  organizaciones,
+  inicial,
+}: {
+  organizaciones: { id: string; name: string }[];
+  inicial: string;
+}) {
   const router = useRouter();
 
-  const organizationId = searchParams.get("organizationId");
+  const [organizationId, setOrganizationId] = useState(inicial);
 
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,7 +28,7 @@ export default function NuevaCarpetaPage() {
     }
 
     if (!organizationId) {
-      setError("No se encontró la organización");
+      setError("Elige la organización a la que pertenece la carpeta");
       return;
     }
 
@@ -139,17 +144,34 @@ export default function NuevaCarpetaPage() {
             </div>
 
             {/* ORGANIZACIÓN */}
-            <div className="bg-gray-950 border border-gray-800 rounded-xl px-4 py-3">
-              <p className="text-xs text-gray-500 uppercase tracking-wide">
+            <div>
+              <label
+                htmlFor="organizacion"
+                className="block text-sm font-bold text-gray-300 mb-2"
+              >
                 Organización
-              </p>
-
-              <p className="text-white font-bold mt-1">
-                Organización seleccionada
-              </p>
-
-              <p className="text-xs text-gray-600 mt-1 break-all">
-                ID: {organizationId || "No especificada"}
+              </label>
+              {organizaciones.length === 0 ? (
+                <p className="bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-400">
+                  No hay organizaciones registradas. Crea una organización antes de crear carpetas.
+                </p>
+              ) : (
+                <select
+                  id="organizacion"
+                  value={organizationId}
+                  onChange={(e) => setOrganizationId(e.target.value)}
+                  disabled={loading}
+                  className="w-full bg-gray-950 border border-gray-700 rounded-xl px-4 py-3 text-white outline-none focus:border-green-500 transition disabled:opacity-50"
+                >
+                  {organizaciones.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <p className="text-xs text-gray-500 mt-2">
+                Puedes guardar en la carpeta torneos de esta organización y torneos sin organización.
               </p>
             </div>
 

@@ -13,16 +13,9 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    // SUPER_ADMIN puede mover cualquier torneo; un ADMIN solo los que
+    // administra (se revisa abajo con su TenantUser).
     const isSuperAdmin = (session.user as any).isSuperAdmin;
-    const role = (session.user as any).role;
-
-    // Por ahora permitimos SUPER_ADMIN y ADMIN.
-    if (!isSuperAdmin && role !== "ADMIN") {
-      return NextResponse.json(
-        { error: "No tienes permisos para mover torneos" },
-        { status: 403 }
-      );
-    }
 
     const { tenantId, folderId } = await req.json();
 
@@ -125,7 +118,9 @@ if (!isSuperAdmin) {
     // que el torneo.
     // =========================================================
 
+    // (Si el torneo no tiene organización asignada, se permite.)
     if (
+      tenant.organizationId &&
       folder.organizationId !== tenant.organizationId
     ) {
       return NextResponse.json(
