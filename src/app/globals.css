@@ -1,26 +1,300 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+  Tema de MarcaGol (mismo estilo que la app móvil):
+  - Claro: fondo gris claro, tarjetas blancas, acento azul.
+  - Oscuro: azul marino de la marca, acento verde.
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  Las pantallas usan las clases de Tailwind de siempre (bg-gray-950,
+  text-white, bg-green-600...). Aquí esas escalas se redefinen con
+  variables, así el mismo HTML se ve bien en ambos temas:
+    gray-950 = fondo de página   gray-900 = tarjeta
+    gray-800 = campo / borde     gray-700 = borde fuerte / hover
+    gray-600..300 = textos secundarios
+    white = texto principal      green = acento
+  El tema sigue al sistema; data-theme="light|dark" en <html> (o en
+  cualquier contenedor) lo fija.
+*/
+
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  --g-50: #14171c;
+  --g-100: #1e2128;
+  --g-200: #2a2f36;
+  --g-300: #3c434c;
+  --g-400: #5d6672;
+  --g-500: #7a8494;
+  --g-600: #a3aab5;
+  --g-700: #d7dee7;
+  --g-800: #e7ecf2;
+  --g-900: #ffffff;
+  --g-950: #edf1f6;
+  --c-white: #1e2128;
+  --c-black: #000000;
+
+  /* acento: azul en claro */
+  --gr-300: #1e44c9;
+  --gr-400: #2c55e8;
+  --gr-500: #4166f0;
+  --gr-600: #2c55e8;
+  --gr-700: #2347c7;
+  --gr-800: #bfd0fa;
+  --gr-900: #dce5fd;
+  --gr-950: #eef2fe;
+
+  --rd-300: #b8282b;
+  --rd-400: #d92d30;
+  --rd-500: #e5383b;
+  --rd-600: #e5383b;
+  --rd-700: #c42f32;
+  --rd-800: #f2b8b9;
+  --rd-900: #fbdadb;
+  --rd-950: #fdeded;
+
+  --yl-300: #8f6400;
+  --yl-400: #a87700;
+  --yl-500: #d99a00;
+  --yl-600: #c28800;
+  --yl-800: #ebd48a;
+  --yl-900: #fbefc7;
+  --yl-950: #fdf7e3;
+
+  --bl-300: #1b3fa8;
+  --bl-400: #2550d4;
+  --bl-500: #3d63f0;
+  --bl-600: #2c55e8;
+  --bl-700: #2347c7;
+  --bl-800: #bfd0fa;
+  --bl-900: #dce5fd;
+  --bl-950: #eef2fe;
+
+  --pp-400: #7a3fd1;
+  --pp-600: #7a3fd1;
+  --pp-900: #ebddfb;
+
+  /* tokens semánticos (para CSS propio) */
+  --mg-bg: var(--g-950);
+  --mg-card: var(--g-900);
+  --mg-line: var(--g-800);
+  --mg-text: var(--c-white);
+  --mg-muted: var(--g-500);
+  --mg-accent: var(--gr-600);
+  --mg-on-accent: #ffffff;
+  --mg-header: #ffffff;
+  --mg-live: #e5383b;
+  --mg-win: #1da45a;
+  --mg-draw: #a3aab5;
+  --mg-loss: #e5383b;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --g-50: #f6f8fd;
+    --g-100: #eef1fa;
+    --g-200: #dde1ee;
+    --g-300: #c9cfe3;
+    --g-400: #a5adc8;
+    --g-500: #8790ae;
+    --g-600: #4a5478;
+    --g-700: #2a3458;
+    --g-800: #1f2745;
+    --g-900: #141b33;
+    --g-950: #0b1022;
+    --c-white: #ffffff;
+    --gr-300: #86efac;
+    --gr-400: #4ade80;
+    --gr-500: #22c55e;
+    --gr-600: #16a34a;
+    --gr-700: #15803d;
+    --gr-800: #166534;
+    --gr-900: #14532d;
+    --gr-950: #052e16;
+    --rd-300: #fca5a5;
+    --rd-400: #f87171;
+    --rd-500: #ef4444;
+    --rd-600: #dc2626;
+    --rd-700: #b91c1c;
+    --rd-800: #991b1b;
+    --rd-900: #7f1d1d;
+    --rd-950: #450a0a;
+    --yl-300: #fde047;
+    --yl-400: #facc15;
+    --yl-500: #eab308;
+    --yl-600: #ca8a04;
+    --yl-800: #854d0e;
+    --yl-900: #713f12;
+    --yl-950: #422006;
+    --bl-300: #93c5fd;
+    --bl-400: #60a5fa;
+    --bl-500: #3b82f6;
+    --bl-600: #2563eb;
+    --bl-700: #1d4ed8;
+    --bl-800: #1e40af;
+    --bl-900: #1e3a8a;
+    --bl-950: #172554;
+    --pp-400: #c084fc;
+    --pp-600: #9333ea;
+    --pp-900: #581c87;
+    --mg-accent: #22c55e;
+    --mg-on-accent: #052012;
+    --mg-header: #13306a;
+    --mg-live: #ffb020;
+    --mg-win: #22c55e;
+    --mg-draw: #66708f;
+    --mg-loss: #f05252;
   }
 }
 
+[data-theme="dark"] {
+  color-scheme: dark;
+  --g-50: #f6f8fd;
+  --g-100: #eef1fa;
+  --g-200: #dde1ee;
+  --g-300: #c9cfe3;
+  --g-400: #a5adc8;
+  --g-500: #8790ae;
+  --g-600: #4a5478;
+  --g-700: #2a3458;
+  --g-800: #1f2745;
+  --g-900: #141b33;
+  --g-950: #0b1022;
+  --c-white: #ffffff;
+  --gr-300: #86efac;
+  --gr-400: #4ade80;
+  --gr-500: #22c55e;
+  --gr-600: #16a34a;
+  --gr-700: #15803d;
+  --gr-800: #166534;
+  --gr-900: #14532d;
+  --gr-950: #052e16;
+  --rd-300: #fca5a5;
+  --rd-400: #f87171;
+  --rd-500: #ef4444;
+  --rd-600: #dc2626;
+  --rd-700: #b91c1c;
+  --rd-800: #991b1b;
+  --rd-900: #7f1d1d;
+  --rd-950: #450a0a;
+  --yl-300: #fde047;
+  --yl-400: #facc15;
+  --yl-500: #eab308;
+  --yl-600: #ca8a04;
+  --yl-800: #854d0e;
+  --yl-900: #713f12;
+  --yl-950: #422006;
+  --bl-300: #93c5fd;
+  --bl-400: #60a5fa;
+  --bl-500: #3b82f6;
+  --bl-600: #2563eb;
+  --bl-700: #1d4ed8;
+  --bl-800: #1e40af;
+  --bl-900: #1e3a8a;
+  --bl-950: #172554;
+  --pp-400: #c084fc;
+  --pp-600: #9333ea;
+  --pp-900: #581c87;
+  --mg-accent: #22c55e;
+  --mg-on-accent: #052012;
+  --mg-header: #13306a;
+  --mg-live: #ffb020;
+  --mg-win: #22c55e;
+  --mg-draw: #66708f;
+  --mg-loss: #f05252;
+}
+
+@theme inline {
+  --font-sans: var(--font-manrope), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-score: var(--font-barlow), var(--font-manrope), sans-serif;
+
+  --color-white: var(--c-white);
+  --color-black: var(--c-black);
+
+  --color-gray-50: var(--g-50);
+  --color-gray-100: var(--g-100);
+  --color-gray-200: var(--g-200);
+  --color-gray-300: var(--g-300);
+  --color-gray-400: var(--g-400);
+  --color-gray-500: var(--g-500);
+  --color-gray-600: var(--g-600);
+  --color-gray-700: var(--g-700);
+  --color-gray-800: var(--g-800);
+  --color-gray-900: var(--g-900);
+  --color-gray-950: var(--g-950);
+
+  --color-green-300: var(--gr-300);
+  --color-green-400: var(--gr-400);
+  --color-green-500: var(--gr-500);
+  --color-green-600: var(--gr-600);
+  --color-green-700: var(--gr-700);
+  --color-green-800: var(--gr-800);
+  --color-green-900: var(--gr-900);
+  --color-green-950: var(--gr-950);
+
+  --color-red-300: var(--rd-300);
+  --color-red-400: var(--rd-400);
+  --color-red-500: var(--rd-500);
+  --color-red-600: var(--rd-600);
+  --color-red-700: var(--rd-700);
+  --color-red-800: var(--rd-800);
+  --color-red-900: var(--rd-900);
+  --color-red-950: var(--rd-950);
+
+  --color-yellow-300: var(--yl-300);
+  --color-yellow-400: var(--yl-400);
+  --color-yellow-500: var(--yl-500);
+  --color-yellow-600: var(--yl-600);
+  --color-yellow-800: var(--yl-800);
+  --color-yellow-900: var(--yl-900);
+  --color-yellow-950: var(--yl-950);
+
+  --color-blue-300: var(--bl-300);
+  --color-blue-400: var(--bl-400);
+  --color-blue-500: var(--bl-500);
+  --color-blue-600: var(--bl-600);
+  --color-blue-700: var(--bl-700);
+  --color-blue-800: var(--bl-800);
+  --color-blue-900: var(--bl-900);
+  --color-blue-950: var(--bl-950);
+
+  --color-purple-400: var(--pp-400);
+  --color-purple-600: var(--pp-600);
+  --color-purple-900: var(--pp-900);
+}
+
+/* Texto blanco real sobre botones y etiquetas de color sólido */
+.bg-green-500,
+.bg-green-600,
+.bg-green-700,
+.bg-blue-500,
+.bg-blue-600,
+.bg-blue-700,
+.bg-red-500,
+.bg-red-600,
+.bg-red-700,
+.bg-yellow-600,
+.bg-amber-700,
+.bg-purple-600 {
+  --c-white: #ffffff;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body:has([data-landing]) .mg-floating-toggle {
+  display: none;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--g-950);
+  color: var(--c-white);
+  font-family: var(--font-manrope), system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }

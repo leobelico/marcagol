@@ -66,6 +66,7 @@ export default function ChampionAnimation({ tenantId, teamName, teamLogo, topSco
   return (
     <div
       onClick={() => setVisible(false)}
+      data-theme="dark"
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 cursor-pointer animate-fadeIn"
     >
       {/* Confeti */}

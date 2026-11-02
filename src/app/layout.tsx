@@ -1,23 +1,35 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Barlow_Semi_Condensed, Manrope } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import FloatingThemeToggle from "./components/FloatingThemeToggle";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const barlow = Barlow_Semi_Condensed({
+  variable: "--font-barlow",
   subsets: ["latin"],
+  weight: ["600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "Marcagol",
+  title: "MarcaGol · Tu liga como en las apps de resultados",
   description:
-    "Administra tus torneos de fútbol amateur con facilidad. Crea calendarios, gestiona equipos y jugadores, y mantén a todos informados con nuestra plataforma todo en uno.",
+    "Calendario automático, resultados en vivo, tabla, goleo y liguilla para tu torneo de fútbol amateur. Panel web, app móvil para organizadores y capitanes, y página pública para la afición.",
 };
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b1022" },
+  ],
+};
+
+// Aplica el tema guardado antes de pintar (evita el parpadeo claro/oscuro)
+const themeScript = `try{var t=localStorage.getItem("mg-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
 
 export default function RootLayout({
   children,
@@ -25,11 +37,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="es" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className={`${manrope.variable} ${barlow.variable} antialiased`}>
         {children}
+        <FloatingThemeToggle />
         <Analytics />
       </body>
     </html>
