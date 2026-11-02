@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireTenantAdmin } from "@/lib/permissions";
 import { notificarCalendario } from "@/lib/notificaciones";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-
   const { id } = await params;
+  const guard = await requireTenantAdmin(id);
+  if ("error" in guard) return guard.error;
   const { tipo } = await req.json();
 
   if (tipo === "calendario") {

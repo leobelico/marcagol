@@ -85,6 +85,14 @@ export async function POST(request: Request) {
         name: user.name,
         email: user.email,
         isSuperAdmin: user.isSuperAdmin,
+        // Mismo criterio que /auth/me
+        role: user.isSuperAdmin
+          ? "SUPER_ADMIN"
+          : memberships.some((m) => m.role === "ADMIN")
+          ? "ADMIN"
+          : memberships.some((m) => m.role === "CAPTAIN")
+          ? "CAPTAIN"
+          : null,
         memberships,
       },
     });

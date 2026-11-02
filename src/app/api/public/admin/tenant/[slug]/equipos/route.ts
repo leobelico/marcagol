@@ -11,7 +11,7 @@
 //     que el admin se las dé al capitán.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyMobileAuth, UnauthorizedError } from "@/lib/mobileAuth";
+import { verifyMobileAuth, UnauthorizedError, isTenantAdmin } from "@/lib/mobileAuth";
 import bcrypt from "bcryptjs";
 
 export async function GET(
@@ -24,7 +24,7 @@ export async function GET(
 
     const tenant = await prisma.tenant.findUnique({
       where: { slug },
-      select: { id: true, name: true },
+      select: { id: true, name: true, registrationOpen: true },
     });
 
     if (!tenant) {
@@ -34,7 +34,7 @@ export async function GET(
       );
     }
 
-    if (!auth.isSuperAdmin && auth.tenantId !== tenant.id) {
+    if (!(await isTenantAdmin(auth, tenant.id))) {
       return NextResponse.json(
         { error: "No tienes permiso sobre este torneo" },
         { status: 403 }
@@ -49,6 +49,8 @@ export async function GET(
         logo: true,
         captain: true,
         phone: true,
+        disqualified: true,
+        allowLateRegistration: true,
         _count: { select: { players: true } },
       },
       orderBy: { name: "asc" },
@@ -60,6 +62,8 @@ export async function GET(
       logo: t.logo,
       captain: t.captain,
       phone: t.phone,
+      disqualified: t.disqualified,
+      allowLateRegistration: t.allowLateRegistration,
       playerCount: t._count.players,
     }));
 
@@ -95,7 +99,7 @@ export async function POST(
         { status: 404 }
       );
     }
-    if (!auth.isSuperAdmin && auth.tenantId !== tenant.id) {
+    if (!(await isTenantAdmin(auth, tenant.id))) {
       return NextResponse.json(
         { error: "No tienes permiso sobre este torneo" },
         { status: 403 }

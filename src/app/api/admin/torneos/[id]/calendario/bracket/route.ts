@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { requireTenantAdmin } from "@/lib/permissions";
 
 // Crea una fase de bracket (ej. Cuartos) con todos sus cruces en una sola Round
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-
   const { id: tenantId } = await params;
+  const guard = await requireTenantAdmin(tenantId);
+  if ("error" in guard) return guard.error;
   const { bracketLabel, pares } = await req.json();
   // pares: [{ homeTeamId, awayTeamId, fecha, hora, cancha }, ...]
 
@@ -62,6 +61,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 // Obtiene la última fase de bracket para saber si ya se puede generar la siguiente
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: tenantId } = await params;
+  const guard = await requireTenantAdmin(tenantId);
+  if ("error" in guard) return guard.error;
 
   const lastRound = await prisma.round.findFirst({
     where: { tenantId, bracketStage: { not: null } },

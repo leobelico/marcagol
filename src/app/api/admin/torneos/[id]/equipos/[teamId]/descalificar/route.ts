@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { requireTenantAdmin } from "@/lib/permissions";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; teamId: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-
   const { id: tenantId, teamId } = await params;
+  const guard = await requireTenantAdmin(tenantId);
+  if ("error" in guard) return guard.error;
   const { disqualified } = await req.json();
 
   if (typeof disqualified !== "boolean") {

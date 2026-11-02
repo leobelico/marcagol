@@ -5,7 +5,7 @@
 // pertenece ese partido antes de dejarlo escribir.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyMobileAuth, UnauthorizedError } from "@/lib/mobileAuth";
+import { verifyMobileAuth, UnauthorizedError, isTenantAdmin } from "@/lib/mobileAuth";
 
 export async function PATCH(
   request: Request,
@@ -28,7 +28,7 @@ export async function PATCH(
       );
     }
 
-    if (!auth.isSuperAdmin && auth.tenantId !== match.tenantId) {
+    if (!(await isTenantAdmin(auth, match.tenantId))) {
       return NextResponse.json(
         { error: "No tienes permiso sobre este partido" },
         { status: 403 }

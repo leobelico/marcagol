@@ -5,7 +5,7 @@
 // porque el schema no tiene onDelete: Cascade en esa relación).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyMobileAuth, UnauthorizedError } from "@/lib/mobileAuth";
+import { verifyMobileAuth, UnauthorizedError, isTenantAdmin } from "@/lib/mobileAuth";
 
 async function getPlayerWithTenant(playerId: string) {
   return prisma.player.findUnique({
@@ -33,7 +33,7 @@ export async function PATCH(
         { status: 404 }
       );
     }
-    if (!auth.isSuperAdmin && auth.tenantId !== player.team.tenantId) {
+    if (!(await isTenantAdmin(auth, player.team.tenantId))) {
       return NextResponse.json(
         { error: "No tienes permiso sobre este jugador" },
         { status: 403 }
@@ -105,7 +105,7 @@ export async function DELETE(
         { status: 404 }
       );
     }
-    if (!auth.isSuperAdmin && auth.tenantId !== player.team.tenantId) {
+    if (!(await isTenantAdmin(auth, player.team.tenantId))) {
       return NextResponse.json(
         { error: "No tienes permiso sobre este jugador" },
         { status: 403 }

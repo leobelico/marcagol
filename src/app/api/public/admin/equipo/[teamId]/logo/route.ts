@@ -5,7 +5,7 @@
 // adaptado a auth móvil y a nivel de equipo.
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyMobileAuth, UnauthorizedError } from "@/lib/mobileAuth";
+import { verifyMobileAuth, UnauthorizedError, isTenantAdmin } from "@/lib/mobileAuth";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -32,7 +32,7 @@ export async function POST(
         { status: 404 }
       );
     }
-    if (!auth.isSuperAdmin && auth.tenantId !== team.tenantId) {
+    if (!(await isTenantAdmin(auth, team.tenantId))) {
       return NextResponse.json(
         { error: "No tienes permiso sobre este equipo" },
         { status: 403 }

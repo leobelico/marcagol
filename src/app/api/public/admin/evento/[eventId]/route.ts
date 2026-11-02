@@ -4,7 +4,7 @@
 // revierte el incremento correspondiente en PlayerStat.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyMobileAuth, UnauthorizedError } from "@/lib/mobileAuth";
+import { verifyMobileAuth, UnauthorizedError, isTenantAdmin } from "@/lib/mobileAuth";
 
 export async function DELETE(
   request: Request,
@@ -27,7 +27,7 @@ export async function DELETE(
         { status: 404 }
       );
     }
-    if (!auth.isSuperAdmin && auth.tenantId !== event.match.tenantId) {
+    if (!(await isTenantAdmin(auth, event.match.tenantId))) {
       return NextResponse.json(
         { error: "No tienes permiso sobre este evento" },
         { status: 403 }

@@ -5,7 +5,7 @@
 // (SUPER_ADMIN siempre puede; un ADMIN normal solo si es su tenantId).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyMobileAuth, UnauthorizedError } from "@/lib/mobileAuth";
+import { verifyMobileAuth, UnauthorizedError, isTenantAdmin } from "@/lib/mobileAuth";
 
 export async function GET(
   request: Request,
@@ -27,7 +27,7 @@ export async function GET(
       );
     }
 
-    if (!auth.isSuperAdmin && auth.tenantId !== tenant.id) {
+    if (!(await isTenantAdmin(auth, tenant.id))) {
       return NextResponse.json(
         { error: "No tienes permiso sobre este torneo" },
         { status: 403 }

@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-// ⚠️ Agrega aquí la misma validación de sesión/admin que usas en tus otras rutas /api/admin
+import { requireTenantAdmin } from "@/lib/permissions";
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const guard = await requireTenantAdmin(id);
+  if ("error" in guard) return guard.error;
 
   const encuestas = await prisma.encuestaArbitral.findMany({
     where: { refereeId: { not: null }, match: { tenantId: id } },

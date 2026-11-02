@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireTenantAdmin } from "@/lib/permissions";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -10,6 +11,19 @@ export async function POST(req: NextRequest) {
       { error: "No autorizado" },
       { status: 401 }
     );
+  }
+
+  const isSuperAdmin = !!(session.user as any).isSuperAdmin;
+  if (!isSuperAdmin) {
+    const esAdmin = await prisma.tenantUser.findFirst({
+      where: { userId: session.user.id, role: "ADMIN" },
+    });
+    if (!esAdmin) {
+      return NextResponse.json(
+        { error: "No tienes permiso para crear torneos" },
+        { status: 403 }
+      );
+    }
   }
 
   const body = await req.json();
@@ -56,22 +70,24 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  // Un ADMIN que crea un torneo queda como admin de ese torneo
+  // (si no, no lo vería en su lista)
+  if (!isSuperAdmin) {
+    await prisma.tenantUser.create({
+      data: { userId: session.user.id!, tenantId: tenant.id, role: "ADMIN" },
+    });
+  }
+
   return NextResponse.json(tenant);
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await auth();
-
-  if (!session?.user) {
-    return NextResponse.json(
-      { error: "No autorizado" },
-      { status: 401 }
-    );
-  }
-
   const body = await req.json();
 
   const { id, archived } = body;
+
+  const guard = await requireTenantAdmin(id);
+  if ("error" in guard) return guard.error;
 
   if (!id) {
     return NextResponse.json(

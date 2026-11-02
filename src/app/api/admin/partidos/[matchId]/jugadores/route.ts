@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireMatchAdmin } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ matchId: string }> }) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-
   const { matchId } = await params;
+  const guard = await requireMatchAdmin(matchId);
+  if ("error" in guard) return guard.error;
 
   const match = await prisma.match.findUnique({
     where: { id: matchId },

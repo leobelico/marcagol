@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireMatchAdmin } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ matchId: string }> }
 ) {
-  const session = await auth();
-
-  if (!session?.user) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
-
   const { matchId } = await params;
+  const guard = await requireMatchAdmin(matchId);
+  if ("error" in guard) return guard.error;
 
   const events = await prisma.matchEvent.findMany({
     where: { matchId },
@@ -87,16 +83,9 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ matchId: string }> }
 ) {
-  const session = await auth();
-
-  if (!session?.user) {
-    return NextResponse.json(
-      { error: "No autorizado" },
-      { status: 401 }
-    );
-  }
-
   const { matchId } = await params;
+  const guard = await requireMatchAdmin(matchId);
+  if ("error" in guard) return guard.error;
 
   const {
     type,
@@ -234,16 +223,9 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ matchId: string }> }
 ) {
-  const session = await auth();
-
-  if (!session?.user) {
-    return NextResponse.json(
-      { error: "No autorizado" },
-      { status: 401 }
-    );
-  }
-
   const { matchId } = await params;
+  const guard = await requireMatchAdmin(matchId);
+  if ("error" in guard) return guard.error;
   const { eventId } = await req.json();
 
   const event = await prisma.matchEvent.findUnique({
@@ -255,7 +237,7 @@ export async function DELETE(
     },
   });
 
-  if (!event) {
+  if (!event || event.matchId !== matchId) {
     return NextResponse.json(
       { error: "Evento no encontrado" },
       { status: 404 }

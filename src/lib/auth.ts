@@ -1,9 +1,11 @@
-import NextAuth from "next-auth";
+import NextAuth, { type Session } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { headers } from "next/headers";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
+import { getMobileSession } from "./mobileAuth";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+const nextAuth = NextAuth({
   session: {
     strategy: "jwt",
   },
@@ -158,3 +160,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
 });
+
+export const { handlers, signIn, signOut } = nextAuth;
+
+/**
+ * Sesión del usuario actual. La web usa la cookie de NextAuth; la app
+ * móvil manda "Authorization: Bearer <token>" y recibe una sesión con
+ * la misma forma, así todas las rutas /api/admin sirven para ambas.
+ */
+export async function auth(): Promise<Session | null> {
+  const authorization = (await headers()).get("authorization");
+  if (authorization?.startsWith("Bearer ")) {
+    return getMobileSession(authorization.slice(7));
+  }
+  return nextAuth.auth();
+}

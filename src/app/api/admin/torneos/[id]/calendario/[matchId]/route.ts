@@ -1,27 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireTenantAdmin } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; matchId: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-
   const { id, matchId } = await params;
+  const guard = await requireTenantAdmin(id);
+  if ("error" in guard) return guard.error;
 
   // Obtenemos el partido antes de borrarlo, para saber a qué jornada pertenece
-  const match = await prisma.match.findUnique({
-    where: { id: matchId },
+  const match = await prisma.match.findFirst({
+    where: { id: matchId, tenantId: id },
     select: { roundId: true },
   });
+  if (!match) return NextResponse.json({ error: "Partido no encontrado" }, { status: 404 });
 
   await prisma.matchEvent.deleteMany({ where: { matchId } });
   await prisma.match.delete({ where: { id: matchId, tenantId: id } }); 
 
   // Si la jornada se quedó sin partidos, la eliminamos también
-  if (match?.roundId) {
+  if (match.roundId) {
     const partidosRestantes = await prisma.match.count({
       where: { roundId: match.roundId },
     });
@@ -36,18 +36,20 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; matchId: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-
   const { id, matchId } = await params;
+  const guard = await requireTenantAdmin(id);
+  if ("error" in guard) return guard.error;
   const { targetRoundId } = await req.json();
 
   // Obtener el partido a mover
-  const match = await prisma.match.findUnique({
-    where: { id: matchId },
+  const match = await prisma.match.findFirst({
+    where: { id: matchId, tenantId: id },
     include: { homeTeam: true, awayTeam: true },
   });
   if (!match) return NextResponse.json({ error: "Partido no encontrado" }, { status: 404 });
+
+  const targetRound = await prisma.round.findFirst({ where: { id: targetRoundId, tenantId: id } });
+  if (!targetRound) return NextResponse.json({ error: "Jornada no encontrada" }, { status: 404 });
 
   // Verificar que los equipos no jueguen ya en esa jornada
   const conflictoEquipo = await prisma.match.findFirst({

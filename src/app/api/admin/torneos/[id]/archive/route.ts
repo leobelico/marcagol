@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireTenantAdmin } from "@/lib/permissions";
 
 export async function PATCH(
   req: Request,
@@ -7,6 +8,8 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
+    const guard = await requireTenantAdmin(id);
+    if ("error" in guard) return guard.error;
 
     const torneo = await prisma.tenant.update({
       where: {

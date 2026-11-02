@@ -5,13 +5,14 @@
 // web, adaptado a auth móvil (JWT en vez de sesión NextAuth).
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyMobileAuth, UnauthorizedError } from "@/lib/mobileAuth";
+import { verifyMobileAuth, UnauthorizedError, adminTenantIds } from "@/lib/mobileAuth";
 
 export async function GET(request: Request) {
   try {
     const auth = verifyMobileAuth(request);
 
-    if (!auth.isSuperAdmin && auth.role !== "ADMIN") {
+    const ids = await adminTenantIds(auth);
+    if (ids !== null && ids.length === 0) {
       return NextResponse.json(
         { error: "No tienes permisos para buscar capitanes" },
         { status: 403 }

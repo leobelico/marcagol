@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { requireTenantAdmin } from "@/lib/permissions";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-
   const { id: tenantId } = await params;
+  const guard = await requireTenantAdmin(tenantId);
+  if ("error" in guard) return guard.error;
   const { partidos } = await req.json();
 
   if (!partidos?.length) return NextResponse.json({ error: "Sin partidos" }, { status: 400 });

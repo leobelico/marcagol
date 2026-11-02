@@ -6,7 +6,7 @@
 // /logo porque usa formData, no JSON.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyMobileAuth, UnauthorizedError } from "@/lib/mobileAuth";
+import { verifyMobileAuth, UnauthorizedError, isTenantAdmin } from "@/lib/mobileAuth";
 
 export async function PATCH(
   request: Request,
@@ -27,7 +27,7 @@ export async function PATCH(
         { status: 404 }
       );
     }
-    if (!auth.isSuperAdmin && auth.tenantId !== team.tenantId) {
+    if (!(await isTenantAdmin(auth, team.tenantId))) {
       return NextResponse.json(
         { error: "No tienes permiso sobre este equipo" },
         { status: 403 }

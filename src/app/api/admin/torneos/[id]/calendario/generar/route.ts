@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireTenantAdmin } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 const DIAS_MAP: Record<string, number> = {
@@ -103,11 +103,9 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user)
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-
   const { id } = await params;
+  const guard = await requireTenantAdmin(id);
+  if ("error" in guard) return guard.error;
 
   // --------------------------------------------------
   // LEER BODY
@@ -418,11 +416,9 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user)
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-
   const { id } = await params;
+  const guard = await requireTenantAdmin(id);
+  if ("error" in guard) return guard.error;
 
   await prisma.matchEvent.deleteMany({ where: { match: { tenantId: id } } });
   await prisma.match.deleteMany({ where: { tenantId: id } });

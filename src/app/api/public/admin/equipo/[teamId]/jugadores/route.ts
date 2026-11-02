@@ -4,7 +4,7 @@
 // POST: crea un jugador nuevo en ese equipo.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyMobileAuth, UnauthorizedError } from "@/lib/mobileAuth";
+import { verifyMobileAuth, UnauthorizedError, isTenantAdmin } from "@/lib/mobileAuth";
 
 export async function GET(
   request: Request,
@@ -24,7 +24,7 @@ export async function GET(
         { status: 404 }
       );
     }
-    if (!auth.isSuperAdmin && auth.tenantId !== team.tenantId) {
+    if (!(await isTenantAdmin(auth, team.tenantId))) {
       return NextResponse.json(
         { error: "No tienes permiso sobre este equipo" },
         { status: 403 }
@@ -43,11 +43,13 @@ export async function GET(
       number: p.number,
       position: p.position,
       photo: p.photo,
+      ineUrl: p.ineUrl,
+      documentoOficialUrl: p.documentoOficialUrl,
       goals: p.stats[0]?.goals ?? 0,
     }));
 
     return NextResponse.json({
-      team: { id: team.id, name: team.name },
+      team: { id: team.id, name: team.name, tenantId: team.tenantId },
       players: result,
     });
   } catch (error) {
@@ -81,7 +83,7 @@ export async function POST(
         { status: 404 }
       );
     }
-    if (!auth.isSuperAdmin && auth.tenantId !== team.tenantId) {
+    if (!(await isTenantAdmin(auth, team.tenantId))) {
       return NextResponse.json(
         { error: "No tienes permiso sobre este equipo" },
         { status: 403 }
