@@ -13,8 +13,18 @@ const SECCIONES = [
   { href: "/calendario", label: "Calendario" },
 ];
 
-export default function SitioNav({ nombre, logo }: { nombre: string; logo: string | null }) {
+export default function SitioNav({
+  nombre,
+  logo,
+  flyer,
+}: {
+  nombre: string;
+  logo: string | null;
+  /** true si el flyer de inscripción está publicado */
+  flyer: boolean;
+}) {
   const pathname = usePathname();
+  const secciones = flyer ? [...SECCIONES, { href: "/info", label: "Inscripción" }] : SECCIONES;
   // En el subdominio la ruta visible no lleva /sitio, pero por si se entra directo
   const ruta = pathname.replace(/^\/sitio/, "") || "/";
 
@@ -34,7 +44,7 @@ export default function SitioNav({ nombre, logo }: { nombre: string; logo: strin
           <span className="truncate">{nombre}</span>
         </Link>
         <div className="-mx-4 flex gap-1 overflow-x-auto px-4 text-sm font-semibold [scrollbar-width:none] md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden">
-          {SECCIONES.map((s) => {
+          {secciones.map((s) => {
             const activa = s.href === "/" ? ruta === "/" : ruta.startsWith(s.href);
             return (
               <Link

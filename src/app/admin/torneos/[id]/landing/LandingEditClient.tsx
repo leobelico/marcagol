@@ -23,13 +23,23 @@ type Torneo = {
   published: boolean;
 };
 
+// Dominio de los sitios de torneo (ej. marcagol.site → liga.marcagol.site)
+const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || "marcagol.site";
+const PROTOCOLO = /localhost|lvh\.me/.test(APP_DOMAIN) ? "http" : "https";
+
+// Las fechas del flyer son días (AAAA-MM-DD) guardados a medianoche UTC
+const fechaCorta = (iso: string) =>
+  new Date(iso).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+
 export default function LandingEditClient({ torneo }: { torneo: Torneo }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+  const urlFlyer = `${PROTOCOLO}://${torneo.slug}.${APP_DOMAIN}/info`;
   const [form, setForm] = useState({
     description: torneo.description ?? "",
-    endDate: torneo.endDate ? new Date(torneo.endDate).toISOString().split("T")[0] : "",
+    endDate: torneo.endDate ? torneo.endDate.slice(0, 10) : "",
     maxTeams: torneo.maxTeams?.toString() ?? "",
     inscriptionFee: torneo.inscriptionFee?.toString() ?? "",
     contactName: torneo.contactName ?? "",
@@ -44,20 +54,31 @@ export default function LandingEditClient({ torneo }: { torneo: Torneo }) {
 
   async function guardar() {
     setLoading(true);
-    await fetch(`/api/admin/torneos/${torneo.id}/landing`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...form,
-        maxTeams: form.maxTeams ? Number(form.maxTeams) : null,
-        inscriptionFee: form.inscriptionFee ? Number(form.inscriptionFee) : null,
-        endDate: form.endDate || null,
-      }),
-    });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
-    setLoading(false);
-    router.refresh();
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/torneos/${torneo.id}/landing`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          maxTeams: form.maxTeams ? Number(form.maxTeams) : null,
+          inscriptionFee: form.inscriptionFee !== "" ? Number(form.inscriptionFee) : null,
+          endDate: form.endDate || null,
+        }),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        setError(json.error || "No se pudieron guardar los cambios. Intenta de nuevo.");
+        return;
+      }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+      router.refresh();
+    } catch {
+      setError("Sin conexión. Revisa tu internet e intenta de nuevo.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   const formatMoney = (n: number) =>
@@ -73,9 +94,9 @@ export default function LandingEditClient({ torneo }: { torneo: Torneo }) {
           <p className="text-gray-500 text-sm mt-1">Configura la landing page pública de tu torneo</p>
         </div>
         <div className="flex items-center gap-3">
-        <a href={`http://${torneo.slug}.lvh.me:3000/info`} target="_blank"
+        <a href={`${urlFlyer}?vista-previa=1`} target="_blank" rel="noopener noreferrer"
         className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 px-4 py-2.5 rounded-xl transition font-bold">
-        Ver preview →
+        Ver vista previa →
         </a>
           <button onClick={guardar} disabled={loading}
             className="bg-green-600 hover:bg-green-500 disabled:bg-gray-700 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
@@ -84,12 +105,18 @@ export default function LandingEditClient({ torneo }: { torneo: Torneo }) {
         </div>
       </div>
 
+      {error && (
+        <div className="rounded-xl border border-red-800 bg-red-900/20 px-4 py-3 text-sm text-red-400">{error}</div>
+      )}
+
       {/* Publicado toggle */}
       <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 flex items-center justify-between">
         <div>
           <p className="text-white font-bold">Estado del flyer</p>
           <p className="text-gray-500 text-sm mt-0.5">
-            {form.published ? "Visible públicamente en tu subdominio" : "Oculto — solo admins pueden verlo"}
+            {form.published
+              ? `Visible en ${urlFlyer.replace(/^https?:\/\//, "")} y en el menú del sitio`
+              : "Oculto. Solo se ve con el botón de vista previa."}
           </p>
         </div>
         <button
@@ -202,8 +229,8 @@ export default function LandingEditClient({ torneo }: { torneo: Torneo }) {
             />
           </div>
           <div>
-            <label className="text-xs text-gray-500 block mb-1">💬 WhatsApp (link directo)</label>
-            <input type="text" placeholder="https://wa.me/528112345678"
+            <label className="text-xs text-gray-500 block mb-1">💬 WhatsApp (número o link)</label>
+            <input type="text" placeholder="81 1234 5678"
               value={form.whatsapp}
               onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
               className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-green-500"
@@ -217,24 +244,25 @@ export default function LandingEditClient({ torneo }: { torneo: Torneo }) {
         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Preview del Flyer</h3>
         <div className="rounded-2xl overflow-hidden border border-gray-700">
           <div
-            className="relative p-8 min-h-48"
+            data-theme="dark"
+            className="relative p-6 sm:p-8 min-h-48"
             style={{
               background: form.bannerUrl
                 ? `linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.9)), url(${form.bannerUrl}) center/cover`
-                : "linear-gradient(135deg, #064e3b, #111827)",
+                : "radial-gradient(90% 90% at 85% 0%, rgba(34,197,94,.28), transparent 60%), linear-gradient(160deg, #13306a, #0b1022)",
             }}>
             <p className="text-green-400 text-xs font-bold tracking-widest uppercase mb-2">⚽ Torneo de Fútbol</p>
-            <h2 className="text-4xl font-black text-white">{torneo.name}</h2>
+            <h2 className="text-3xl sm:text-4xl font-black text-white">{torneo.name}</h2>
             {form.description && <p className="text-gray-300 mt-3 text-sm max-w-lg">{form.description}</p>}
             <div className="flex flex-wrap gap-4 mt-6 text-sm">
             {torneo.startDate && (
             <span className="bg-white/10 text-white px-3 py-1.5 rounded-lg">
-                📅 Inicio: {new Date(torneo.startDate).toLocaleDateString("es-MX")}
+                📅 Inicio: {fechaCorta(torneo.startDate)}
             </span>
             )}
               {form.endDate && (
                 <span className="bg-white/10 text-white px-3 py-1.5 rounded-lg">
-                  🏁 Fin: {new Date(form.endDate).toLocaleDateString("es-MX")}
+                  🏁 Fin: {fechaCorta(form.endDate)}
                 </span>
               )}
               {form.maxTeams && (
@@ -242,9 +270,9 @@ export default function LandingEditClient({ torneo }: { torneo: Torneo }) {
                   👥 {form.maxTeams} equipos máx.
                 </span>
               )}
-              {form.inscriptionFee && (
+              {form.inscriptionFee !== "" && (
                 <span className="bg-green-600/80 text-white px-3 py-1.5 rounded-lg font-bold">
-                  💰 {formatMoney(Number(form.inscriptionFee))}
+                  💰 {Number(form.inscriptionFee) > 0 ? formatMoney(Number(form.inscriptionFee)) : "Inscripción gratis"}
                 </span>
               )}
             </div>

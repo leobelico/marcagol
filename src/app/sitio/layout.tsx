@@ -11,7 +11,7 @@ export default async function PublicLayout({ children }: { children: React.React
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      <SitioNav nombre={tenant.name} logo={tenant.logo} />
+      <SitioNav nombre={tenant.name} logo={tenant.logo} flyer={tenant.published} />
       <main className="mx-auto max-w-5xl px-4 pb-20 pt-6 md:pt-8">{children}</main>
     </div>
   );
