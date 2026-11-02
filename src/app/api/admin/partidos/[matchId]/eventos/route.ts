@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireMatchAdmin } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
+import { recalcularSuspension } from "@/lib/suspensiones";
 
 export async function GET(
   req: NextRequest,
@@ -23,60 +24,6 @@ export async function GET(
   });
 
   return NextResponse.json(events);
-}
-
-/**
- * Recalcula la jornada hasta la que está suspendido un jugador
- * tomando TODAS sus tarjetas rojas registradas.
- */
-async function recalcularSuspension(playerId: string) {
-  const playerStat = await prisma.playerStat.findUnique({
-    where: { playerId },
-  });
-
-  if (!playerStat) return;
-
-  const rojas = await prisma.matchEvent.findMany({
-    where: {
-      playerId: playerStat.id,
-      type: "RED_CARD",
-      suspensionGames: {
-        not: null,
-      },
-    },
-    include: {
-      match: {
-        include: {
-          round: true,
-        },
-      },
-    },
-  });
-
-  let suspendedUntil: number | null = null;
-
-  for (const roja of rojas) {
-    const jornada = roja.match.round?.number;
-
-    if (jornada == null || roja.suspensionGames == null) {
-      continue;
-    }
-
-    const hasta = jornada + roja.suspensionGames;
-
-    if (suspendedUntil === null || hasta > suspendedUntil) {
-      suspendedUntil = hasta;
-    }
-  }
-
-  await prisma.player.update({
-    where: {
-      id: playerId,
-    },
-    data: {
-      suspendedUntil,
-    },
-  });
 }
 
 export async function POST(
@@ -127,9 +74,11 @@ export async function POST(
     });
   }
 
+  // Partidos de castigo por roja: entero de 1 en adelante (1 si no viene)
+  const castigo = Math.floor(Number(suspensionGames ?? 1));
   const suspension =
     type === "RED_CARD"
-      ? Number(suspensionGames ?? 1)
+      ? Number.isFinite(castigo) && castigo >= 1 ? castigo : 1
       : null;
 
   // Crear evento

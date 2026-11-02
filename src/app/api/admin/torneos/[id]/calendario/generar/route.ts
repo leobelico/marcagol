@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireTenantAdmin } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
+import { recalcularSuspensionesTorneo } from "@/lib/suspensiones";
 
 const DIAS_MAP: Record<string, number> = {
   SUNDAY: 0, MONDAY: 1, TUESDAY: 2, WEDNESDAY: 3,
@@ -401,6 +402,7 @@ export async function POST(
     };
   });
 
+  await recalcularSuspensionesTorneo(id);
   return NextResponse.json({
     ok: true,
     rounds: allRounds.length,
@@ -424,5 +426,6 @@ export async function DELETE(
   await prisma.match.deleteMany({ where: { tenantId: id } });
   await prisma.round.deleteMany({ where: { tenantId: id } });
 
+  await recalcularSuspensionesTorneo(id);
   return NextResponse.json({ ok: true });
 }

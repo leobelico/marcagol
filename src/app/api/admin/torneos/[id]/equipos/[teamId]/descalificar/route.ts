@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { recalcularSuspensionesTorneo } from "@/lib/suspensiones";
 import { requireTenantAdmin } from "@/lib/permissions";
 
 export async function PATCH(
@@ -36,5 +37,6 @@ export async function PATCH(
     });
   }
 
+  await recalcularSuspensionesTorneo(tenantId);
   return NextResponse.json({ team: updated });
 }

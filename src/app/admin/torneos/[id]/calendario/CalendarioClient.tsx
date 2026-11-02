@@ -778,8 +778,16 @@ doc.text(
       doc.rect(x, rowY - 4, colWidth, 7, "F");
     }
 
+    // Suspendido en esta jornada si está dentro de su castigo y no es una
+    // jornada ya jugada (la primera con partidos pendientes o posterior)
+    const jornadaEnJuego = torneo.rounds
+      .filter((r) => r.matches.some((m) => m.status === "SCHEDULED" || m.status === "LIVE"))
+      .reduce<number | null>((min, r) => (min === null || r.number < min ? r.number : min), null);
     const suspendido =
-      !!j && j.suspendedUntil != null && roundNumber <= j.suspendedUntil;
+      !!j &&
+      j.suspendedUntil != null &&
+      roundNumber <= j.suspendedUntil &&
+      (jornadaEnJuego === null || roundNumber >= jornadaEnJuego);
 
     if (j) {
       doc.setTextColor(suspendido ? 200 : 0, 0, 0);

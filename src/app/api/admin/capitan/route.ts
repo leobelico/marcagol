@@ -3,6 +3,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { jornadaActual } from "@/lib/suspensiones";
 
 export async function GET() {
   const session = await auth();
@@ -46,10 +47,23 @@ export async function GET() {
     },
   });
 
-  const ligas = tenantUsers.map((tu) => ({
-    tenant: tu.tenant,
-    teams: tu.teams.map((tc) => tc.team),
-  }));
+  const ligas = await Promise.all(
+    tenantUsers.map(async (tu) => {
+      // Suspensión vigente: suspendedUntil alcanza la jornada que sigue
+      const actual = await jornadaActual(tu.tenant.id);
+      return {
+        tenant: tu.tenant,
+        jornadaActual: actual,
+        teams: tu.teams.map((tc) => ({
+          ...tc.team,
+          players: tc.team.players.map((p) => ({
+            ...p,
+            suspendido: p.suspendedUntil != null && actual != null && p.suspendedUntil >= actual,
+          })),
+        })),
+      };
+    })
+  );
 
   return NextResponse.json({ ligas });
 }

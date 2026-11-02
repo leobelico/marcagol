@@ -15,6 +15,7 @@
 // con minuto exacto como los goles/tarjetas.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { recalcularSuspension } from "@/lib/suspensiones";
 import { verifyMobileAuth, UnauthorizedError, isTenantAdmin } from "@/lib/mobileAuth";
 
 export async function GET(
@@ -99,6 +100,10 @@ export async function POST(
     const playerId = String(body?.playerId ?? "");
     const type = String(body?.type ?? ""); // "GOAL" | "YELLOW_CARD" | "RED_CARD" | "ASSIST"
     const minute = Number(body?.minute ?? 0);
+    // Partidos de castigo por roja (igual que en la web; 1 si no viene)
+    const castigo = Math.floor(Number(body?.suspensionGames ?? 1));
+    const suspensionGames =
+      type === "RED_CARD" ? (Number.isFinite(castigo) && castigo >= 1 ? castigo : 1) : null;
 
     if (!playerId) {
       return NextResponse.json(
@@ -151,6 +156,7 @@ export async function POST(
           minute: Number.isFinite(minute) ? minute : 0,
           matchId,
           playerId: stat.id, // MatchEvent.playerId apunta a PlayerStat.id
+          suspensionGames,
         },
       }),
       prisma.playerStat.update({
@@ -163,6 +169,8 @@ export async function POST(
             : { red: { increment: 1 } },
       }),
     ]);
+
+    if (type === "RED_CARD") await recalcularSuspension(playerId);
 
     return NextResponse.json({ event, stat: updatedStat });
   } catch (error) {

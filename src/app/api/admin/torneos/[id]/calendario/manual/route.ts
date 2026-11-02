@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { recalcularSuspensionesTorneo } from "@/lib/suspensiones";
 import { requireTenantAdmin } from "@/lib/permissions";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -102,5 +103,6 @@ const existingMatches = await prisma.match.findMany({
     },
   });
 
+  await recalcularSuspensionesTorneo(tenantId);
   return NextResponse.json({ match });
 }

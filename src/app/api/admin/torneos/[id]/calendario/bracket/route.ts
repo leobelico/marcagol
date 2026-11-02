@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { recalcularSuspensionesTorneo } from "@/lib/suspensiones";
 import { requireTenantAdmin } from "@/lib/permissions";
 
 // Crea una fase de bracket (ej. Cuartos) con todos sus cruces en una sola Round
@@ -55,6 +56,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     matches.push(match);
   }
 
+  await recalcularSuspensionesTorneo(tenantId);
   return NextResponse.json({ round, matches });
 }
 

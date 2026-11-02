@@ -4,6 +4,7 @@
 // revierte el incremento correspondiente en PlayerStat.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { recalcularSuspension } from "@/lib/suspensiones";
 import { verifyMobileAuth, UnauthorizedError, isTenantAdmin } from "@/lib/mobileAuth";
 
 export async function DELETE(
@@ -54,6 +55,8 @@ export async function DELETE(
           ]
         : []),
     ]);
+
+    if (event.type === "RED_CARD") await recalcularSuspension(event.player.playerId);
 
     return NextResponse.json({ success: true });
   } catch (error) {

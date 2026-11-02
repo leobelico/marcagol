@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireTenantAdmin } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
+import { recalcularSuspensionesTorneo } from "@/lib/suspensiones";
 
 export async function DELETE(
   req: NextRequest,
@@ -30,6 +31,7 @@ export async function DELETE(
     }
   }
 
+  await recalcularSuspensionesTorneo(id);
   return NextResponse.json({ ok: true });
 }
 export async function PATCH(
@@ -94,5 +96,6 @@ export async function PATCH(
     data: { roundId: targetRoundId },
   });
 
+  await recalcularSuspensionesTorneo(id);
   return NextResponse.json({ ok: true, match: updated });
 }

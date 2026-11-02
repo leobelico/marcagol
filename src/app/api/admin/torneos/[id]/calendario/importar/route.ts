@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { recalcularSuspensionesTorneo } from "@/lib/suspensiones";
 import { requireTenantAdmin } from "@/lib/permissions";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -97,5 +98,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
   }
 
+  await recalcularSuspensionesTorneo(tenantId);
   return NextResponse.json({ creados: creados.length, errores });
 }
