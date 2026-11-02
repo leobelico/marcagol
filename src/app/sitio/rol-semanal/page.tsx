@@ -29,9 +29,9 @@ export default async function RolSemanalPage() {
 
   return (
     <div className="space-y-8">
-      <div className="rounded-2xl bg-gradient-to-br from-blue-950 via-gray-900 to-gray-950 border border-blue-900/30 p-8">
+      <div className="rounded-2xl bg-gradient-to-br from-blue-950 via-gray-900 to-gray-950 border border-blue-900/30 p-5 sm:p-8">
         <p className="text-blue-400 text-xs font-bold tracking-widest uppercase mb-2">📅 Próximos partidos</p>
-        <h1 className="text-4xl font-black text-white">Rol Semanal</h1>
+        <h1 className="text-3xl font-black text-white sm:text-4xl">Rol semanal</h1>
         <p className="text-gray-500 mt-1 text-sm">{partidos.length} partidos pendientes</p>
       </div>
 
@@ -44,42 +44,30 @@ export default async function RolSemanalPage() {
         <div className="space-y-6">
           {Object.entries(porJornada).map(([jornada, matches]) => (
             <div key={jornada} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-800">
+              <div className="px-4 py-3 border-b border-gray-800 sm:px-6 sm:py-4">
                 <h2 className="text-white font-bold">{jornada}</h2>
               </div>
               <div className="divide-y divide-gray-800">
                 {matches.map((m) => (
-                  <div key={m.id} className="px-6 py-4 flex items-center justify-between gap-4">
-  <span className="text-white font-semibold text-sm text-right flex-1 flex items-center justify-end gap-2">
-    {m.homeTeam.name}
-    <span className="w-6 h-6 rounded-full overflow-hidden bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0">
-      {m.homeTeam.logo ? (
-        <img src={m.homeTeam.logo} alt={m.homeTeam.name} className="w-full h-full object-cover" />
-      ) : (
-        <span className="text-[10px]">⚽</span>
-      )}
-    </span>
-  </span>
-        <div className="text-center flex-shrink-0">
-          <span className="bg-gray-800 text-gray-400 text-xs font-black px-3 py-1 rounded">VS</span>
-          <p className="text-gray-600 text-xs mt-1">
-          {new Date(m.date).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short", timeZone: "America/Mexico_City" })}
-            {" · "}
-            {new Date(m.date).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", timeZone: "America/Mexico_City" })}
-            {m.cancha ? ` · C${m.cancha}` : ""}
-          </p>
-        </div>
-        <span className="text-white font-semibold text-sm flex-1 flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full overflow-hidden bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0">
-            {m.awayTeam.logo ? (
-              <img src={m.awayTeam.logo} alt={m.awayTeam.name} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-[10px]">⚽</span>
-            )}
-          </span>
-          {m.awayTeam.name}
-        </span>
-      </div>
+                  <div key={m.id} className="px-4 py-3 sm:px-6 sm:py-4">
+                    <p className="mb-2 text-center text-xs text-gray-500">
+                      {new Date(m.date).toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short", timeZone: "America/Mexico_City" })}
+                      {" · "}
+                      {new Date(m.date).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", timeZone: "America/Mexico_City" })}
+                      {m.cancha ? ` · Cancha ${m.cancha}` : ""}
+                    </p>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <span className="flex min-w-0 flex-1 items-center justify-end gap-2 text-right text-sm font-semibold text-white">
+                        <span className="truncate">{m.homeTeam.name}</span>
+                        <Escudo logo={m.homeTeam.logo} nombre={m.homeTeam.name} />
+                      </span>
+                      <span className="shrink-0 rounded bg-gray-800 px-2.5 py-1 text-xs font-black text-gray-400">VS</span>
+                      <span className="flex min-w-0 flex-1 items-center gap-2 text-sm font-semibold text-white">
+                        <Escudo logo={m.awayTeam.logo} nombre={m.awayTeam.name} />
+                        <span className="truncate">{m.awayTeam.name}</span>
+                      </span>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -87,5 +75,17 @@ export default async function RolSemanalPage() {
         </div>
       )}
     </div>
+  );
+}
+function Escudo({ logo, nombre }: { logo: string | null; nombre: string }) {
+  return (
+    <span className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-700 bg-gray-800">
+      {logo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={logo} alt={nombre} className="h-full w-full object-cover" />
+      ) : (
+        <span className="text-[10px]">⚽</span>
+      )}
+    </span>
   );
 }

@@ -52,9 +52,9 @@ export default async function EquipoPage({ params }: { params: Promise<{ teamId:
         <Link href="/" className="text-gray-500 hover:text-white transition text-sm">← Posiciones</Link>
       </div>
 
-      <div className="bg-gradient-to-br from-gray-900 to-gray-950 border border-gray-800 rounded-2xl p-6">
-        <h1 className="text-3xl font-black text-white">{team.name}</h1>
-        <div className="flex gap-6 mt-4 text-sm">
+      <div className="bg-gradient-to-br from-gray-900 to-gray-950 border border-gray-800 rounded-2xl p-5 sm:p-6">
+        <h1 className="text-2xl font-black text-white sm:text-3xl">{team.name}</h1>
+        <div className="mt-4 grid grid-cols-5 gap-2 text-xs sm:flex sm:gap-6 sm:text-sm">
           <div className="text-center">
             <p className="text-2xl font-black text-green-400">{w}</p>
             <p className="text-gray-500">Ganados</p>
@@ -69,11 +69,11 @@ export default async function EquipoPage({ params }: { params: Promise<{ teamId:
           </div>
           <div className="text-center">
             <p className="text-2xl font-black text-white">{gf}</p>
-            <p className="text-gray-500">Goles a favor</p>
+            <p className="text-gray-500"><span className="sm:hidden">GF</span><span className="hidden sm:inline">Goles a favor</span></p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-black text-white">{ga}</p>
-            <p className="text-gray-500">Goles en contra</p>
+            <p className="text-gray-500"><span className="sm:hidden">GC</span><span className="hidden sm:inline">Goles en contra</span></p>
           </div>
         </div>
       </div>
@@ -89,7 +89,7 @@ export default async function EquipoPage({ params }: { params: Promise<{ teamId:
           <div className="space-y-2">
             {team.players.map((p) => (
               <div key={p.id} className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-xl px-4 py-3">
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 items-center gap-3">
                   <span className="text-gray-600 text-sm w-6 text-center">{p.number ?? "-"}</span>
                   <div>
                     <p className="text-white font-medium text-sm">{p.name}</p>

@@ -97,13 +97,13 @@ const bracketRounds = await prisma.round.findMany({
         />
       )}
       {/* Hero */}
-      <div className="rounded-2xl bg-gradient-to-br from-green-950 via-gray-900 to-gray-950 border border-green-900/30 p-8">
+      <div className="rounded-2xl bg-gradient-to-br from-green-950 via-gray-900 to-gray-950 border border-green-900/30 p-5 sm:p-8">
         <p className="text-green-400 text-xs font-bold tracking-widest uppercase mb-2">⚽ Temporada 2026</p>
-        <h1 className="text-4xl font-black text-white">{tenant.name}</h1>
+        <h1 className="text-3xl font-black text-white sm:text-4xl">{tenant.name}</h1>
         <p className="text-gray-500 mt-1 text-sm">{teams.length} equipos · {recentMatches.length + upcomingMatches.length} partidos</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 [&>*]:min-w-0">
 
         {/* Columna izquierda - Tabla + Resultados */}
         <div className="lg:col-span-2 space-y-8">
@@ -111,26 +111,26 @@ const bracketRounds = await prisma.round.findMany({
           {/* Tabla de posiciones */}
           <div>
             <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Tabla de Posiciones</h2>
-            <div className="rounded-xl overflow-hidden border border-gray-800">
+            <div className="rounded-xl border border-gray-800 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-gray-800 text-gray-400 uppercase text-xs">
                   <tr>
-                    <th className="px-4 py-3 text-left">#</th>
-                    <th className="px-4 py-3 text-left">Equipo</th>
-                    <th className="px-4 py-3 text-center">PJ</th>
-                    <th className="px-4 py-3 text-center">G</th>
-                    <th className="px-4 py-3 text-center">E</th>
-                    <th className="px-4 py-3 text-center">P</th>
-                    <th className="px-4 py-3 text-center hidden md:table-cell">GF</th>
-                    <th className="px-4 py-3 text-center hidden md:table-cell">GC</th>
-                    <th className="px-4 py-3 text-center hidden md:table-cell">DIF</th>
-                    <th className="px-4 py-3 text-center">PTS</th>
+                    <th className="px-2 py-3 sm:px-4 text-left">#</th>
+                    <th className="px-2 py-3 sm:px-4 text-left">Equipo</th>
+                    <th className="px-2 py-3 sm:px-4 text-center">PJ</th>
+                    <th className="px-2 py-3 sm:px-4 text-center hidden sm:table-cell">G</th>
+                    <th className="px-2 py-3 sm:px-4 text-center hidden sm:table-cell">E</th>
+                    <th className="px-2 py-3 sm:px-4 text-center hidden sm:table-cell">P</th>
+                    <th className="px-2 py-3 sm:px-4 text-center hidden md:table-cell">GF</th>
+                    <th className="px-2 py-3 sm:px-4 text-center hidden md:table-cell">GC</th>
+                    <th className="px-2 py-3 sm:px-4 text-center">DIF</th>
+                    <th className="px-2 py-3 sm:px-4 text-center">PTS</th>
                   </tr>
                 </thead>
                 <tbody>
                   {standings.map((s, i) => (
                     <tr key={s.team.id} className={`border-t border-gray-800 hover:bg-gray-800/50 transition ${i === 0 ? "bg-green-950/20" : ""}`}>
-                      <td className="px-4 py-3">
+                      <td className="px-2 py-3 sm:px-4">
                         <span className={`text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full
                           ${i === 0 ? "bg-yellow-500 text-black" :
                             i === 1 ? "bg-gray-400 text-black" :
@@ -139,9 +139,9 @@ const bracketRounds = await prisma.round.findMany({
                           {i + 1}
                         </span>
                       </td>
-                    <td className="px-4 py-3">
-                        <Link href={`/equipos/${s.team.id}`} className="font-semibold text-white hover:text-green-400 transition flex items-center gap-2">
-                          {i === 0 && <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded font-bold">LÍDER</span>}
+                    <td className="px-2 py-3 sm:px-4">
+                        <Link href={`/equipos/${s.team.id}`} className="font-semibold text-white hover:text-green-400 transition flex min-w-0 items-center gap-2">
+                          {i === 0 && <span className="hidden text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded font-bold sm:inline">LÍDER</span>}
                           <span className="w-6 h-6 rounded-full overflow-hidden bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0">
                             {s.team.logo ? (
                               <img src={s.team.logo} alt={s.team.name} className="w-full h-full object-cover" />
@@ -149,21 +149,21 @@ const bracketRounds = await prisma.round.findMany({
                               <span className="text-[10px]">⚽</span>
                             )}
                           </span>
-                          {s.team.name}
+                          <span className="truncate">{s.team.name}</span>
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-center text-gray-400">{s.pj}</td>
-                      <td className="px-4 py-3 text-center text-green-400 font-medium">{s.w}</td>
-                      <td className="px-4 py-3 text-center text-gray-400">{s.d}</td>
-                      <td className="px-4 py-3 text-center text-red-400">{s.l}</td>
-                      <td className="px-4 py-3 text-center text-gray-400 hidden md:table-cell">{s.gf}</td>
-                      <td className="px-4 py-3 text-center text-gray-400 hidden md:table-cell">{s.ga}</td>
-                      <td className="px-4 py-3 text-center hidden md:table-cell">
+                      <td className="px-2 py-3 sm:px-4 text-center text-gray-400">{s.pj}</td>
+                      <td className="px-2 py-3 sm:px-4 text-center text-green-400 font-medium hidden sm:table-cell">{s.w}</td>
+                      <td className="px-2 py-3 sm:px-4 text-center text-gray-400 hidden sm:table-cell">{s.d}</td>
+                      <td className="px-2 py-3 sm:px-4 text-center text-red-400 hidden sm:table-cell">{s.l}</td>
+                      <td className="px-2 py-3 sm:px-4 text-center text-gray-400 hidden md:table-cell">{s.gf}</td>
+                      <td className="px-2 py-3 sm:px-4 text-center text-gray-400 hidden md:table-cell">{s.ga}</td>
+                      <td className="px-2 py-3 sm:px-4 text-center">
                         <span className={s.dif > 0 ? "text-green-400" : s.dif < 0 ? "text-red-400" : "text-gray-400"}>
                           {s.dif > 0 ? `+${s.dif}` : s.dif}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center font-black text-white text-base">{s.pts}</td>
+                      <td className="px-2 py-3 sm:px-4 text-center font-black text-white text-base">{s.pts}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -174,37 +174,31 @@ const bracketRounds = await prisma.round.findMany({
           {/* Resultados recientes */}
           <div>
             <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Resultados Recientes</h2>
-            <div className="rounded-xl overflow-hidden border border-gray-800">
-              <table className="w-full text-sm">
-                <tbody>
-                  {recentMatches.map((m) => (
-                    <tr key={m.id} className="border-t border-gray-800 first:border-0 hover:bg-gray-800/50 transition">
-                      <td className="px-4 py-3 text-gray-500 text-xs w-20">
-                        {new Date(m.date).toLocaleDateString("es-MX", {
-                          day: "numeric",
-                          month: "short",
-                          timeZone: "America/Mexico_City",
-                        })}
-                      </td>
-                      <td className="px-4 py-3 text-right font-semibold">
-                        <span className={(m.homeScore ?? 0) > (m.awayScore ?? 0) ? "text-white" : "text-gray-500"}>
-                          {m.homeTeam.name}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className="bg-gray-800 text-white font-black px-3 py-1 rounded-lg text-sm">
-                          {m.homeScore} - {m.awayScore}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 font-semibold">
-                        <span className={(m.awayScore ?? 0) > (m.homeScore ?? 0) ? "text-white" : "text-gray-500"}>
-                          {m.awayTeam.name}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="rounded-xl border border-gray-800 bg-gray-900 divide-y divide-gray-800">
+              {recentMatches.map((m) => {
+                const hs = m.homeScore ?? 0;
+                const as = m.awayScore ?? 0;
+                return (
+                  <div key={m.id} className="flex items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4">
+                    <span className="w-12 shrink-0 text-xs text-gray-500 sm:w-16">
+                      {new Date(m.date).toLocaleDateString("es-MX", {
+                        day: "numeric",
+                        month: "short",
+                        timeZone: "America/Mexico_City",
+                      })}
+                    </span>
+                    <span className={`min-w-0 flex-1 truncate text-right text-sm font-semibold ${hs > as ? "text-white" : "text-gray-500"}`}>
+                      {m.homeTeam.name}
+                    </span>
+                    <span className="shrink-0 rounded-lg bg-gray-800 px-2.5 py-1 text-sm font-black tabular-nums text-white">
+                      {m.homeScore} - {m.awayScore}
+                    </span>
+                    <span className={`min-w-0 flex-1 truncate text-sm font-semibold ${as > hs ? "text-white" : "text-gray-500"}`}>
+                      {m.awayTeam.name}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -256,7 +250,7 @@ const bracketRounds = await prisma.round.findMany({
                     ${i === 0 ? "bg-yellow-500 text-black" : i === 1 ? "bg-gray-400 text-black" : "bg-amber-700 text-white"}`}>
                     {i + 1}
                   </span>
-                  <span className="text-white font-semibold text-sm flex-1">{s.team.name}</span>
+                  <span className="text-white font-semibold text-sm flex-1 truncate">{s.team.name}</span>
                   <span className="text-green-400 font-black text-lg">{s.pts}</span>
                 </Link>
               ))}
