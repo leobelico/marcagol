@@ -190,6 +190,67 @@ function Encuesta({ estado }: { estado: Estado }) {
 }
 
 // ============================================================
+// HORARIOS DE UNA LIGA: horas libres (manuales) + atajos de bloque
+// ============================================================
+
+function HorariosLiga({ horarios, onChange }: { horarios: string[]; onChange: (h: string[]) => void }) {
+  const [nueva, setNueva] = useState("");
+
+  function agregar() {
+    if (!/^\d{2}:\d{2}$/.test(nueva)) return;
+    onChange([...new Set([...horarios, nueva])].sort());
+    setNueva("");
+  }
+
+  return (
+    <div className="mt-3 space-y-2 text-sm">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="w-16 text-xs text-gray-500">Horarios</span>
+        {horarios.length === 0 && <span className="text-xs text-gray-600">Sin horarios: agrega al menos uno</span>}
+        {horarios.map((h) => (
+          <span key={h} className="flex items-center gap-1 rounded-lg bg-green-700 py-1 pl-2.5 pr-1 text-xs font-bold text-white">
+            {h}
+            <button
+              onClick={() => onChange(horarios.filter((x) => x !== h))}
+              aria-label={`Quitar ${h}`}
+              className="rounded px-1 text-green-200 hover:bg-green-800 hover:text-white"
+            >
+              ×
+            </button>
+          </span>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5 sm:pl-[4.375rem]">
+        <input
+          type="time"
+          value={nueva}
+          onChange={(e) => setNueva(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && agregar()}
+          className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-white [color-scheme:dark]"
+        />
+        <button
+          onClick={agregar}
+          disabled={!nueva}
+          className="rounded-lg bg-gray-700 px-3 py-1.5 text-xs font-bold text-white disabled:opacity-40"
+        >
+          + Agregar hora
+        </button>
+        <span className="mx-1 text-xs text-gray-600">o usar</span>
+        {BLOQUES.map((b) => (
+          <button
+            key={b.label}
+            onClick={() => onChange(b.horas)}
+            className="rounded-lg bg-gray-800 px-2.5 py-1.5 text-xs font-bold text-gray-400 hover:text-white"
+          >
+            {b.label} ({b.horas.join(", ")})
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
 // CONFIGURACIÓN: categoría, días y horarios de cada liga; compras
 // ============================================================
 
@@ -274,35 +335,7 @@ function Configuracion({ estado, onGuardado }: { estado: Estado; onGuardado: () 
               </select>
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
-              <span className="w-16 text-xs text-gray-500">Horarios</span>
-              {BLOQUES.map((b) => {
-                const activo = b.horas.join() === l.horarios.join();
-                return (
-                  <button
-                    key={b.label}
-                    onClick={() => editarLiga(l.id, { horarios: b.horas })}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-bold ${activo ? "bg-green-600 text-white" : "bg-gray-800 text-gray-400"}`}
-                  >
-                    {b.label}: {b.horas.join(" y ")}
-                  </button>
-                );
-              })}
-              <input
-                defaultValue={l.horarios.join(", ")}
-                key={l.horarios.join()}
-                onBlur={(e) =>
-                  editarLiga(l.id, {
-                    horarios: e.target.value
-                      .split(/[,\s]+/)
-                      .map((h) => h.trim())
-                      .filter(Boolean),
-                  })
-                }
-                placeholder="Otros: 19:40, 20:30"
-                className="w-36 rounded-lg border border-gray-700 bg-gray-800 px-2 py-1.5 text-xs text-white"
-              />
-            </div>
+            <HorariosLiga horarios={l.horarios} onChange={(horarios) => editarLiga(l.id, { horarios })} />
 
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
               <span className="w-16 text-xs text-gray-500">Días</span>
