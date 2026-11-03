@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import PreferenciasRol from "./PreferenciasRol";
 
 type Player = {
   id: string;
@@ -359,6 +360,8 @@ export default function CapitanClient({
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-6 sm:py-8 space-y-6">
+        <PreferenciasRol teamId={team.id} />
+
         {/* AVISO DE INSCRIPCIONES CERRADAS */}
 
         {!inscripcionesAbiertas && (

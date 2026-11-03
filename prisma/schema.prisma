@@ -44,6 +44,12 @@ model Tenant {
   folderId       String?
   folder         TenantFolder? @relation(fields: [folderId], references: [id])
   registrationOpen Boolean @default(true)
+
+  // Armado de rol semanal: categoría (prioridad en la cancha rosa) y
+  // horarios del bloque en que juega la liga, p. ej. ["19:40", "20:30"]
+  categoria      CategoriaLiga?
+  horarios       String[]     @default([])
+  preferenciasRol PreferenciaRol[]
   @@index([folderId])
   @@index([organizationId])
 }
@@ -58,6 +64,9 @@ model Organization {
   tenants  Tenant[]
   users    OrgUser[]
   folders  TenantFolder[]
+
+  // Abre la encuesta de horarios fuera de la ventana de los miércoles
+  prefsForzadas Boolean @default(false)
 }
 model TenantFolder {
   id             String       @id @default(cuid())
@@ -133,6 +142,31 @@ model Team {
   captains     TeamCaptain[]
   preferredDay String?
   allowLateRegistration Boolean @default(false)
+
+  // Día/hora comprados (cualquiera de los dos o ambos). prioridadCompra:
+  // 1 = compró primero y gana el horario sobre los demás compradores.
+  diaComprado     String?
+  horaComprada    String?
+  prioridadCompra Int?
+  preferenciasRol PreferenciaRol[]
+}
+
+// Opciones de horario que manda el capitán para una semana.
+// opciones: [{ dia, hora, prioridad }]  bloqueos: [{ dia, hora }]
+model PreferenciaRol {
+  id        String   @id @default(cuid())
+  teamId    String
+  tenantId  String
+  semana    DateTime // lunes (UTC 00:00) de la semana a jugar
+  opciones  Json
+  bloqueos  Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, semana])
+  @@index([tenantId, semana])
 }
 
 model Player {
@@ -255,6 +289,12 @@ enum Role {
   ADMIN
   VIEWER
   CAPTAIN
+}
+
+enum CategoriaLiga {
+  FEMENIL
+  MIXTA
+  VARONIL
 }
 
 enum MatchStatus {

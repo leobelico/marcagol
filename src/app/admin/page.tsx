@@ -297,6 +297,15 @@ const organizationId =
               </>
             )}
 
+            {!verArchivados && !carpetaActual && !isSuperAdmin && (
+              <Link
+                href="/admin/armado"
+                className="rounded-xl border border-gray-700 bg-gray-900 px-4 py-2.5 text-sm font-bold text-white transition hover:border-gray-600"
+              >
+                🗓️ Armado de rol
+              </Link>
+            )}
+
           </div>
         </div>
 

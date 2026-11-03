@@ -7,6 +7,7 @@ const SECCIONES = [
   { href: "/admin", label: "Torneos" },
   { href: "/admin/capitanes", label: "Capitanes" },
   { href: "/admin/subadmins", label: "Sub admins" },
+  { href: "/admin/armado", label: "Armado de rol" },
   { href: "/admin/roladmin", label: "Rol administrativo" },
   { href: "/admin/importar", label: "Importar" },
 ];
