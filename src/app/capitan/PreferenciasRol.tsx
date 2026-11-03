@@ -64,11 +64,21 @@ export default function PreferenciasRol({ teamId }: { teamId: string }) {
     [datos, orden, bloqueos]
   );
 
-  if (error) return null;
+  if (error || (datos && !datos.configurada)) {
+    return (
+      <section className="rounded-2xl border border-gray-800 bg-gray-900 p-4 sm:p-6">
+        <p className="text-xs font-bold uppercase tracking-widest text-blue-400">🗓️ Horarios de la semana</p>
+        <p className="mt-2 text-sm text-gray-400">
+          {error
+            ? `No se pudo cargar la encuesta de horarios: ${error}`
+            : "Aquí elegirás el día y la hora en que te gustaría jugar. El organizador todavía no configura los horarios de tu liga; vuelve a revisar pronto."}
+        </p>
+      </section>
+    );
+  }
   if (!datos) {
     return <section className="h-40 animate-pulse rounded-2xl border border-gray-800 bg-gray-900" />;
   }
-  if (!datos.configurada) return null; // la liga aún no tiene horarios de bloque
 
   const editable = datos.abierta;
   const totalCasillas = datos.dias.length * datos.horas.length;

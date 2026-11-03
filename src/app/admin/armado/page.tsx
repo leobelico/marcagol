@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import AdminHeader from "../AdminHeader";
 import ArmadoClient from "./ArmadoClient";
+import { SIN_ORG } from "@/lib/armadoRolServer";
 
 export default async function ArmadoPage({ searchParams }: { searchParams: Promise<{ org?: string }> }) {
   const session = await auth();
@@ -10,14 +11,28 @@ export default async function ArmadoPage({ searchParams }: { searchParams: Promi
 
   const isSuperAdmin = !!(session.user as any).isSuperAdmin;
 
-  // Organizaciones donde el usuario administra al menos una liga
-  const organizaciones = await prisma.organization.findMany({
-    where: isSuperAdmin
-      ? {}
-      : { tenants: { some: { archived: false, users: { some: { userId: session.user.id, role: "ADMIN" } } } } },
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
+  // Grupos de ligas que comparten canchas: cada organización, más las
+  // ligas sin organización. Solo los que tienen ligas que administra.
+  const ligas = await prisma.tenant.groupBy({
+    by: ["organizationId"],
+    where: {
+      archived: false,
+      ...(isSuperAdmin ? {} : { users: { some: { userId: session.user.id, role: "ADMIN" } } }),
+    },
+    _count: true,
   });
+  const nombres = await prisma.organization.findMany({
+    where: { id: { in: ligas.map((l) => l.organizationId).filter((id): id is string => !!id) } },
+    select: { id: true, name: true },
+  });
+  const organizaciones = ligas
+    .sort((a, b) => b._count - a._count)
+    .map((l) => ({
+      id: l.organizationId ?? SIN_ORG,
+      name: l.organizationId
+        ? `${nombres.find((o) => o.id === l.organizationId)?.name ?? "Organización"} (${l._count} ligas)`
+        : `Ligas sin organización (${l._count})`,
+    }));
 
   if (!isSuperAdmin && organizaciones.length === 0) redirect("/admin");
 
@@ -31,7 +46,7 @@ export default async function ArmadoPage({ searchParams }: { searchParams: Promi
         <ArmadoClient organizaciones={organizaciones} org={activa} />
       ) : (
         <main className="mx-auto max-w-6xl px-4 py-16 text-center text-gray-400">
-          No hay organizaciones. Asigna las ligas a una organización para armar el rol.
+          No hay ligas activas.
         </main>
       )}
     </div>

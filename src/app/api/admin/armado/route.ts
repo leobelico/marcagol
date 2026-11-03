@@ -3,7 +3,7 @@
 // PATCH { org, ligas?, equipos?, prefsForzadas? } → guarda la configuración
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireOrgAdmin } from "@/lib/armadoRolServer";
+import { SIN_ORG, requireOrgAdmin } from "@/lib/armadoRolServer";
 import { DIAS, lunesDe, semanaObjetivo, ventanaAbierta, ymd } from "@/lib/rol";
 
 const HORA = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -16,10 +16,9 @@ export async function GET(req: NextRequest) {
   const semana = (sp.get("semana") && lunesDe(sp.get("semana")!)) || semanaObjetivo();
 
   const [org, ligas] = await Promise.all([
-    prisma.organization.findUnique({
-      where: { id: guard.organizationId },
-      select: { id: true, name: true, prefsForzadas: true },
-    }),
+    guard.organizationId
+      ? prisma.organization.findUnique({ where: { id: guard.organizationId }, select: { id: true, name: true } })
+      : { id: SIN_ORG, name: "Ligas sin organización" },
     prisma.tenant.findMany({
       where: { id: { in: guard.tenantIds } },
       orderBy: { name: "asc" },
@@ -29,6 +28,7 @@ export async function GET(req: NextRequest) {
         categoria: true,
         horarios: true,
         matchDays: true,
+        prefsAbiertas: true,
         teams: {
           where: { disqualified: false },
           orderBy: { name: "asc" },
@@ -46,7 +46,8 @@ export async function GET(req: NextRequest) {
   ]);
 
   return NextResponse.json({
-    org,
+    // La encuesta se abre a mano para todo el grupo a la vez
+    org: org && { ...org, prefsForzadas: ligas.some((l) => l.prefsAbiertas) },
     semana: ymd(semana),
     ventanaAbierta: ventanaAbierta(),
     ligas: ligas.map((l) => ({
@@ -66,9 +67,9 @@ export async function PATCH(req: NextRequest) {
 
   if (typeof body.prefsForzadas === "boolean") {
     ops.push(
-      prisma.organization.update({
-        where: { id: guard.organizationId },
-        data: { prefsForzadas: body.prefsForzadas },
+      prisma.tenant.updateMany({
+        where: { id: { in: guard.tenantIds } },
+        data: { prefsAbiertas: body.prefsForzadas },
       })
     );
   }

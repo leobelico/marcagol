@@ -195,6 +195,21 @@ function Encuesta({ estado }: { estado: Estado }) {
 
 function HorariosLiga({ horarios, onChange }: { horarios: string[]; onChange: (h: string[]) => void }) {
   const [nueva, setNueva] = useState("");
+  const [desde, setDesde] = useState("");
+  const [hasta, setHasta] = useState("");
+  const [cada, setCada] = useState(50);
+
+  const aMin = (h: string) => {
+    const [hh, mm] = h.split(":").map(Number);
+    return hh * 60 + mm;
+  };
+  const aHora = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+
+  // Horas de inicio de partido dentro del rango (incluye "hasta" si cae justo)
+  const generadas =
+    desde && hasta && cada > 0 && aMin(hasta) >= aMin(desde)
+      ? Array.from({ length: Math.floor((aMin(hasta) - aMin(desde)) / cada) + 1 }, (_, i) => aHora(aMin(desde) + i * cada))
+      : [];
 
   function agregar() {
     if (!/^\d{2}:\d{2}$/.test(nueva)) return;
@@ -245,6 +260,46 @@ function HorariosLiga({ horarios, onChange }: { horarios: string[]; onChange: (h
             {b.label} ({b.horas.join(", ")})
           </button>
         ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5 text-xs text-gray-400 sm:pl-[4.375rem]">
+        <span>Bloque por rango: de</span>
+        <input
+          type="time"
+          value={desde}
+          onChange={(e) => setDesde(e.target.value)}
+          className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-1 text-white [color-scheme:dark]"
+        />
+        <span>a</span>
+        <input
+          type="time"
+          value={hasta}
+          onChange={(e) => setHasta(e.target.value)}
+          className="rounded-lg border border-gray-700 bg-gray-800 px-2 py-1 text-white [color-scheme:dark]"
+        />
+        <span>cada</span>
+        <input
+          type="number"
+          min={10}
+          step={5}
+          value={cada}
+          onChange={(e) => setCada(Math.max(0, parseInt(e.target.value, 10) || 0))}
+          className="w-16 rounded-lg border border-gray-700 bg-gray-800 px-2 py-1 text-white"
+        />
+        <span>min</span>
+        <button
+          onClick={() => {
+            onChange(generadas);
+            setDesde("");
+            setHasta("");
+          }}
+          disabled={generadas.length === 0}
+          className="rounded-lg bg-gray-700 px-3 py-1.5 font-bold text-white disabled:opacity-40"
+        >
+          Usar {generadas.length > 0 ? generadas.join(", ") : "rango"}
+        </button>
+        {desde && hasta && aMin(hasta) < aMin(desde) && (
+          <span className="text-amber-400">La hora final debe ser después de la inicial.</span>
+        )}
       </div>
     </div>
   );

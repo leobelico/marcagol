@@ -27,7 +27,7 @@ async function cargarEquipo(teamId: string | null) {
 
   const team = await prisma.team.findUnique({
     where: { id: teamId },
-    include: { tenant: { include: { organization: { select: { prefsForzadas: true } } } } },
+    include: { tenant: true },
   });
   if (!team) return { error: NextResponse.json({ error: "Equipo no encontrado" }, { status: 404 }) };
 
@@ -41,7 +41,7 @@ async function cargarEquipo(teamId: string | null) {
     }
   }
 
-  const abierta = ventanaAbierta() || !!team.tenant.organization?.prefsForzadas;
+  const abierta = ventanaAbierta() || team.tenant.prefsAbiertas;
   return { team, abierta };
 }
 
@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
 
   const [pref, saturacion] = await Promise.all([
     prisma.preferenciaRol.findUnique({ where: { teamId_semana: { teamId: team.id, semana } } }),
-    saturacionOrganizacion(team.tenant.organizationId, team.tenantId, semana),
+    saturacionOrganizacion(team.tenant.organizationId, semana),
   ]);
 
   return NextResponse.json({

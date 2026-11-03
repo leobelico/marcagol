@@ -17,11 +17,16 @@ import {
   parseOpciones,
 } from "./rol";
 
-type OrgGuard = { organizationId: string; tenantIds: string[] } | { error: NextResponse };
+// Las ligas que no pertenecen a ninguna organización se arman juntas
+// como un grupo más, identificado con este id.
+export const SIN_ORG = "sin";
+
+type OrgGuard = { organizationId: string | null; tenantIds: string[] } | { error: NextResponse };
 
 /**
  * SUPER_ADMIN ve todas las ligas activas de la organización; un ADMIN
- * solo las ligas que administra dentro de ella.
+ * solo las ligas que administra dentro de ella. organizationId = "sin"
+ * es el grupo de ligas sin organización.
  */
 export async function requireOrgAdmin(organizationId: string | null | undefined): Promise<OrgGuard> {
   const session = await auth();
@@ -32,10 +37,11 @@ export async function requireOrgAdmin(organizationId: string | null | undefined)
     return { error: NextResponse.json({ error: "Falta la organización" }, { status: 400 }) };
   }
 
+  const orgId = organizationId === SIN_ORG ? null : organizationId;
   const isSuperAdmin = !!(session.user as any).isSuperAdmin;
   const tenants = await prisma.tenant.findMany({
     where: {
-      organizationId,
+      organizationId: orgId,
       archived: false,
       ...(isSuperAdmin ? {} : { users: { some: { userId: session.user.id, role: "ADMIN" } } }),
     },
@@ -47,7 +53,7 @@ export async function requireOrgAdmin(organizationId: string | null | undefined)
       error: NextResponse.json({ error: "No tienes ligas en esta organización" }, { status: 403 }),
     };
   }
-  return { organizationId, tenantIds: tenants.map((t) => t.id) };
+  return { organizationId: orgId, tenantIds: tenants.map((t) => t.id) };
 }
 
 export function diasDeLiga(matchDays: string[]) {
@@ -97,18 +103,15 @@ export async function cargarArmado(tenantIds: string[], semana: Date) {
     };
   });
 
-  // Canchas ya ocupadas esa semana por cualquier liga de la organización
-  const orgIds = await prisma.tenant.findMany({
-    where: { id: { in: tenantIds } },
-    select: { organizationId: true },
-  });
-  const organizationId = orgIds[0]?.organizationId;
+  // Canchas ya ocupadas esa semana por cualquier liga del mismo grupo
+  // (misma organización, o todas las ligas sin organización)
+  const organizationId = ligasDb[0]?.organizationId ?? null;
   const existentes = await prisma.match.findMany({
     where: {
       date: { gte: semana, lt: finSemana },
       cancha: { not: null },
       status: { not: "CANCELLED" },
-      ...(organizationId ? { tenant: { organizationId } } : { tenantId: { in: tenantIds } }),
+      tenant: { organizationId },
     },
     select: { date: true, cancha: true, tenantId: true },
   });
@@ -126,15 +129,15 @@ export async function cargarArmado(tenantIds: string[], semana: Date) {
  * tienen entre sus 3 primeras opciones (o la compraron) contra los
  * lugares que hay (3 canchas × 2 equipos).
  */
-export async function saturacionOrganizacion(organizationId: string | null, tenantId: string, semana: Date) {
-  const where = organizationId
-    ? { tenant: { organizationId, archived: false }, semana }
-    : { tenantId, semana };
-  const prefs = await prisma.preferenciaRol.findMany({ where, select: { opciones: true } });
+export async function saturacionOrganizacion(organizationId: string | null, semana: Date) {
+  const prefs = await prisma.preferenciaRol.findMany({
+    where: { tenant: { organizationId, archived: false }, semana },
+    select: { opciones: true },
+  });
   const compradores = await prisma.team.findMany({
     where: {
       disqualified: false,
-      ...(organizationId ? { tenant: { organizationId, archived: false } } : { tenantId }),
+      tenant: { organizationId, archived: false },
       diaComprado: { not: null },
       horaComprada: { not: null },
     },

@@ -49,6 +49,8 @@ model Tenant {
   // horarios del bloque en que juega la liga, p. ej. ["19:40", "20:30"]
   categoria      CategoriaLiga?
   horarios       String[]     @default([])
+  // Abre la encuesta de horarios fuera de la ventana de los miércoles
+  prefsAbiertas  Boolean      @default(false)
   preferenciasRol PreferenciaRol[]
   @@index([folderId])
   @@index([organizationId])
@@ -64,9 +66,6 @@ model Organization {
   tenants  Tenant[]
   users    OrgUser[]
   folders  TenantFolder[]
-
-  // Abre la encuesta de horarios fuera de la ventana de los miércoles
-  prefsForzadas Boolean @default(false)
 }
 model TenantFolder {
   id             String       @id @default(cuid())
