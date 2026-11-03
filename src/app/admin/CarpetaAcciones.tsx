@@ -48,7 +48,7 @@ export default function CarpetaAcciones({ id, nombre }: { id: string; nombre: st
         type="button"
         onClick={renombrar}
         disabled={ocupado}
-        className="bg-gray-800 hover:bg-gray-700 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm disabled:opacity-50"
+        className="rounded-xl border border-gray-700 bg-gray-900 px-4 py-2.5 text-sm font-bold text-white transition hover:border-gray-600 disabled:opacity-50"
       >
         Renombrar
       </button>
@@ -56,7 +56,7 @@ export default function CarpetaAcciones({ id, nombre }: { id: string; nombre: st
         type="button"
         onClick={eliminar}
         disabled={ocupado}
-        className="border border-red-800 bg-red-900/20 hover:bg-red-900/40 text-red-400 font-bold px-5 py-2.5 rounded-xl transition text-sm disabled:opacity-50"
+        className="rounded-xl border border-red-800 bg-red-900/20 px-4 py-2.5 text-sm font-bold text-red-400 transition hover:bg-red-900/40 disabled:opacity-50"
       >
         Eliminar carpeta
       </button>

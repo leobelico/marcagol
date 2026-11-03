@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import AdminHeader from "./AdminHeader";
 import CarpetaAcciones from "./CarpetaAcciones";
 import { auth } from "@/lib/auth";
 import TorneoCard from "./TorneoCard";
@@ -209,38 +210,7 @@ const organizationId =
   return (
     <div className="min-h-screen bg-gray-950 text-white">
 
-      {/* HEADER */}
-      <header className="border-b border-gray-800 bg-gray-900">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-
-          <div>
-            <p className="text-xs text-gray-500 uppercase tracking-widest">
-              Panel de Control
-            </p>
-
-            <h1 className="text-lg font-black text-white">
-              {isSuperAdmin
-                ? "⚽ Super Admin"
-                : "⚽ Admin de Liga"}
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-4">
-
-            <span className="text-sm text-gray-400">
-              {session.user?.email}
-            </span>
-
-            <Link
-              href="/api/auth/signout"
-              className="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-2 rounded-lg transition"
-            >
-              Cerrar sesión
-            </Link>
-
-          </div>
-        </div>
-      </header>
+      <AdminHeader email={session.user?.email} isSuperAdmin={isSuperAdmin} />
 
       {/* MAIN */}
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-8">
@@ -249,41 +219,29 @@ const organizationId =
             TITULO Y BOTONES
         ===================================================== */}
 
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
 
-          <div>
+          <div className="min-w-0">
+            {carpetaActual && (
+              <Link
+                href={baseUrl}
+                className="mb-1 inline-block text-sm font-semibold text-gray-500 transition hover:text-white"
+              >
+                ← Todas las ligas
+              </Link>
+            )}
 
-            <div className="flex items-center gap-3">
+            <h2 className="truncate text-2xl font-black text-white">
+              {carpetaActual
+                ? `📁 ${carpetaActual.name}`
+                : verArchivados
+                  ? "Torneos archivados"
+                  : isSuperAdmin
+                    ? "Todos los torneos"
+                    : "Mis ligas"}
+            </h2>
 
-              {carpetaActual && (
-                <Link
-                  href={baseUrl}
-                  className="text-gray-400 hover:text-white transition"
-                  title="Volver"
-                >
-                  ←
-                </Link>
-              )}
-
-              <h2 className="text-2xl font-black text-white">
-                {carpetaActual
-                  ? `📁 ${carpetaActual.name}`
-                  : verArchivados
-                    ? "Torneos Archivados"
-                    : isSuperAdmin
-                      ? "Todos los Torneos"
-                      : "Mis Ligas"}
-              </h2>
-
-              {verArchivados && (
-                <span className="text-xs bg-yellow-900/40 text-yellow-400 border border-yellow-800 px-2 py-1 rounded-lg">
-                  ARCHIVADOS
-                </span>
-              )}
-
-            </div>
-
-            <p className="text-gray-500 text-sm mt-1">
+            <p className="mt-1 text-sm text-gray-500">
               {torneos.length}{" "}
               {verArchivados
                 ? "torneos archivados"
@@ -291,96 +249,53 @@ const organizationId =
                   ? "torneos en esta carpeta"
                   : "torneos sin carpeta"}
             </p>
-
           </div>
 
-          {/* BOTONES */}
+          <div className="flex flex-wrap items-center gap-2">
 
-          <div className="flex flex-wrap gap-3">
-
-            {/* VOLVER A TODAS */}
-            {carpetaActual && (
-              <Link
-                href={baseUrl}
-                className="bg-gray-700 hover:bg-gray-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
-              >
-                ← Todas las ligas
-              </Link>
-            )}
-
+            {/* Dentro de una carpeta: renombrar / eliminar */}
             {carpetaActual && isSuperAdmin && (
               <CarpetaAcciones id={carpetaActual.id} nombre={carpetaActual.name} />
             )}
 
-            {/* CARPETAS */}
-            {!verArchivados && !carpetaActual && isSuperAdmin && (
-            <Link
-              href={organizationId ? `/admin/carpetas/nueva?organizationId=${organizationId}` : "/admin/carpetas/nueva"}
-              className="bg-blue-700 hover:bg-blue-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
-            >
-              📁 Nueva carpeta
-            </Link>
-            )}
-
-            {/* ACTIVOS / ARCHIVADOS */}
+            {/* Activos | Archivados */}
             {!carpetaActual && (
-              <Link
-                href={
-                  verArchivados
-                    ? "/admin"
-                    : "/admin?archivados=true"
-                }
-                className="bg-gray-700 hover:bg-gray-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
-              >
-                {verArchivados
-                  ? "⚽ Ver Torneos Activos"
-                  : "🗄️ Ver Archivados"}
-              </Link>
+              <div className="flex rounded-xl border border-gray-800 bg-gray-900 p-1 text-sm font-semibold">
+                <Link
+                  href="/admin"
+                  className={`rounded-lg px-3 py-1.5 transition ${
+                    !verArchivados ? "bg-gray-800 text-white" : "text-gray-500 hover:text-white"
+                  }`}
+                >
+                  Activos
+                </Link>
+                <Link
+                  href="/admin?archivados=true"
+                  className={`rounded-lg px-3 py-1.5 transition ${
+                    verArchivados ? "bg-gray-800 text-white" : "text-gray-500 hover:text-white"
+                  }`}
+                >
+                  Archivados
+                </Link>
+              </div>
             )}
 
-            {/* SOLO SUPER ADMIN */}
-            {isSuperAdmin &&
-              !verArchivados &&
-              !carpetaActual && (
-                <>
-
-                  <Link
-                    href="/admin/roladmin"
-                    className="bg-red-700 hover:bg-red-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
-                  >
-                    ROL ADMINISTRATIVO
-                  </Link>
-
-                  <Link
-                    href="/admin/subadmins"
-                    className="bg-gray-700 hover:bg-gray-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
-                  >
-                    👥 Sub Admins
-                  </Link>
-
-                  <Link
-                    href="/admin/capitanes"
-                    className="bg-gray-700 hover:bg-gray-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
-                  >
-                    Capitanes
-                  </Link>
-
-                  <Link
-                    href="/admin/torneos/nuevo"
-                    className="bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
-                  >
-                    + Nuevo Torneo
-                  </Link>
-
-                  <Link
-                    href="/admin/importar"
-                    className="bg-blue-700 hover:bg-blue-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm"
-                  >
-                    Importar
-                  </Link>
-
-                </>
-              )}
+            {!verArchivados && !carpetaActual && isSuperAdmin && (
+              <>
+                <Link
+                  href={organizationId ? `/admin/carpetas/nueva?organizationId=${organizationId}` : "/admin/carpetas/nueva"}
+                  className="rounded-xl border border-gray-700 bg-gray-900 px-4 py-2.5 text-sm font-bold text-white transition hover:border-gray-600"
+                >
+                  Nueva carpeta
+                </Link>
+                <Link
+                  href="/admin/torneos/nuevo"
+                  className="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-green-700"
+                >
+                  + Nuevo torneo
+                </Link>
+              </>
+            )}
 
           </div>
         </div>
