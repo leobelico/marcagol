@@ -48,6 +48,10 @@ type RankingArbitro = {
 };
 
 
+// Botón secundario de la barra de acciones (mismo estilo para todos)
+const BOTON =
+  "rounded-xl border border-gray-700 bg-gray-800/60 px-3.5 py-2 text-sm font-bold text-gray-200 transition hover:border-gray-500 hover:text-white disabled:opacity-50";
+
 export default function CalendarioClient({ torneo }: { torneo: Torneo }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -892,63 +896,74 @@ dibujarEquipo(away, awayPlayers, colRight, 38, roundNumber);
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-2xl font-black text-white">Calendario</h2>
-          <p className="text-gray-500 text-sm mt-1">
-            {tieneCalendario ? `${torneo.rounds.length} jornadas` : "Sin calendario aún"}
-          </p>
-        </div>
-        <div className="flex gap-3 flex-wrap">
-          {/* Toggle modo */}
-          <div className="flex bg-gray-800 rounded-xl p-1">
-            <button onClick={() => setModo("auto")}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition ${modo === "auto" ? "bg-green-600 text-white" : "text-gray-400 hover:text-white"}`}>
-              🤖 Automático
-            </button>
-            <button onClick={() => setModo("manual")}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition ${modo === "manual" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"}`}>
-              ✏️ Manual
-            </button>
-          </div>
+      <div>
+        <h2 className="text-2xl font-black text-white">Calendario</h2>
+        <p className="text-gray-500 text-sm mt-1">
+          {tieneCalendario ? `${torneo.rounds.length} jornadas` : "Sin calendario aún"}
+        </p>
+      </div>
 
-          {tieneCalendario && (
-            <button onClick={enviarNotificaciones} disabled={enviando}
-              className="bg-blue-700 hover:bg-blue-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
-              {enviando ? "Enviando..." : "📱 Notificar"}
-            </button>
-          )}
-          {notifResult && <p className="text-green-400 text-sm self-center">{notifResult}</p>}
-
-            <button onClick={() => setShowImport(true)}
-              className="bg-purple-700 hover:bg-purple-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
+      {/* Barra de acciones agrupada */}
+      <div className="grid gap-px overflow-hidden rounded-2xl border border-gray-800 bg-gray-800 lg:grid-cols-[auto_auto_1fr]">
+        {/* Armar calendario */}
+        <div className="bg-gray-900 p-4">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-gray-500">Armar calendario</p>
+          <div className="flex flex-wrap gap-2">
+            <div className="flex rounded-xl bg-gray-800 p-1">
+              <button onClick={() => setModo("auto")}
+                className={`px-3.5 py-1.5 rounded-lg text-sm font-bold transition ${modo === "auto" ? "bg-green-600 text-white" : "text-gray-400 hover:text-white"}`}>
+                🤖 Automático
+              </button>
+              <button onClick={() => setModo("manual")}
+                className={`px-3.5 py-1.5 rounded-lg text-sm font-bold transition ${modo === "manual" ? "bg-green-600 text-white" : "text-gray-400 hover:text-white"}`}>
+                ✏️ Manual
+              </button>
+            </div>
+            <button onClick={() => setShowImport(true)} className={BOTON}>
               📊 Importar Excel
             </button>
-            <button onClick={() => setShowLiguilla(true)}
-              className="bg-yellow-700 hover:bg-yellow-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
-              🏆 Crear Liguilla
+          </div>
+        </div>
+
+        {/* Liguilla */}
+        <div className="bg-gray-900 p-4">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-gray-500">Liguilla</p>
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => setShowLiguilla(true)} className={BOTON}>
+              🏆 Crear liguilla
             </button>
             {bracketCompleta && !esFinalBracket && (
-              <button onClick={abrirSiguienteRonda}
-                className="bg-green-700 hover:bg-green-600 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
-                ▶️ Generar Siguiente Ronda
+              <button onClick={abrirSiguienteRonda} className={`${BOTON} border-green-700 text-green-300`}>
+                ▶️ Siguiente ronda
               </button>
             )}
             {bracketCompleta && esFinalBracket && (
-              <span className="bg-yellow-900/30 text-yellow-400 font-bold px-5 py-2.5 rounded-xl text-sm flex items-center">
+              <span className="flex items-center rounded-xl bg-yellow-900/30 px-3.5 py-2 text-sm font-bold text-yellow-400">
                 🏆 Torneo finalizado
               </span>
             )}
-            <button onClick={() => setShowDescalificar(true)}
-            className="bg-red-800 hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
-            🚫 Descalificar equipos
-          </button>
-          <button onClick={abrirRanking}
-            className="bg-emerald-800 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm">
-            🏅 Ranking árbitros
-          </button>
+          </div>
         </div>
-        
+
+        {/* Herramientas */}
+        <div className="bg-gray-900 p-4">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-gray-500">Herramientas</p>
+          <div className="flex flex-wrap gap-2">
+            {tieneCalendario && (
+              <button onClick={enviarNotificaciones} disabled={enviando} className={BOTON}>
+                {enviando ? "Enviando..." : "📱 Notificar"}
+              </button>
+            )}
+            <button onClick={abrirRanking} className={BOTON}>
+              🏅 Ranking árbitros
+            </button>
+            <button onClick={() => setShowDescalificar(true)}
+              className={`${BOTON} border-red-900 text-red-300 hover:border-red-700 hover:text-red-200`}>
+              🚫 Descalificar
+            </button>
+          </div>
+          {notifResult && <p className="mt-2 text-xs text-green-400">{notifResult}</p>}
+        </div>
       </div>
 
       {/* Conflictos de la última generación */}
