@@ -63,6 +63,12 @@ model Organization {
   logo      String?
   createdAt DateTime     @default(now())
 
+  // Contacto de la liga que se muestra en la app
+  contactName String?
+  instagram   String?
+  facebook    String?
+  whatsapp    String?
+
   tenants  Tenant[]
   users    OrgUser[]
   folders  TenantFolder[]

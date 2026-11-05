@@ -16,6 +16,10 @@ export async function GET() {
           name: true,
           slug: true,
           logo: true,
+          contactName: true,
+          instagram: true,
+          facebook: true,
+          whatsapp: true,
           tenants: {
             where: { archived: false },
             select: { _count: { select: { teams: true } } },
