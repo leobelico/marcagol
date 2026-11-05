@@ -1,6 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import ThemeToggle from "./components/ThemeToggle";
+import CintaResultados from "./components/CintaResultados";
+import ContadorHero from "./components/ContadorHero";
+
+// La cinta de resultados lee partidos reales: regenerar cada 5 minutos
+export const revalidate = 300;
 
 // ─────────────────────────────────────────────────────────────
 // Contenido
@@ -520,24 +525,73 @@ export default function LandingPage() {
         </div>
       </header>
 
+      {/* CINTA DE RESULTADOS */}
+      <CintaResultados />
+
       {/* HERO */}
-      <section className="relative">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-[520px]"
-          style={{ background: "radial-gradient(70% 60% at 70% 0%, color-mix(in oklab, var(--mg-accent) 16%, transparent), transparent 70%)" }}
-        />
+      <section className="relative overflow-hidden">
+        {/* Fondo: franjas de pasto + cancha que se dibuja + balón */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "repeating-linear-gradient(90deg, transparent 0 64px, color-mix(in oklab, var(--mg-accent) 4%, transparent) 64px 128px)",
+              maskImage: "linear-gradient(to bottom, black 55%, transparent)",
+              WebkitMaskImage: "linear-gradient(to bottom, black 55%, transparent)",
+            }}
+          />
+          <div
+            className="absolute inset-x-0 top-0 h-[520px]"
+            style={{ background: "radial-gradient(70% 60% at 70% 0%, color-mix(in oklab, var(--mg-accent) 16%, transparent), transparent 70%)" }}
+          />
+          <svg
+            className="mg-cancha absolute inset-0 h-full w-full"
+            viewBox="0 0 1200 640"
+            preserveAspectRatio="xMidYMid slice"
+            fill="none"
+            stroke="var(--mg-accent)"
+            strokeOpacity="0.2"
+            strokeWidth="2"
+          >
+            <rect x="40" y="40" width="1120" height="560" rx="6" />
+            <line x1="600" y1="40" x2="600" y2="600" />
+            <circle cx="600" cy="320" r="90" />
+            <rect x="40" y="170" width="150" height="300" />
+            <rect x="40" y="250" width="56" height="140" />
+            <path d="M190 260 A70 70 0 0 1 190 380" />
+            <rect x="1010" y="170" width="150" height="300" />
+            <rect x="1104" y="250" width="56" height="140" />
+            <path d="M1010 260 A70 70 0 0 0 1010 380" />
+          </svg>
+          <svg
+            className="mg-balon absolute left-1/2 top-1/2 -ml-3 -mt-3 h-6 w-6 opacity-80"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          >
+            <circle cx="12" cy="12" r="10" className="fill-gray-950" />
+            <path d="M12 7.5l4 2.9-1.5 4.7h-5L8 10.4z" fill="currentColor" />
+          </svg>
+        </div>
+
         <div className={`${contenedor} relative grid items-center gap-14 py-16 lg:grid-cols-[1.05fr_1fr] lg:py-24`}>
           <div>
-            <Etiqueta>Para ligas de fútbol amateur</Etiqueta>
-            <h1 className="mt-4 text-[clamp(38px,6vw,64px)] font-extrabold leading-[1.02] tracking-[-0.03em] [text-wrap:balance]">
+            <div className="mg-up">
+              <Etiqueta>Para ligas de fútbol amateur</Etiqueta>
+            </div>
+            <h1
+              className="mg-up mt-4 text-[clamp(38px,6vw,64px)] font-extrabold leading-[1.02] tracking-[-0.03em] [text-wrap:balance]"
+              style={{ animationDelay: "80ms" }}
+            >
               Tu liga, con marcador en vivo y tabla al instante.
             </h1>
-            <p className="mt-6 max-w-[54ch] text-lg leading-relaxed text-gray-400">
+            <p className="mg-up mt-6 max-w-[54ch] text-lg leading-relaxed text-gray-400" style={{ animationDelay: "160ms" }}>
               MarcaGol arma el calendario y lleva resultados, tabla, goleo y liguilla. Tú capturas desde el celular en
               la cancha; los capitanes y la afición lo ven al momento, como en las apps de resultados.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mg-up mt-8 flex flex-wrap gap-3" style={{ animationDelay: "240ms" }}>
               <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className={btnPrimario}>
                 Quiero mi liga en MarcaGol
               </a>
@@ -545,12 +599,17 @@ export default function LandingPage() {
                 Ver qué hace
               </a>
             </div>
-            <dl className="mt-10 grid max-w-lg grid-cols-3 gap-4 border-t border-gray-800 pt-6">
-              {[
-                ["$200", "MXN al mes por torneo"],
-                ["Web + app", "iOS y Android"],
-                ["1 clic", "para el calendario"],
-              ].map(([n, l]) => (
+            <dl
+              className="mg-up mt-10 grid max-w-lg grid-cols-3 gap-4 border-t border-gray-800 pt-6"
+              style={{ animationDelay: "320ms" }}
+            >
+              {(
+                [
+                  [<ContadorHero key="p" valor={200} prefijo="$" />, "MXN al mes por torneo"],
+                  ["Web + app", "iOS y Android"],
+                  ["1 clic", "para el calendario"],
+                ] as [ReactNode, string][]
+              ).map(([n, l]) => (
                 <div key={l}>
                   <dt className="font-score text-[26px] font-bold leading-none">{n}</dt>
                   <dd className="mt-1.5 text-xs text-gray-500">{l}</dd>
@@ -559,7 +618,7 @@ export default function LandingPage() {
             </dl>
           </div>
 
-          <div className="relative flex justify-center lg:justify-end">
+          <div className="mg-tel-in relative flex justify-center lg:justify-end">
             <div className="flex items-end">
               <Telefono tema="light" className="relative z-10 -rotate-3">
                 <PantallaPartidos />

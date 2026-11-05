@@ -298,3 +298,63 @@ body {
     scroll-behavior: auto;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Portada: entrada escalonada, cancha que se dibuja y cinta de
+   resultados. Todo queda visible en reposo (fill-mode both) y se
+   apaga con prefers-reduced-motion.
+   ───────────────────────────────────────────────────────────── */
+@keyframes mg-up {
+  from { opacity: 0; transform: translateY(18px); }
+}
+@keyframes mg-tel-in {
+  from { opacity: 0; transform: translateY(70px) rotate(6deg); }
+}
+@keyframes mg-traza {
+  from { stroke-dashoffset: 1600; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes mg-rueda {
+  from { opacity: 0; transform: translate(-340px, 140px) rotate(-900deg); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes mg-ticker {
+  to { transform: translateX(-50%); }
+}
+@keyframes mg-parpadeo {
+  50% { opacity: 0.25; }
+}
+
+.mg-up {
+  animation: mg-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.mg-tel-in {
+  animation: mg-tel-in 1s cubic-bezier(0.2, 0.9, 0.25, 1.1) 0.45s both;
+}
+.mg-cancha * {
+  stroke-dasharray: 1600;
+  animation: mg-traza 2.6s ease-out both;
+}
+.mg-balon {
+  animation: mg-rueda 2.4s cubic-bezier(0.2, 0.7, 0.3, 1) 0.3s both;
+}
+.mg-ticker-pista {
+  animation: mg-ticker 45s linear infinite;
+}
+.mg-ticker:hover .mg-ticker-pista {
+  animation-play-state: paused;
+}
+.mg-vivo-punto {
+  animation: mg-parpadeo 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mg-up,
+  .mg-tel-in,
+  .mg-cancha *,
+  .mg-balon,
+  .mg-ticker-pista,
+  .mg-vivo-punto {
+    animation: none;
+  }
+}
