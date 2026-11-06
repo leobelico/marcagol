@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import ThemeToggle from "./components/ThemeToggle";
 import CintaResultados from "./components/CintaResultados";
 import ContadorHero from "./components/ContadorHero";
+import CamarasModal from "./components/CamarasModal";
 
 // La cinta de resultados lee partidos reales: regenerar cada 5 minutos
 export const revalidate = 300;
@@ -806,14 +807,9 @@ export default function LandingPage() {
                 </li>
               ))}
             </ul>
-            <a
-              href={`https://wa.me/524443479221?text=${encodeURIComponent("Hola, me interesa MarcaGol TV (cámaras en mi cancha)")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`${btnPrimario} mt-8`}
-            >
+            <CamarasModal className={`${btnPrimario} mt-8`}>
               Quiero cámaras en mi liga
-            </a>
+            </CamarasModal>
           </div>
 
           {/* Maqueta: transmisión con marcador y clips */}
