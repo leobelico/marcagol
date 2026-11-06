@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getTenant } from "@/lib/tenant";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
@@ -35,10 +36,15 @@ export default async function CalendarioPage() {
                 });
 
           return (
-            <div key={m.id} className="bg-gray-900 border border-gray-800 rounded-xl px-6 py-4">
+            <Link key={m.id} href={`/partido/${m.id}`} className="block bg-gray-900 border border-gray-800 rounded-xl px-6 py-4 transition hover:border-gray-600">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs text-gray-500 capitalize">{fecha} — {hora}</span>
-                <span className={`text-xs font-medium ${st.color}`}>{st.label}</span>
+                <span className="flex items-center gap-2">
+                  {m.videoUrl && (
+                    <span className="rounded-md bg-green-500/15 px-2 py-0.5 text-[11px] font-bold text-green-400">▶ Video</span>
+                  )}
+                  <span className={`text-xs font-medium ${st.color}`}>{st.label}</span>
+                </span>
               </div>
               <div className="flex items-center justify-between gap-4">
                 <span className="text-white font-semibold text-right flex-1">{m.homeTeam.name}</span>
@@ -58,7 +64,7 @@ export default async function CalendarioPage() {
                   Árbitro: {m.referee.name}
                 </p>
               )}
-            </div>
+            </Link>
           );
         })}
         {matches.length === 0 && (

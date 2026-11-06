@@ -776,6 +776,96 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* MARCAGOL TV (próximamente) */}
+      <section id="tv" className={`${contenedor} scroll-mt-20 py-24`}>
+        <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.1fr]">
+          <div>
+            <div className="flex items-center gap-3">
+              <Etiqueta>MarcaGol TV</Etiqueta>
+              <span className="rounded-full border border-gray-700 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                Próximamente
+              </span>
+            </div>
+            <h2 className="mt-3 text-[clamp(28px,4vw,40px)] font-extrabold leading-tight tracking-tight [text-wrap:balance]">
+              Tus partidos en video, y cada gol en un clip.
+            </h2>
+            <p className="mt-5 max-w-[50ch] text-lg leading-relaxed text-gray-400">
+              Instalamos una cámara en tu cancha. Los partidos se transmiten en vivo y se quedan guardados. Cada gol que
+              capturas en MarcaGol se convierte en un clip que le llega al jugador para compartirlo.
+            </p>
+            <ul className="mt-6 grid gap-2.5 text-gray-300">
+              {[
+                "Transmisión en vivo con el marcador encima",
+                "Clips de goles automáticos, sin editar nada",
+                "Las mejores jugadas de cada jugador en su ficha",
+                "Espacio para el logo de tus patrocinadores",
+              ].map((t) => (
+                <li key={t} className="flex items-start gap-2.5">
+                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-green-500" />
+                  {t}
+                </li>
+              ))}
+            </ul>
+            <a
+              href={`https://wa.me/524443479221?text=${encodeURIComponent("Hola, me interesa MarcaGol TV (cámaras en mi cancha)")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${btnPrimario} mt-8`}
+            >
+              Quiero cámaras en mi liga
+            </a>
+          </div>
+
+          {/* Maqueta: transmisión con marcador y clips */}
+          <div className="min-w-0">
+            <div className="overflow-hidden rounded-2xl border border-gray-800 bg-gray-900 shadow-2xl">
+              <div
+                className="relative aspect-video w-full"
+                style={{ background: "repeating-linear-gradient(90deg,#2f8a4a 0 12.5%,#2a7d43 12.5% 25%)" }}
+                aria-hidden
+              >
+                <div className="absolute inset-[8%_5%] rounded-sm border-2 border-white/50">
+                  <div className="absolute inset-y-0 left-1/2 border-l-2 border-white/50" />
+                  <div className="absolute left-1/2 top-1/2 aspect-square w-[22%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/50" />
+                  <div className="absolute inset-y-[30%] left-0 w-[12%] border-2 border-l-0 border-white/50" />
+                  <div className="absolute inset-y-[30%] right-0 w-[12%] border-2 border-r-0 border-white/50" />
+                </div>
+                <div className="absolute left-3 top-3 flex overflow-hidden rounded-md font-score text-sm font-bold text-white shadow">
+                  <span className="bg-[#0d1530] px-2 py-1">HAL</span>
+                  <span className="bg-white px-2 py-1 tabular-nums text-[#0d1530]">2-1</span>
+                  <span className="bg-[#0d1530] px-2 py-1">CUM</span>
+                  <span className="bg-[var(--mg-live)] px-2 py-1">38&apos;</span>
+                </div>
+                <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-md bg-[var(--mg-live)] px-2 py-1 text-[11px] font-bold text-white">
+                  <span className="mg-vivo-punto h-1.5 w-1.5 rounded-full bg-white" />
+                  EN VIVO
+                </span>
+                <span className="absolute bottom-3 right-3 rounded-md bg-black/55 px-2 py-1 text-[11px] font-semibold text-white">
+                  Tu patrocinador aquí
+                </span>
+                <span className="absolute left-[46%] top-[52%] h-2 w-2 rounded-full bg-yellow-300 shadow-[0_0_8px_#fde047]" />
+              </div>
+              <ul className="divide-y divide-gray-800 text-sm">
+                {[
+                  ["34'", "⚽", "Iván Treviño", "Halcones FC"],
+                  ["23'", "⚽", "Marco Leal", "Real Cumbres"],
+                  ["11'", "⚽", "Iván Treviño", "Halcones FC"],
+                ].map(([min, ico, nombre, equipo]) => (
+                  <li key={`${min}${nombre}`} className="flex items-center gap-3 px-5 py-3">
+                    <span className="w-8 font-score font-bold tabular-nums text-gray-500">{min}</span>
+                    <span aria-hidden>{ico}</span>
+                    <span className="min-w-0 flex-1 truncate">
+                      <span className="font-semibold">{nombre}</span> <span className="text-gray-500">{equipo}</span>
+                    </span>
+                    <span className="shrink-0 rounded-full bg-green-500/15 px-3 py-1 text-xs font-bold text-green-500">▶ Clip</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ORGANIZACIONES */}
       <section className={`${contenedor} py-24`}>
         <div className="grid gap-10 rounded-3xl border border-gray-800 bg-gray-900 p-8 md:grid-cols-[1.2fr_1fr] md:p-12">

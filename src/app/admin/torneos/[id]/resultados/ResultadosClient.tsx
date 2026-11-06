@@ -10,6 +10,7 @@ type MatchEvent = {
   type: string; 
   minute: number; 
   suspensionGames?: number | null;
+  clipUrl?: string | null;
   player: { player: { id: string; name: string } } 
 };
 type Match = {
@@ -20,6 +21,7 @@ type Match = {
   homeScore: number | null;
   awayScore: number | null;
   status: string;
+  videoUrl?: string | null;
 };
 type Round = { id: string; number: number; name: string | null; matches: Match[] };
 type Torneo = { id: string; rounds: Round[] };
@@ -42,6 +44,51 @@ export default function ResultadosClient({ torneo }: { torneo: Torneo }) {
   suspensionGames: "1"
 });
   const [loadingModal, setLoadingModal] = useState(false);
+
+  // MarcaGol TV: link de video del partido y clips por evento
+  const [videoEdit, setVideoEdit] = useState<{ matchId: string; url: string } | null>(null);
+  const [videoError, setVideoError] = useState<string | null>(null);
+  const [clipEdit, setClipEdit] = useState<{ eventId: string; url: string } | null>(null);
+  const [clipError, setClipError] = useState<string | null>(null);
+
+  async function guardarVideo() {
+    if (!videoEdit) return;
+    setLoading(true);
+    setVideoError(null);
+    const res = await fetch(`/api/admin/partidos/${videoEdit.matchId}/video`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ videoUrl: videoEdit.url }),
+    });
+    setLoading(false);
+    if (!res.ok) {
+      const j = await res.json().catch(() => null);
+      setVideoError(j?.error ?? "No se pudo guardar el video");
+      return;
+    }
+    setVideoEdit(null);
+    router.refresh();
+  }
+
+  async function guardarClip() {
+    if (!modalPartido || !clipEdit) return;
+    setLoadingModal(true);
+    setClipError(null);
+    const res = await fetch(`/api/admin/partidos/${modalPartido.id}/eventos`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventId: clipEdit.eventId, clipUrl: clipEdit.url }),
+    });
+    if (res.ok) {
+      const { clipUrl } = await res.json();
+      setEventos((prev) => prev.map((e) => (e.id === clipEdit.eventId ? { ...e, clipUrl } : e)));
+      setClipEdit(null);
+    } else {
+      const j = await res.json().catch(() => null);
+      setClipError(j?.error ?? "No se pudo guardar el clip");
+    }
+    setLoadingModal(false);
+  }
 
   function iniciarEdicion(match: Match) {
     setEditando(match.id);
@@ -236,6 +283,21 @@ export default function ResultadosClient({ torneo }: { torneo: Torneo }) {
                         </>
                       ) : (
                         <>
+                          {m.status !== "CANCELLED" && (
+                            <button
+                              onClick={() => {
+                                setVideoError(null);
+                                setVideoEdit(videoEdit?.matchId === m.id ? null : { matchId: m.id, url: m.videoUrl ?? "" });
+                              }}
+                              title={m.videoUrl ? "Este partido tiene video" : "Agregar video del partido"}
+                              className={`text-xs font-bold px-3 py-1.5 rounded-lg transition ${
+                                m.videoUrl
+                                  ? "bg-purple-600 hover:bg-purple-500 text-white"
+                                  : "bg-purple-900/30 hover:bg-purple-900/50 text-purple-300"
+                              }`}>
+                              {m.videoUrl ? "▶ Video" : "+ Video"}
+                            </button>
+                          )}
                           {m.status === "FINISHED" && (
                             <button onClick={() => abrirEventos(m)}
                               className="text-xs bg-yellow-900/40 hover:bg-yellow-900/60 text-yellow-400 font-bold px-3 py-1.5 rounded-lg transition">
@@ -264,6 +326,40 @@ export default function ResultadosClient({ torneo }: { torneo: Torneo }) {
                       )}
                     </div>
                   </div>
+
+                  {videoEdit?.matchId === m.id && (
+                    <div className="mt-3 rounded-xl border border-purple-900/50 bg-purple-950/20 p-3">
+                      <label htmlFor={`video-${m.id}`} className="text-xs font-bold text-purple-300 block mb-1.5">
+                        Video del partido (YouTube en vivo o grabado)
+                      </label>
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <input
+                          id={`video-${m.id}`}
+                          type="url"
+                          autoFocus
+                          placeholder="https://youtube.com/live/..."
+                          value={videoEdit.url}
+                          onChange={(e) => setVideoEdit({ matchId: m.id, url: e.target.value })}
+                          onKeyDown={(e) => e.key === "Enter" && guardarVideo()}
+                          className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500"
+                        />
+                        <div className="flex gap-2">
+                          <button onClick={guardarVideo} disabled={loading}
+                            className="text-xs bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 py-2 rounded-lg transition">
+                            Guardar
+                          </button>
+                          {m.videoUrl && (
+                            <button onClick={() => setVideoEdit({ matchId: m.id, url: "" })}
+                              className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold px-3 py-2 rounded-lg transition">
+                              Vaciar
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      {videoError && <p className="text-xs text-red-400 mt-1.5">{videoError}</p>}
+                      <p className="text-xs text-gray-500 mt-1.5">Se verá en la app y en la página de la liga. Para quitarlo, vacía el campo y guarda.</p>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -413,6 +509,33 @@ export default function ResultadosClient({ torneo }: { torneo: Torneo }) {
                           </p>
                           {ev.type === "RED_CARD" && ev.suspensionGames && (
                             <p className="text-red-400 text-xs font-bold mt-0.5">🚫 Suspendido {ev.suspensionGames} partido(s)</p>
+                          )}
+                          {clipEdit?.eventId === ev.id ? (
+                            <div className="mt-2">
+                              <div className="flex gap-2">
+                                <input
+                                  type="url"
+                                  autoFocus
+                                  aria-label="Link del clip"
+                                  placeholder="https://youtube.com/shorts/..."
+                                  value={clipEdit.url}
+                                  onChange={(e) => setClipEdit({ eventId: ev.id, url: e.target.value })}
+                                  onKeyDown={(e) => e.key === "Enter" && guardarClip()}
+                                  className="w-full min-w-0 bg-gray-900 border border-gray-700 rounded-lg px-2 py-1 text-white text-xs focus:outline-none focus:border-purple-500"
+                                />
+                                <button onClick={guardarClip} disabled={loadingModal}
+                                  className="text-xs bg-purple-600 hover:bg-purple-500 text-white font-bold px-2.5 rounded-lg">
+                                  Guardar
+                                </button>
+                              </div>
+                              {clipError && <p className="text-xs text-red-400 mt-1">{clipError}</p>}
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => { setClipError(null); setClipEdit({ eventId: ev.id, url: ev.clipUrl ?? "" }); }}
+                              className={`mt-1 text-xs font-bold transition ${ev.clipUrl ? "text-purple-300 hover:text-purple-200" : "text-gray-500 hover:text-purple-300"}`}>
+                              {ev.clipUrl ? "▶ Tiene clip · cambiar" : "+ Agregar clip"}
+                            </button>
                           )}
                         </div>
                       </div>

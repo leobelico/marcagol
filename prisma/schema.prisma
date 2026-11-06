@@ -240,6 +240,9 @@ model Match {
   tenant       Tenant       @relation(fields: [tenantId], references: [id])
   events       MatchEvent[]
   encuestas EncuestaArbitral[]
+
+  // MarcaGol TV: link de YouTube del partido (en vivo o grabado)
+  videoUrl     String?
 }
 
 model MatchEvent {
@@ -249,6 +252,10 @@ model MatchEvent {
   matchId         String
   playerId        String
   suspensionGames Int?
+  // MarcaGol TV: clip de la jugada y hora real de captura (para cortar
+  // el clip de la grabación). Los eventos viejos no tienen hora.
+  clipUrl         String?
+  createdAt       DateTime?  @default(now())
   match           Match      @relation(fields: [matchId], references: [id])
   player          PlayerStat @relation(fields: [playerId], references: [id])
 }

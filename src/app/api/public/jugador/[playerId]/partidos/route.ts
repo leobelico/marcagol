@@ -50,9 +50,11 @@ export async function GET(
       isHome: m.homeTeamId === player.teamId,
       homeTeam: m.homeTeam,
       awayTeam: m.awayTeam,
+      videoUrl: m.videoUrl,
       events: (m.events ?? []).map((e) => ({
         type: e.type,
         minute: e.minute,
+        clipUrl: e.clipUrl,
       })),
     }));
 

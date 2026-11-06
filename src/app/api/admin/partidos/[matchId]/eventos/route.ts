@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireMatchAdmin } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { recalcularSuspension } from "@/lib/suspensiones";
+import { linkVideoValido } from "@/lib/video";
 
 export async function GET(
   req: NextRequest,
@@ -166,6 +167,36 @@ export async function POST(
   }
 
   return NextResponse.json(event);
+}
+
+// MarcaGol TV: guarda (o borra, con vacío) el clip de un evento
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ matchId: string }> }
+) {
+  const { matchId } = await params;
+  const guard = await requireMatchAdmin(matchId);
+  if ("error" in guard) return guard.error;
+
+  const body = await req.json().catch(() => null);
+  const eventId = typeof body?.eventId === "string" ? body.eventId : null;
+  const link = linkVideoValido(body?.clipUrl);
+  if (!eventId) return NextResponse.json({ error: "Falta el evento" }, { status: 400 });
+  if (!link.ok) {
+    return NextResponse.json({ error: "Pega un link que empiece con https://" }, { status: 400 });
+  }
+
+  const event = await prisma.matchEvent.findUnique({ where: { id: eventId }, select: { matchId: true } });
+  if (!event || event.matchId !== matchId) {
+    return NextResponse.json({ error: "Evento no encontrado" }, { status: 404 });
+  }
+
+  const actualizado = await prisma.matchEvent.update({
+    where: { id: eventId },
+    data: { clipUrl: link.valor },
+    select: { id: true, clipUrl: true },
+  });
+  return NextResponse.json(actualizado);
 }
 
 export async function DELETE(

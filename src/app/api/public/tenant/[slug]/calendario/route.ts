@@ -39,6 +39,7 @@ export async function GET(
       homeScore: m.homeScore,
       awayScore: m.awayScore,
       cancha: m.cancha,
+      videoUrl: m.videoUrl,
       homeTeam: { id: m.homeTeam.id, name: m.homeTeam.name, logo: m.homeTeam.logo },
       awayTeam: { id: m.awayTeam.id, name: m.awayTeam.name, logo: m.awayTeam.logo },
       referee: m.referee ? { name: m.referee.name } : null,
