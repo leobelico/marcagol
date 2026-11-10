@@ -1,6 +1,6 @@
 // app/api/public/admin/partido/[matchId]/video/route.ts
 //
-// MarcaGol TV desde la app: el admin guarda (o borra, con vacío) el link
+// Tlachtli TV desde la app: el admin guarda (o borra, con vacío) el link
 // de YouTube del partido, en vivo o grabado.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";

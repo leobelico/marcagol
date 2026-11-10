@@ -1,5 +1,5 @@
 // Botón de tema flotante para el panel y el sitio público.
-// En la página principal de MarcaGol (marcada con data-landing) se oculta
+// En la página principal de Tlachtli (marcada con data-landing) se oculta
 // por CSS, porque ahí el botón va en el menú (ver globals.css).
 import ThemeToggle from "./ThemeToggle";
 

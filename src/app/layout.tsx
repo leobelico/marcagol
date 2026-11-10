@@ -16,7 +16,7 @@ const shoulders = Big_Shoulders({
 });
 
 export const metadata: Metadata = {
-  title: "MarcaGol · Tu liga como en las apps de resultados",
+  title: "Tlachtli · Tu liga como en las apps de resultados",
   description:
     "Calendario automático, resultados en vivo, tabla, goleo y liguilla para tu torneo de fútbol amateur. Panel web, app móvil para organizadores y capitanes, y página pública para la afición.",
 };

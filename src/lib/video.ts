@@ -1,4 +1,4 @@
-// MarcaGol TV: utilidades para los links de video de partidos y clips.
+// Tlachtli TV: utilidades para los links de video de partidos y clips.
 // Por ahora los videos viven en YouTube (en vivo o grabados); cuando haya
 // cámaras en las canchas, los clips se llenarán solos.
 

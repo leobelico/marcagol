@@ -4,6 +4,7 @@ import ThemeToggle from "./components/ThemeToggle";
 import CintaResultados from "./components/CintaResultados";
 import ContadorHero from "./components/ContadorHero";
 import CamarasModal from "./components/CamarasModal";
+import LogoTlachtli from "./components/LogoTlachtli";
 
 // La cinta de resultados lee partidos reales: regenerar cada 5 minutos
 export const revalidate = 300;
@@ -13,7 +14,7 @@ export const revalidate = 300;
 // ─────────────────────────────────────────────────────────────
 
 const WHATSAPP = `https://wa.me/524443479221?text=${encodeURIComponent(
-  "Hola, quiero usar MarcaGol en mi liga"
+  "Hola, quiero usar Tlachtli en mi liga"
 )}`;
 
 const pasos = [
@@ -167,7 +168,7 @@ const faqs = [
   },
   {
     q: "¿Cómo funciona la liguilla?",
-    a: "Eliges cuántos equipos clasifican y MarcaGol arma los cruces con la tabla: 1° contra último, 2° contra penúltimo y así. Al terminar cada ronda genera la siguiente con los ganadores; en empates tú eliges quién avanza.",
+    a: "Eliges cuántos equipos clasifican y Tlachtli arma los cruces con la tabla: 1° contra último, 2° contra penúltimo y así. Al terminar cada ronda genera la siguiente con los ganadores; en empates tú eliges quién avanza.",
   },
   {
     q: "¿Puedo guardar el INE de los jugadores?",
@@ -496,16 +497,8 @@ export default function LandingPage() {
       {/* NAV */}
       <header className="sticky top-0 z-30 border-b border-gray-800 bg-gray-900/85 backdrop-blur" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
         <div className={`${contenedor} flex h-16 items-center gap-6`}>
-          <Link href="/" className="flex items-center gap-2 text-[19px] font-extrabold tracking-tight">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-green-600 text-white">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 7.5l4 2.9-1.5 4.7h-5L8 10.4z" fill="currentColor" />
-              </svg>
-            </span>
-            <span>
-              Marca<span className="text-green-500">Gol</span>
-            </span>
+          <Link href="/" className="flex items-center" aria-label="Tlachtli, inicio">
+            <LogoTlachtli className="h-7 w-auto" />
           </Link>
           <nav className="hidden items-center gap-6 text-sm font-semibold text-gray-400 md:flex">
             <a href="#funciones" className="hover:text-white">Funciones</a>
@@ -589,12 +582,12 @@ export default function LandingPage() {
               Tu liga, con marcador en vivo y tabla al instante.
             </h1>
             <p className="mg-up mt-6 max-w-[54ch] text-lg leading-relaxed text-gray-400" style={{ animationDelay: "160ms" }}>
-              MarcaGol arma el calendario y lleva resultados, tabla, goleo y liguilla. Tú capturas desde el celular en
+              Tlachtli arma el calendario y lleva resultados, tabla, goleo y liguilla. Tú capturas desde el celular en
               la cancha; los capitanes y la afición lo ven al momento, como en las apps de resultados.
             </p>
             <div className="mg-up mt-8 flex flex-wrap gap-3" style={{ animationDelay: "240ms" }}>
               <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className={btnPrimario}>
-                Quiero mi liga en MarcaGol
+                Quiero mi liga en Tlachtli
               </a>
               <a href="#funciones" className={btnSecundario}>
                 Ver qué hace
@@ -751,7 +744,7 @@ export default function LandingPage() {
               La liguilla se arma sola.
             </h2>
             <p className="mt-5 max-w-[50ch] text-lg leading-relaxed text-gray-400">
-              Eliges cuántos clasifican y MarcaGol toma la tabla: 1° contra 8°, 2° contra 7°. Cuando termina la ronda,
+              Eliges cuántos clasifican y Tlachtli toma la tabla: 1° contra 8°, 2° contra 7°. Cuando termina la ronda,
               genera la siguiente con los ganadores, ordenados otra vez por su lugar en la tabla. En los empates, tú
               decides quién pasa.
             </p>
@@ -779,12 +772,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* MARCAGOL TV (próximamente) */}
+      {/* TLACHTLI TV (próximamente) */}
       <section id="tv" className={`${contenedor} scroll-mt-20 py-24`}>
         <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.1fr]">
           <div>
             <div className="flex items-center gap-3">
-              <Etiqueta>MarcaGol TV</Etiqueta>
+              <Etiqueta>Tlachtli TV</Etiqueta>
               <span className="rounded-full border border-gray-700 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-gray-400">
                 Próximamente
               </span>
@@ -794,7 +787,7 @@ export default function LandingPage() {
             </h2>
             <p className="mt-5 max-w-[50ch] text-lg leading-relaxed text-gray-400">
               Instalamos una cámara en tu cancha. Los partidos se transmiten en vivo y se quedan guardados. Cada gol que
-              capturas en MarcaGol se convierte en un clip que le llega al jugador para compartirlo.
+              capturas en Tlachtli se convierte en un clip que le llega al jugador para compartirlo.
             </p>
             <ul className="mt-6 grid gap-2.5 text-gray-300">
               {[
@@ -1027,7 +1020,7 @@ export default function LandingPage() {
       {/* FOOTER */}
       <footer className="border-t border-gray-800" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
         <div className={`${contenedor} flex flex-col gap-4 py-10 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between`}>
-          <p>© {new Date().getFullYear()} MarcaGol · Hecho en México para el fútbol amateur</p>
+          <p>© {new Date().getFullYear()} Tlachtli · Un producto de KoatlCyber · Hecho en México para el fútbol amateur</p>
           <nav className="flex flex-wrap gap-5">
             <a href="#funciones" className="hover:text-white">Funciones</a>
             <a href="#precio" className="hover:text-white">Precio</a>

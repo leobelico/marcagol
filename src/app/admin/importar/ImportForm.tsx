@@ -85,7 +85,7 @@ export default function ImportForm() {
     const ws = XLSX.utils.json_to_sheet(datos);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Torneos");
-    XLSX.writeFile(wb, "plantilla_marcagol.xlsx");
+    XLSX.writeFile(wb, "plantilla_tlachtli.xlsx");
   }
 
   return (

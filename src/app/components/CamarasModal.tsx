@@ -1,13 +1,13 @@
 "use client";
 
-// MarcaGol TV: botón "Quiero cámaras en mi liga" que abre una ventana con
+// Tlachtli TV: botón "Quiero cámaras en mi liga" que abre una ventana con
 // lo que cuesta instalar cámaras en una cancha (equipo, gasto mensual,
 // fases) y una calculadora de en cuánto tiempo se paga con patrocinios.
 // Al final, el botón para cotizar por WhatsApp.
 import { useEffect, useRef, useState } from "react";
 
 const WHATSAPP_TV = `https://wa.me/524443479221?text=${encodeURIComponent(
-  "Hola, me interesa MarcaGol TV (cámaras en mi cancha). ¿Me pasas una cotización?"
+  "Hola, me interesa Tlachtli TV (cámaras en mi cancha). ¿Me pasas una cotización?"
 )}`;
 
 const EQUIPO = [
@@ -163,7 +163,7 @@ export default function CamarasModal({ className, children }: { className?: stri
             {/* Encabezado */}
             <div className="flex items-start justify-between gap-4 border-b border-gray-800 px-6 py-5">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.14em] text-green-500">MarcaGol TV · Próximamente</p>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-green-500">Tlachtli TV · Próximamente</p>
                 <h2 id="tv-titulo" className="mt-1 text-2xl font-extrabold tracking-tight [text-wrap:balance]">
                   ¿Cuánto cuesta poner cámaras en tu cancha?
                 </h2>
@@ -186,7 +186,7 @@ export default function CamarasModal({ className, children }: { className?: stri
               <div className="grid gap-3 sm:grid-cols-3">
                 {[
                   ["Graba", "Una cámara en la cancha graba cada partido completo."],
-                  ["Corta", "Cuando capturas un gol en MarcaGol, el clip se corta solo."],
+                  ["Corta", "Cuando capturas un gol en Tlachtli, el clip se corta solo."],
                   ["Comparte", "El clip le llega al jugador en la app para subirlo a sus redes."],
                 ].map(([t, d], i) => (
                   <div key={t} className="rounded-2xl border border-gray-800 bg-gray-950 p-4">

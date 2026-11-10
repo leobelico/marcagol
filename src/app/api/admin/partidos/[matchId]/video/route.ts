@@ -1,4 +1,4 @@
-// MarcaGol TV: guarda (o borra, con vacío) el link de video de un partido.
+// Tlachtli TV: guarda (o borra, con vacío) el link de video de un partido.
 import { NextRequest, NextResponse } from "next/server";
 import { requireMatchAdmin } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";

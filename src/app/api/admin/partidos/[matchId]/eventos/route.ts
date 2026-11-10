@@ -169,7 +169,7 @@ export async function POST(
   return NextResponse.json(event);
 }
 
-// MarcaGol TV: guarda (o borra, con vacío) el clip de un evento
+// Tlachtli TV: guarda (o borra, con vacío) el clip de un evento
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ matchId: string }> }

@@ -45,7 +45,7 @@ export default function ResultadosClient({ torneo }: { torneo: Torneo }) {
 });
   const [loadingModal, setLoadingModal] = useState(false);
 
-  // MarcaGol TV: link de video del partido y clips por evento
+  // Tlachtli TV: link de video del partido y clips por evento
   const [videoEdit, setVideoEdit] = useState<{ matchId: string; url: string } | null>(null);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [clipEdit, setClipEdit] = useState<{ eventId: string; url: string } | null>(null);

@@ -1,5 +1,5 @@
 // Página pública de un partido en el sitio de la liga: marcador, video
-// (MarcaGol TV) y jugadas con su clip si lo tienen.
+// (Tlachtli TV) y jugadas con su clip si lo tienen.
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTenant } from "@/lib/tenant";

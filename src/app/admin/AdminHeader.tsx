@@ -2,6 +2,7 @@
 // secciones (solo SUPER_ADMIN) y sesión. En el celular la navegación
 // pasa a una fila de pestañas deslizables.
 import Link from "next/link";
+import LogoTlachtli from "@/app/components/LogoTlachtli";
 
 const SECCIONES = [
   { href: "/admin", label: "Torneos" },
@@ -29,15 +30,7 @@ export default function AdminHeader({
     >
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4">
         <Link href="/admin" className="flex shrink-0 items-center gap-2 font-extrabold tracking-tight">
-          <span className="grid h-7 w-7 place-items-center rounded-lg bg-green-600 text-white">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 7.5l4 2.9-1.5 4.7h-5L8 10.4z" fill="currentColor" />
-            </svg>
-          </span>
-          <span>
-            Marca<span className="text-green-500">Gol</span>
-          </span>
+          <LogoTlachtli className="h-6 w-auto" />
           <span className="hidden rounded-md bg-gray-800 px-1.5 py-0.5 text-[11px] font-bold text-gray-400 sm:inline">
             {isSuperAdmin ? "Super admin" : "Admin"}
           </span>

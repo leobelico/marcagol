@@ -6,14 +6,14 @@
 // marcagol.site/eliminar-cuenta sin login.
 
 export const metadata = {
-  title: "Eliminar cuenta — MarcaGol",
+  title: "Eliminar cuenta — Tlachtli",
 };
 
 export default function EliminarCuentaPage() {
   return (
     <div className="max-w-3xl mx-auto px-6 py-16 text-gray-300">
       <h1 className="text-3xl font-black text-white mb-2">
-        Eliminar tu cuenta de MarcaGol
+        Eliminar tu cuenta de Tlachtli
       </h1>
       <p className="text-sm text-gray-500 mb-10">
         Última actualización: 04/09/2026
@@ -21,7 +21,7 @@ export default function EliminarCuentaPage() {
 
       <section className="space-y-4 mb-10">
         <p>
-          Si tienes una cuenta de administrador en MarcaGol (la que usas para
+          Si tienes una cuenta de administrador en Tlachtli, antes MarcaGol (la que usas para
           iniciar sesión en la app o en marcagol.site) y deseas eliminarla,
           sigue estos pasos:
         </p>
@@ -37,7 +37,7 @@ export default function EliminarCuentaPage() {
             <span className="font-semibold text-white">
               ldj821@gmail.com
             </span>{" "}
-            desde el mismo correo registrado en tu cuenta de MarcaGol.
+            desde el mismo correo registrado en tu cuenta de Tlachtli.
           </li>
           <li>
             Incluye en el asunto: <em>&quot;Solicitud de eliminación de cuenta&quot;</em>.

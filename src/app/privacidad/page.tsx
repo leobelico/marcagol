@@ -6,14 +6,14 @@
 // debe ser accesible en marcagol.site/privacidad sin importar el torneo.
 
 export const metadata = {
-  title: "Política de Privacidad — MarcaGol",
+  title: "Política de Privacidad — Tlachtli",
 };
 
 export default function PrivacidadPage() {
   return (
     <div className="max-w-3xl mx-auto px-6 py-16 text-gray-300">
       <h1 className="text-3xl font-black text-white mb-2">
-        Política de Privacidad de MarcaGol
+        Política de Privacidad de Tlachtli
       </h1>
       <p className="text-sm text-gray-500 mb-10">
         Última actualización: 04/09/2026
@@ -22,7 +22,7 @@ export default function PrivacidadPage() {
       <section className="space-y-4 mb-10">
         <h2 className="text-xl font-bold text-white">Introducción</h2>
         <p>
-          MarcaGol (&quot;la App&quot;) es una aplicación móvil que permite a
+          Tlachtli, antes MarcaGol, (&quot;la App&quot;) es una aplicación móvil que permite a
           los usuarios consultar tablas de posiciones, goleo y calendarios de
           torneos de fútbol amateur, y permite a administradores autorizados
           capturar resultados y gestionar plantillas de equipos. Esta
@@ -122,7 +122,7 @@ export default function PrivacidadPage() {
       <section className="space-y-4 mb-10">
         <h2 className="text-xl font-bold text-white">Menores de edad</h2>
         <p>
-          MarcaGol no está dirigida a niños menores de 13 años como usuarios
+          Tlachtli no está dirigida a niños menores de 13 años como usuarios
           de la cuenta de administrador. La información de jugadores menores
           de edad que un administrador capture (como parte de la gestión
           pública de un torneo deportivo) es proporcionada y gestionada por

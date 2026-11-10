@@ -1,6 +1,6 @@
 // app/api/public/partido/[matchId]/route.ts
 //
-// Detalle público de un partido para la app: marcador, video (MarcaGol TV)
+// Detalle público de un partido para la app: marcador, video (Tlachtli TV)
 // y jugadas con su clip si lo tienen. Las asistencias se guardan como
 // eventos aparte; aquí se mandan todos los eventos y la app decide qué
 // mostrar.
