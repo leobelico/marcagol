@@ -583,7 +583,7 @@ export default function LandingPage() {
               <Etiqueta>Para ligas de fútbol amateur</Etiqueta>
             </div>
             <h1
-              className="mg-up mt-4 text-[clamp(38px,6vw,64px)] font-extrabold leading-[1.02] tracking-[-0.03em] [text-wrap:balance]"
+              className="mg-up mt-4 t-titulo text-[clamp(48px,8vw,96px)] [text-wrap:balance]"
               style={{ animationDelay: "80ms" }}
             >
               Tu liga, con marcador en vivo y tabla al instante.
@@ -632,11 +632,13 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <div className="t-escalones" aria-hidden="true" />
+
       {/* CÓMO FUNCIONA */}
-      <section className="border-y border-gray-800 bg-gray-900">
+      <section className="border-b border-gray-800 bg-gray-900">
         <div className={`${contenedor} py-20`}>
           <Etiqueta>Así va un fin de semana</Etiqueta>
-          <h2 className="mt-3 max-w-2xl text-[clamp(28px,4vw,40px)] font-extrabold leading-tight tracking-tight [text-wrap:balance]">
+          <h2 className="mt-3 max-w-2xl t-titulo text-[clamp(36px,5vw,56px)] [text-wrap:balance]">
             De la inscripción al pitazo final, sin hojas de cálculo ni grupos de WhatsApp.
           </h2>
           <ol className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -656,14 +658,14 @@ export default function LandingPage() {
       {/* PERFILES */}
       <section className={`${contenedor} py-24`}>
         <Etiqueta>Una plataforma, tres vistas</Etiqueta>
-        <h2 className="mt-3 max-w-2xl text-[clamp(28px,4vw,40px)] font-extrabold leading-tight tracking-tight [text-wrap:balance]">
+        <h2 className="mt-3 max-w-2xl t-titulo text-[clamp(36px,5vw,56px)] [text-wrap:balance]">
           Cada quien ve exactamente lo que necesita.
         </h2>
         <div className="mt-12 grid gap-5 md:grid-cols-3">
           {perfiles.map((p) => (
             <div key={p.quien} className="flex flex-col rounded-2xl border border-gray-800 bg-gray-900 p-7">
               <p className="text-sm font-bold text-green-500">{p.quien}</p>
-              <h3 className="mt-1 text-2xl font-extrabold tracking-tight">{p.titulo}</h3>
+              <h3 className="t-titulo mt-1 text-3xl">{p.titulo}</h3>
               <ul className="mt-6 flex flex-col gap-3 text-[15px] text-gray-300">
                 {p.puntos.map((x) => (
                   <li key={x} className="flex gap-2.5">
@@ -690,7 +692,7 @@ export default function LandingPage() {
           </div>
           <div className="order-1 lg:order-2">
             <Etiqueta>App móvil</Etiqueta>
-            <h2 className="mt-3 text-[clamp(28px,4vw,40px)] font-extrabold leading-tight tracking-tight [text-wrap:balance]">
+            <h2 className="mt-3 t-titulo text-[clamp(36px,5vw,56px)] [text-wrap:balance]">
               La liga completa en tu bolsillo.
             </h2>
             <p className="mt-5 max-w-[50ch] text-lg leading-relaxed text-gray-400">
@@ -718,7 +720,7 @@ export default function LandingPage() {
       {/* FUNCIONES */}
       <section id="funciones" className={`${contenedor} scroll-mt-20 py-24`}>
         <Etiqueta>Funciones</Etiqueta>
-        <h2 className="mt-3 max-w-2xl text-[clamp(28px,4vw,40px)] font-extrabold leading-tight tracking-tight [text-wrap:balance]">
+        <h2 className="mt-3 max-w-2xl t-titulo text-[clamp(36px,5vw,56px)] [text-wrap:balance]">
           Todo lo que tu liga necesita, en un solo lugar.
         </h2>
         <div className="mt-12 grid gap-x-10 gap-y-14 md:grid-cols-2">
@@ -745,7 +747,7 @@ export default function LandingPage() {
         <div className={`${contenedor} grid items-center gap-12 py-24 lg:grid-cols-[1fr_1.1fr]`}>
           <div>
             <Etiqueta>Liguilla</Etiqueta>
-            <h2 className="mt-3 text-[clamp(28px,4vw,40px)] font-extrabold leading-tight tracking-tight [text-wrap:balance]">
+            <h2 className="mt-3 t-titulo text-[clamp(36px,5vw,56px)] [text-wrap:balance]">
               La liguilla se arma sola.
             </h2>
             <p className="mt-5 max-w-[50ch] text-lg leading-relaxed text-gray-400">
@@ -787,7 +789,7 @@ export default function LandingPage() {
                 Próximamente
               </span>
             </div>
-            <h2 className="mt-3 text-[clamp(28px,4vw,40px)] font-extrabold leading-tight tracking-tight [text-wrap:balance]">
+            <h2 className="mt-3 t-titulo text-[clamp(36px,5vw,56px)] [text-wrap:balance]">
               Tus partidos en video, y cada gol en un clip.
             </h2>
             <p className="mt-5 max-w-[50ch] text-lg leading-relaxed text-gray-400">
@@ -827,9 +829,9 @@ export default function LandingPage() {
                   <div className="absolute inset-y-[30%] right-0 w-[12%] border-2 border-r-0 border-white/50" />
                 </div>
                 <div className="absolute left-3 top-3 flex overflow-hidden rounded-md font-score text-sm font-bold text-white shadow">
-                  <span className="bg-[#0d1530] px-2 py-1">HAL</span>
-                  <span className="bg-white px-2 py-1 tabular-nums text-[#0d1530]">2-1</span>
-                  <span className="bg-[#0d1530] px-2 py-1">CUM</span>
+                  <span className="bg-[#12261a] px-2 py-1">HAL</span>
+                  <span className="bg-white px-2 py-1 tabular-nums text-[#12261a]">2-1</span>
+                  <span className="bg-[#12261a] px-2 py-1">CUM</span>
                   <span className="bg-[var(--mg-live)] px-2 py-1">38&apos;</span>
                 </div>
                 <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-md bg-[var(--mg-live)] px-2 py-1 text-[11px] font-bold text-white">
@@ -867,7 +869,7 @@ export default function LandingPage() {
         <div className="grid gap-10 rounded-3xl border border-gray-800 bg-gray-900 p-8 md:grid-cols-[1.2fr_1fr] md:p-12">
           <div>
             <Etiqueta>Para organizaciones</Etiqueta>
-            <h2 className="mt-3 text-[clamp(26px,3.5vw,36px)] font-extrabold leading-tight tracking-tight [text-wrap:balance]">
+            <h2 className="mt-3 t-titulo text-[clamp(32px,4.5vw,48px)] [text-wrap:balance]">
               ¿Manejas varias ligas? Todas caben aquí.
             </h2>
             <p className="mt-4 max-w-[52ch] text-gray-400">
@@ -908,7 +910,7 @@ export default function LandingPage() {
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
             <Etiqueta>Precio</Etiqueta>
-            <h2 className="mt-3 text-[clamp(28px,4vw,40px)] font-extrabold leading-tight tracking-tight [text-wrap:balance]">
+            <h2 className="mt-3 t-titulo text-[clamp(36px,5vw,56px)] [text-wrap:balance]">
               Un solo precio por torneo. Todo incluido.
             </h2>
             <p className="mt-5 max-w-[48ch] text-lg leading-relaxed text-gray-400">
@@ -941,7 +943,7 @@ export default function LandingPage() {
       <section className="border-y border-gray-800 bg-gray-900">
         <div className={`${contenedor} py-24`}>
           <Etiqueta>Quiénes somos</Etiqueta>
-          <h2 className="mt-3 max-w-2xl text-[clamp(26px,3.5vw,36px)] font-extrabold leading-tight tracking-tight [text-wrap:balance]">
+          <h2 className="mt-3 max-w-2xl t-titulo text-[clamp(32px,4.5vw,48px)] [text-wrap:balance]">
             También jugamos los fines de semana.
           </h2>
           <div className="mt-10 grid gap-5 sm:grid-cols-3">
@@ -972,7 +974,7 @@ export default function LandingPage() {
         <div className="grid gap-12 lg:grid-cols-[1fr_1.6fr]">
           <div>
             <Etiqueta>Preguntas frecuentes</Etiqueta>
-            <h2 className="mt-3 text-[clamp(28px,4vw,40px)] font-extrabold leading-tight tracking-tight">
+            <h2 className="mt-3 t-titulo text-[clamp(36px,5vw,56px)]">
               Antes de empezar
             </h2>
             <p className="mt-4 text-gray-400">
@@ -1003,9 +1005,9 @@ export default function LandingPage() {
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0"
-            style={{ background: "radial-gradient(60% 80% at 50% 0%, rgba(34,197,94,.22), transparent 70%)" }}
+            style={{ background: "radial-gradient(60% 80% at 50% 0%, rgba(98,214,141,.22), transparent 70%)" }}
           />
-          <h2 className="relative mx-auto max-w-2xl text-[clamp(28px,4.5vw,46px)] font-extrabold leading-tight tracking-tight text-white [text-wrap:balance]">
+          <h2 className="relative mx-auto max-w-2xl t-titulo text-[clamp(40px,6vw,72px)] text-white [text-wrap:balance]">
             Que tu liga se vea como profesional desde la próxima jornada.
           </h2>
           <p className="relative mx-auto mt-4 max-w-xl text-lg text-gray-300">

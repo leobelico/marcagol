@@ -249,7 +249,7 @@ export default function LandingEditClient({ torneo }: { torneo: Torneo }) {
             style={{
               background: form.bannerUrl
                 ? `linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.9)), url(${form.bannerUrl}) center/cover`
-                : "radial-gradient(90% 90% at 85% 0%, rgba(34,197,94,.28), transparent 60%), linear-gradient(160deg, #13306a, #0b1022)",
+                : "radial-gradient(90% 90% at 85% 0%, rgba(255,212,0,.16), transparent 60%), linear-gradient(160deg, #1c6b37, #0c1a11)",
             }}>
             <p className="text-green-400 text-xs font-bold tracking-widest uppercase mb-2">⚽ Torneo de Fútbol</p>
             <h2 className="text-3xl sm:text-4xl font-black text-white">{torneo.name}</h2>

@@ -96,24 +96,26 @@ const bracketRounds = await prisma.round.findMany({
           topScorers={topScorers}
         />
       )}
-      {/* Hero */}
-      <div className="rounded-2xl bg-gradient-to-br from-green-950 via-gray-900 to-gray-950 border border-green-900/30 p-5 sm:p-8">
-        <p className="text-green-400 text-xs font-bold tracking-widest uppercase mb-2">⚽ Temporada 2026</p>
-        <h1 className="text-3xl font-black text-white sm:text-4xl">{tenant.name}</h1>
-        <p className="text-gray-500 mt-1 text-sm">{teams.length} equipos · {recentMatches.length + upcomingMatches.length} partidos</p>
-      </div>
+      {/* Encabezado: el nombre de la liga manda */}
+      <header>
+        <p className="text-sm font-semibold text-gray-500">
+          Temporada 2026 · {teams.length} equipos · {recentMatches.length + upcomingMatches.length} partidos
+        </p>
+        <h1 className="t-titulo mt-2 text-5xl text-white [overflow-wrap:anywhere] sm:text-7xl">{tenant.name}</h1>
+        <div className="t-escalones mt-5" aria-hidden="true" />
+      </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 [&>*]:min-w-0">
 
         {/* Columna izquierda - Tabla + Resultados */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2 space-y-10">
 
           {/* Tabla de posiciones */}
-          <div>
-            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Tabla de Posiciones</h2>
-            <div className="rounded-xl border border-gray-800 overflow-x-auto">
+          <section aria-labelledby="t-tabla">
+            <h2 id="t-tabla" className="t-titulo mb-4 text-3xl text-white">Tabla</h2>
+            <div className="overflow-x-auto rounded-md border border-gray-800 bg-gray-900">
               <table className="w-full text-sm">
-                <thead className="bg-gray-800 text-gray-400 uppercase text-xs">
+                <thead className="border-b-2 border-white text-xs uppercase text-gray-500">
                   <tr>
                     <th className="px-2 py-3 sm:px-4 text-left">#</th>
                     <th className="px-2 py-3 sm:px-4 text-left">Equipo</th>
@@ -129,173 +131,198 @@ const bracketRounds = await prisma.round.findMany({
                 </thead>
                 <tbody>
                   {standings.map((s, i) => (
-                    <tr key={s.team.id} className={`border-t border-gray-800 hover:bg-gray-800/50 transition ${i === 0 ? "bg-green-950/20" : ""}`}>
-                      <td className="px-2 py-3 sm:px-4">
-                        <span className={`text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full
-                          ${i === 0 ? "bg-yellow-500 text-black" :
-                            i === 1 ? "bg-gray-400 text-black" :
-                            i === 2 ? "bg-amber-700 text-white" :
-                            "text-gray-500"}`}>
-                          {i + 1}
+                    <tr
+                      key={s.team.id}
+                      className={`border-t border-gray-800 transition hover:bg-gray-800/50 ${
+                        i === 0 ? "bg-[color-mix(in_srgb,#ffd400_16%,transparent)]" : ""
+                      }`}
+                    >
+                      <td className="px-2 py-2.5 sm:px-4">
+                        <span className={`t-numero text-2xl ${i < 3 ? "text-green-400" : "text-gray-500"}`}>
+                          {String(i + 1).padStart(2, "0")}
                         </span>
                       </td>
-                    <td className="px-2 py-3 sm:px-4">
+                      <td className="px-2 py-2.5 sm:px-4">
                         <Link href={`/equipos/${s.team.id}`} className="font-semibold text-white hover:text-green-400 transition flex min-w-0 items-center gap-2">
-                          {i === 0 && <span className="hidden text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded font-bold sm:inline">LÍDER</span>}
                           <span className="w-6 h-6 rounded-full overflow-hidden bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0">
                             {s.team.logo ? (
-                              <img src={s.team.logo} alt={s.team.name} className="w-full h-full object-cover" />
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={s.team.logo} alt="" className="w-full h-full object-cover" />
                             ) : (
-                              <span className="text-[10px]">⚽</span>
+                              <span className="text-[10px]" aria-hidden="true">⚽</span>
                             )}
                           </span>
                           <span className="truncate">{s.team.name}</span>
+                          {i === 0 && (
+                            <span className="hidden shrink-0 rounded bg-[#ffd400] px-1.5 py-0.5 text-[10px] font-black uppercase text-[#12261a] sm:inline">
+                              Líder
+                            </span>
+                          )}
                         </Link>
                       </td>
-                      <td className="px-2 py-3 sm:px-4 text-center text-gray-400">{s.pj}</td>
-                      <td className="px-2 py-3 sm:px-4 text-center text-green-400 font-medium hidden sm:table-cell">{s.w}</td>
-                      <td className="px-2 py-3 sm:px-4 text-center text-gray-400 hidden sm:table-cell">{s.d}</td>
-                      <td className="px-2 py-3 sm:px-4 text-center text-red-400 hidden sm:table-cell">{s.l}</td>
-                      <td className="px-2 py-3 sm:px-4 text-center text-gray-400 hidden md:table-cell">{s.gf}</td>
-                      <td className="px-2 py-3 sm:px-4 text-center text-gray-400 hidden md:table-cell">{s.ga}</td>
-                      <td className="px-2 py-3 sm:px-4 text-center">
+                      <td className="px-2 py-2.5 sm:px-4 text-center text-gray-400 tabular-nums">{s.pj}</td>
+                      <td className="px-2 py-2.5 sm:px-4 text-center text-gray-400 tabular-nums hidden sm:table-cell">{s.w}</td>
+                      <td className="px-2 py-2.5 sm:px-4 text-center text-gray-400 tabular-nums hidden sm:table-cell">{s.d}</td>
+                      <td className="px-2 py-2.5 sm:px-4 text-center text-gray-400 tabular-nums hidden sm:table-cell">{s.l}</td>
+                      <td className="px-2 py-2.5 sm:px-4 text-center text-gray-400 tabular-nums hidden md:table-cell">{s.gf}</td>
+                      <td className="px-2 py-2.5 sm:px-4 text-center text-gray-400 tabular-nums hidden md:table-cell">{s.ga}</td>
+                      <td className="px-2 py-2.5 sm:px-4 text-center font-semibold tabular-nums">
                         <span className={s.dif > 0 ? "text-green-400" : s.dif < 0 ? "text-red-400" : "text-gray-400"}>
                           {s.dif > 0 ? `+${s.dif}` : s.dif}
                         </span>
                       </td>
-                      <td className="px-2 py-3 sm:px-4 text-center font-black text-white text-base">{s.pts}</td>
+                      <td className="px-2 py-2.5 sm:px-4 text-center">
+                        <span className="t-numero text-2xl text-white">{s.pts}</span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </div>
+          </section>
 
           {/* Resultados recientes */}
-          <div>
-            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Resultados Recientes</h2>
-            <div className="rounded-xl border border-gray-800 bg-gray-900 divide-y divide-gray-800">
+          <section aria-labelledby="t-resultados">
+            <h2 id="t-resultados" className="t-titulo mb-4 text-3xl text-white">Resultados</h2>
+            {recentMatches.length === 0 && (
+              <p className="text-sm text-gray-500">Todavía no hay partidos terminados.</p>
+            )}
+            <div className="grid gap-3 sm:grid-cols-2">
               {recentMatches.map((m) => {
                 const hs = m.homeScore ?? 0;
                 const as = m.awayScore ?? 0;
+                const filas: [string, number, boolean][] = [
+                  [m.homeTeam.name, hs, hs >= as],
+                  [m.awayTeam.name, as, as >= hs],
+                ];
                 return (
-                  <div key={m.id} className="flex items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4">
-                    <span className="w-12 shrink-0 text-xs text-gray-500 sm:w-16">
-                      {new Date(m.date).toLocaleDateString("es-MX", {
-                        day: "numeric",
-                        month: "short",
-                        timeZone: "America/Mexico_City",
-                      })}
-                    </span>
-                    <span className={`min-w-0 flex-1 truncate text-right text-sm font-semibold ${hs > as ? "text-white" : "text-gray-500"}`}>
-                      {m.homeTeam.name}
-                    </span>
-                    <span className="shrink-0 rounded-lg bg-gray-800 px-2.5 py-1 text-sm font-black tabular-nums text-white">
-                      {m.homeScore} - {m.awayScore}
-                    </span>
-                    <span className={`min-w-0 flex-1 truncate text-sm font-semibold ${as > hs ? "text-white" : "text-gray-500"}`}>
-                      {m.awayTeam.name}
-                    </span>
+                  <div key={m.id} className="t-boleto">
+                    <div className="t-boleto__talon">
+                      <span className="t-boleto__hora">
+                        {new Date(m.date).toLocaleDateString("es-MX", { day: "numeric", timeZone: "America/Mexico_City" })}
+                      </span>
+                      <span className="t-boleto__dia">
+                        {new Date(m.date).toLocaleDateString("es-MX", { month: "short", timeZone: "America/Mexico_City" })}
+                      </span>
+                    </div>
+                    <div className="space-y-1.5 px-3 py-3">
+                      {filas.map(([nombre, goles, gana], k) => (
+                        <div key={k} className="flex items-center gap-2">
+                          <span className={`min-w-0 flex-1 truncate text-sm font-semibold ${gana ? "text-white" : "text-gray-500"}`}>
+                            {nombre}
+                          </span>
+                          <span className={`t-numero text-2xl ${gana ? "text-white" : "text-gray-500"}`}>{goles}</span>
+                        </div>
+                      ))}
+                      <span className="inline-flex items-center gap-1 rounded-full border border-gray-600 px-2 py-0.5 text-[11px] font-bold uppercase text-gray-400">
+                        <svg viewBox="0 0 16 16" className="h-3 w-3" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" strokeWidth="2" /></svg>
+                        Final
+                      </span>
+                    </div>
                   </div>
                 );
               })}
             </div>
-          </div>
+          </section>
 
         </div>
 
-        {/* Sidebar - Próximos partidos */}
-        <div className="space-y-8">
-          <div>
-            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Próximos Partidos</h2>
+        {/* Columna derecha - Próximos partidos y top */}
+        <div className="space-y-10">
+          <section aria-labelledby="t-proximos">
+            <h2 id="t-proximos" className="t-titulo mb-4 text-3xl text-white">Próximos</h2>
             <div className="space-y-3">
               {upcomingMatches.length === 0 && (
-                <p className="text-gray-500 text-sm">No hay partidos programados</p>
+                <p className="text-gray-500 text-sm">No hay partidos programados.</p>
               )}
               {upcomingMatches.map((m) => (
-                <div key={m.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-                  <p className="text-xs text-gray-600 font-semibold uppercase mb-3">
-                    {new Date(m.date).toLocaleDateString("es-MX", {
-                      weekday: "long",
-                      day: "numeric",
-                      month: "short",
-                      timeZone: "America/Mexico_City",
-                    })}
-                    {" · "}
-                    {new Date(m.date).toLocaleTimeString("es-MX", {
-                      hour: "numeric",
-                      minute: "2-digit",
-                      hour12: true,
-                      timeZone: "America/Mexico_City",
-                    })}
-                  </p>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-white font-semibold text-sm text-right flex-1 truncate">{m.homeTeam.name}</span>
-                    <span className="bg-gray-800 text-gray-500 text-xs font-black px-2 py-1 rounded">VS</span>
-                    <span className="text-white font-semibold text-sm flex-1 truncate">{m.awayTeam.name}</span>
+                <div key={m.id} className="t-boleto">
+                  <div className="t-boleto__talon">
+                    <span className="t-boleto__hora">
+                      {new Date(m.date).toLocaleTimeString("es-MX", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false,
+                        timeZone: "America/Mexico_City",
+                      })}
+                    </span>
+                    <span className="t-boleto__dia">
+                      {new Date(m.date).toLocaleDateString("es-MX", {
+                        weekday: "short",
+                        day: "numeric",
+                        timeZone: "America/Mexico_City",
+                      })}
+                    </span>
+                  </div>
+                  <div className="space-y-1.5 px-3 py-3">
+                    <p className="truncate text-sm font-semibold text-white">{m.homeTeam.name}</p>
+                    <p className="truncate text-sm font-semibold text-white">{m.awayTeam.name}</p>
+                    <span className="inline-flex items-center gap-1 rounded-full border border-dashed border-gray-600 px-2 py-0.5 text-[11px] font-bold uppercase text-gray-400">
+                      <svg viewBox="0 0 16 16" className="h-3 w-3" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeWidth="1.6" /><path d="M8 4.5V8l2.5 1.5" fill="none" stroke="currentColor" strokeWidth="1.6" /></svg>
+                      Por jugar
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
           {/* Top 3 equipos */}
-          <div>
-            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Top Equipos</h2>
-            <div className="space-y-2">
+          <section aria-labelledby="t-top">
+            <h2 id="t-top" className="t-titulo mb-4 text-3xl text-white">Punteros</h2>
+            <div className="divide-y divide-gray-800 border-y-2 border-white">
               {standings.slice(0, 3).map((s, i) => (
                 <Link key={s.team.id} href={`/equipos/${s.team.id}`}
-                  className="flex items-center gap-3 bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 hover:border-gray-600 transition">
-                  <span className={`text-xs font-black w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0
-                    ${i === 0 ? "bg-yellow-500 text-black" : i === 1 ? "bg-gray-400 text-black" : "bg-amber-700 text-white"}`}>
-                    {i + 1}
-                  </span>
+                  className="flex min-h-14 items-center gap-3 py-2 transition hover:bg-gray-900">
+                  <span className="t-numero w-9 text-4xl text-green-400">{i + 1}</span>
                   <span className="text-white font-semibold text-sm flex-1 truncate">{s.team.name}</span>
-                  <span className="text-green-400 font-black text-lg">{s.pts}</span>
+                  <span className="t-numero text-3xl text-white">{s.pts}</span>
+                  <span className="text-xs font-semibold text-gray-500">pts</span>
                 </Link>
               ))}
             </div>
-          </div>
+          </section>
         </div>
 
-</div>
+      </div>
 
       {/* Liguilla / Bracket */}
       {bracketRounds.length > 0 && (
-        <div>
-          <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">🏆 Liguilla</h2>
+        <section aria-labelledby="t-liguilla">
+          <h2 id="t-liguilla" className="t-titulo mb-4 text-3xl text-white">Liguilla</h2>
           <div className="flex gap-10 overflow-x-auto pb-4">
             {bracketRounds.map((round) => (
               <div key={round.id} className="flex flex-col justify-around gap-6 min-w-[240px]">
-                <h3 className="text-center text-xs font-bold text-yellow-400 uppercase tracking-widest">
+                <h3 className="t-titulo text-center text-xl text-green-400">
                   {round.bracketLabel ?? `Ronda ${round.bracketStage}`}
                 </h3>
                 {round.matches.map((m) => {
                   const finished = m.status === "FINISHED";
                   const homeWins = finished && (m.homeScore ?? 0) > (m.awayScore ?? 0);
                   const awayWins = finished && (m.awayScore ?? 0) > (m.homeScore ?? 0);
+                  const filas: [string, number | null, boolean][] = [
+                    [m.homeTeam.name, m.homeScore, homeWins],
+                    [m.awayTeam.name, m.awayScore, awayWins],
+                  ];
                   return (
-                    <div key={m.id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-                      <div className={`flex items-center justify-between gap-3 px-3 py-2 ${homeWins ? "bg-green-900/20" : ""}`}>
-                        <span className={`text-sm font-semibold truncate ${homeWins ? "text-green-400" : "text-white"}`}>
-                          {m.homeTeam.name}
-                        </span>
-                        <span className="text-sm font-black text-white">{finished ? m.homeScore : "-"}</span>
-                      </div>
-                      <div className="border-t border-gray-800" />
-                      <div className={`flex items-center justify-between gap-3 px-3 py-2 ${awayWins ? "bg-green-900/20" : ""}`}>
-                        <span className={`text-sm font-semibold truncate ${awayWins ? "text-green-400" : "text-white"}`}>
-                          {m.awayTeam.name}
-                        </span>
-                        <span className="text-sm font-black text-white">{finished ? m.awayScore : "-"}</span>
-                      </div>
+                    <div key={m.id} className="overflow-hidden rounded-md border border-gray-800 bg-gray-900">
+                      {filas.map(([nombre, goles, gana], k) => (
+                        <div key={k} className={`flex items-center justify-between gap-3 px-3 py-2 ${k ? "border-t border-gray-800" : ""}`}>
+                          <span className={`truncate text-sm font-semibold ${finished && !gana ? "text-gray-500" : "text-white"}`}>
+                            {nombre}
+                          </span>
+                          <span className={`t-numero text-xl ${gana ? "text-green-400" : "text-white"}`}>
+                            {finished ? goles : "–"}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   );
                 })}
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
     </div>
   );

@@ -16,7 +16,7 @@ export default async function GoleadoresPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6 text-white">Tabla de Goleadores</h1>
+      <h1 className="t-titulo mb-6 text-5xl text-white">Tabla de Goleadores</h1>
       <div className="rounded-xl border border-gray-800 overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-800 text-gray-400 uppercase text-xs">

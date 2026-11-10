@@ -22,7 +22,7 @@ export default async function CalendarioPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6 text-white">Calendario</h1>
+      <h1 className="t-titulo mb-6 text-5xl text-white">Calendario</h1>
       <div className="flex flex-col gap-3">
         {matches.map((m) => {
           const st = statusLabel[m.status];
@@ -36,7 +36,7 @@ export default async function CalendarioPage() {
                 });
 
           return (
-            <Link key={m.id} href={`/partido/${m.id}`} className="block bg-gray-900 border border-gray-800 rounded-xl px-6 py-4 transition hover:border-gray-600">
+            <Link key={m.id} href={`/partido/${m.id}`} className="block bg-gray-900 border border-gray-800 rounded-md px-4 py-4 sm:px-6 transition hover:border-gray-600">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs text-gray-500 capitalize">{fecha} — {hora}</span>
                 <span className="flex items-center gap-2">
@@ -50,7 +50,7 @@ export default async function CalendarioPage() {
                 <span className="text-white font-semibold text-right flex-1">{m.homeTeam.name}</span>
                 <div className="text-center min-w-[80px]">
                   {m.status === "FINISHED" ? (
-                    <span className="text-2xl font-bold text-white">
+                    <span className="t-numero text-3xl text-white">
                       {m.homeScore} - {m.awayScore}
                     </span>
                   ) : (

@@ -1,9 +1,11 @@
 @import "tailwindcss";
 
 /*
-  Tema de MarcaGol (mismo estilo que la app móvil):
-  - Claro: fondo gris claro, tarjetas blancas, acento azul.
-  - Oscuro: azul marino de la marca, acento verde.
+  Tema «Llano» (dirección Talud, ver diseno/talud-colores.html):
+  - Claro: cal (#eef1ea), tarjetas blancas, tinta verde (#12261a), acento pasto (#1c6b37).
+  - Oscuro: noche de cancha (#0c1a11), acento pasto claro (#62d68d) y
+    amarillo tarjeta (#ffd400) para «en vivo».
+  La app móvil todavía usa el tema anterior.
 
   Las pantallas usan las clases de Tailwind de siempre (bg-gray-950,
   text-white, bg-green-600...). Aquí esas escalas se redefinen con
@@ -19,43 +21,43 @@
 :root,
 [data-theme="light"] {
   color-scheme: light;
-  --g-50: #14171c;
-  --g-100: #1e2128;
-  --g-200: #2a2f36;
-  --g-300: #3c434c;
-  --g-400: #5d6672;
-  --g-500: #7a8494;
-  --g-600: #a3aab5;
-  --g-700: #d7dee7;
-  --g-800: #e7ecf2;
+  --g-50: #0a1810;
+  --g-100: #12261a;
+  --g-200: #1f3326;
+  --g-300: #2f4337;
+  --g-400: #4b5a50;
+  --g-500: #56645a;
+  --g-600: #9aa89d;
+  --g-700: #c9d2c3;
+  --g-800: #dfe5d9;
   --g-900: #ffffff;
-  --g-950: #edf1f6;
-  --c-white: #1e2128;
+  --g-950: #eef1ea;
+  --c-white: #12261a;
   --c-black: #000000;
 
-  /* acento: azul en claro */
-  --gr-300: #1e44c9;
-  --gr-400: #2c55e8;
-  --gr-500: #4166f0;
-  --gr-600: #2c55e8;
-  --gr-700: #2347c7;
-  --gr-800: #bfd0fa;
-  --gr-900: #dce5fd;
-  --gr-950: #eef2fe;
+  /* acento: verde pasto */
+  --gr-300: #145a2c;
+  --gr-400: #1c6b37;
+  --gr-500: #23803f;
+  --gr-600: #1c6b37;
+  --gr-700: #155a2d;
+  --gr-800: #b9dcc3;
+  --gr-900: #d9eedf;
+  --gr-950: #edf7f0;
 
-  --rd-300: #b8282b;
-  --rd-400: #d92d30;
-  --rd-500: #e5383b;
-  --rd-600: #e5383b;
-  --rd-700: #c42f32;
+  --rd-300: #9a1f18;
+  --rd-400: #b3261e;
+  --rd-500: #c8322a;
+  --rd-600: #b3261e;
+  --rd-700: #9a1f18;
   --rd-800: #f2b8b9;
   --rd-900: #fbdadb;
   --rd-950: #fdeded;
 
-  --yl-300: #8f6400;
-  --yl-400: #a87700;
-  --yl-500: #d99a00;
-  --yl-600: #c28800;
+  --yl-300: #7a5a00;
+  --yl-400: #8a6600;
+  --yl-500: #e0b400;
+  --yl-600: #9a7200;
   --yl-800: #ebd48a;
   --yl-900: #fbefc7;
   --yl-950: #fdf7e3;
@@ -82,35 +84,35 @@
   --mg-accent: var(--gr-600);
   --mg-on-accent: #ffffff;
   --mg-header: #ffffff;
-  --mg-live: #e5383b;
-  --mg-win: #1da45a;
-  --mg-draw: #a3aab5;
-  --mg-loss: #e5383b;
+  --mg-live: #b3261e;
+  --mg-win: #1c6b37;
+  --mg-draw: #9aa89d;
+  --mg-loss: #b3261e;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --g-50: #f6f8fd;
-    --g-100: #eef1fa;
-    --g-200: #dde1ee;
-    --g-300: #c9cfe3;
-    --g-400: #a5adc8;
-    --g-500: #8790ae;
-    --g-600: #4a5478;
-    --g-700: #2a3458;
-    --g-800: #1f2745;
-    --g-900: #141b33;
-    --g-950: #0b1022;
-    --c-white: #ffffff;
-    --gr-300: #86efac;
-    --gr-400: #4ade80;
-    --gr-500: #22c55e;
-    --gr-600: #16a34a;
-    --gr-700: #15803d;
-    --gr-800: #166534;
-    --gr-900: #14532d;
-    --gr-950: #052e16;
+    --g-50: #f7faf6;
+    --g-100: #edf3ec;
+    --g-200: #dbe5dc;
+    --g-300: #c3d1c6;
+    --g-400: #a3b4a8;
+    --g-500: #8a9c8f;
+    --g-600: #4a5d50;
+    --g-700: #2e4234;
+    --g-800: #1e3125;
+    --g-900: #13251a;
+    --g-950: #0c1a11;
+    --c-white: #edf3ec;
+    --gr-300: #a6ebbd;
+    --gr-400: #62d68d;
+    --gr-500: #3fc472;
+    --gr-600: #1b7a40;
+    --gr-700: #1c6b37;
+    --gr-800: #155a2d;
+    --gr-900: #0f3d20;
+    --gr-950: #082513;
     --rd-300: #fca5a5;
     --rd-400: #f87171;
     --rd-500: #ef4444;
@@ -119,9 +121,9 @@
     --rd-800: #991b1b;
     --rd-900: #7f1d1d;
     --rd-950: #450a0a;
-    --yl-300: #fde047;
-    --yl-400: #facc15;
-    --yl-500: #eab308;
+    --yl-300: #ffe14d;
+    --yl-400: #ffd400;
+    --yl-500: #e6bf00;
     --yl-600: #ca8a04;
     --yl-800: #854d0e;
     --yl-900: #713f12;
@@ -137,38 +139,38 @@
     --pp-400: #c084fc;
     --pp-600: #9333ea;
     --pp-900: #581c87;
-    --mg-accent: #22c55e;
+    --mg-accent: #62d68d;
     --mg-on-accent: #052012;
-    --mg-header: #13306a;
-    --mg-live: #ffb020;
-    --mg-win: #22c55e;
-    --mg-draw: #66708f;
-    --mg-loss: #f05252;
+    --mg-header: #163a24;
+    --mg-live: #ffd400;
+    --mg-win: #62d68d;
+    --mg-draw: #5d6f62;
+    --mg-loss: #ff8f86;
   }
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --g-50: #f6f8fd;
-  --g-100: #eef1fa;
-  --g-200: #dde1ee;
-  --g-300: #c9cfe3;
-  --g-400: #a5adc8;
-  --g-500: #8790ae;
-  --g-600: #4a5478;
-  --g-700: #2a3458;
-  --g-800: #1f2745;
-  --g-900: #141b33;
-  --g-950: #0b1022;
-  --c-white: #ffffff;
-  --gr-300: #86efac;
-  --gr-400: #4ade80;
-  --gr-500: #22c55e;
-  --gr-600: #16a34a;
-  --gr-700: #15803d;
-  --gr-800: #166534;
-  --gr-900: #14532d;
-  --gr-950: #052e16;
+  --g-50: #f7faf6;
+  --g-100: #edf3ec;
+  --g-200: #dbe5dc;
+  --g-300: #c3d1c6;
+  --g-400: #a3b4a8;
+  --g-500: #8a9c8f;
+  --g-600: #4a5d50;
+  --g-700: #2e4234;
+  --g-800: #1e3125;
+  --g-900: #13251a;
+  --g-950: #0c1a11;
+  --c-white: #edf3ec;
+  --gr-300: #a6ebbd;
+  --gr-400: #62d68d;
+  --gr-500: #3fc472;
+  --gr-600: #1b7a40;
+  --gr-700: #1c6b37;
+  --gr-800: #155a2d;
+  --gr-900: #0f3d20;
+  --gr-950: #082513;
   --rd-300: #fca5a5;
   --rd-400: #f87171;
   --rd-500: #ef4444;
@@ -177,9 +179,9 @@
   --rd-800: #991b1b;
   --rd-900: #7f1d1d;
   --rd-950: #450a0a;
-  --yl-300: #fde047;
-  --yl-400: #facc15;
-  --yl-500: #eab308;
+  --yl-300: #ffe14d;
+  --yl-400: #ffd400;
+  --yl-500: #e6bf00;
   --yl-600: #ca8a04;
   --yl-800: #854d0e;
   --yl-900: #713f12;
@@ -195,18 +197,19 @@
   --pp-400: #c084fc;
   --pp-600: #9333ea;
   --pp-900: #581c87;
-  --mg-accent: #22c55e;
+  --mg-accent: #62d68d;
   --mg-on-accent: #052012;
-  --mg-header: #13306a;
-  --mg-live: #ffb020;
-  --mg-win: #22c55e;
-  --mg-draw: #66708f;
-  --mg-loss: #f05252;
+  --mg-header: #163a24;
+  --mg-live: #ffd400;
+  --mg-win: #62d68d;
+  --mg-draw: #5d6f62;
+  --mg-loss: #ff8f86;
 }
 
 @theme inline {
   --font-sans: var(--font-manrope), system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-score: var(--font-barlow), var(--font-manrope), sans-serif;
+  --font-score: var(--font-shoulders), var(--font-manrope), sans-serif;
+  --font-display: var(--font-shoulders), var(--font-manrope), sans-serif;
 
   --color-white: var(--c-white);
   --color-black: var(--c-black);
@@ -357,4 +360,61 @@ body {
   .mg-vivo-punto {
     animation: none;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Talud: piezas del sitio público de cada liga.
+   - .t-titulo: títulos condensados en mayúsculas (Big Shoulders).
+   - .t-escalones: franja con el perfil escalonado de los muros
+     de la cancha; es decorativa (aria-hidden).
+   - .t-boleto: partido como boleto, con talón de hora a la izquierda.
+   ───────────────────────────────────────────────────────────── */
+.t-titulo {
+  font-family: var(--font-shoulders), var(--font-manrope), sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 0.95;
+}
+.t-escalones {
+  height: 16px;
+  background: var(--mg-accent);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 24'%3E%3Cpath d='M0 24V18H12V12H24V6H36V0H60V6H72V12H84V18H96V24Z'/%3E%3C/svg%3E") repeat-x left bottom / 64px 16px;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 24'%3E%3Cpath d='M0 24V18H12V12H24V6H36V0H60V6H72V12H84V18H96V24Z'/%3E%3C/svg%3E") repeat-x left bottom / 64px 16px;
+}
+.t-boleto {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  background: var(--g-900);
+  border: 1px solid var(--g-800);
+  border-radius: 6px;
+}
+.t-boleto__talon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 12px 6px;
+  border-right: 2px dashed var(--g-700);
+  text-align: center;
+}
+.t-boleto__hora {
+  font-family: var(--font-shoulders), var(--font-manrope), sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.t-boleto__dia {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: capitalize;
+  color: var(--g-500);
+}
+.t-numero {
+  font-family: var(--font-shoulders), var(--font-manrope), sans-serif;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }

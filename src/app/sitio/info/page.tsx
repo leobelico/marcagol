@@ -114,8 +114,8 @@ export default async function InfoPage({
         className="relative flex min-h-72 flex-col justify-end overflow-hidden rounded-2xl p-6 text-white sm:p-8"
         style={{
           background: torneo.bannerUrl
-            ? `linear-gradient(to bottom, rgba(8,12,30,.25), rgba(8,12,30,.92)), url(${JSON.stringify(torneo.bannerUrl)}) center/cover`
-            : "radial-gradient(90% 90% at 85% 0%, rgba(34,197,94,.28), transparent 60%), linear-gradient(160deg, #13306a, #0b1022)",
+            ? `linear-gradient(to bottom, rgba(12,26,17,.25), rgba(12,26,17,.92)), url(${JSON.stringify(torneo.bannerUrl)}) center/cover`
+            : "radial-gradient(90% 90% at 85% 0%, rgba(255,212,0,.16), transparent 60%), linear-gradient(160deg, #1c6b37, #0c1a11)",
         }}
       >
         <span className={`mb-3 inline-flex w-fit rounded-full px-3 py-1 text-xs font-bold ${estado.clase}`}>

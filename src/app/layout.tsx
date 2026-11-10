@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow_Semi_Condensed, Manrope } from "next/font/google";
+import { Big_Shoulders, Manrope } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import FloatingThemeToggle from "./components/FloatingThemeToggle";
 import "./globals.css";
@@ -9,10 +9,10 @@ const manrope = Manrope({
   subsets: ["latin"],
 });
 
-const barlow = Barlow_Semi_Condensed({
-  variable: "--font-barlow",
+const shoulders = Big_Shoulders({
+  variable: "--font-shoulders",
   subsets: ["latin"],
-  weight: ["600", "700"],
+  weight: ["700", "800", "900"],
 });
 
 export const metadata: Metadata = {
@@ -23,8 +23,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b1022" },
+    { media: "(prefers-color-scheme: light)", color: "#eef1ea" },
+    { media: "(prefers-color-scheme: dark)", color: "#0c1a11" },
   ],
 };
 
@@ -41,7 +41,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className={`${manrope.variable} ${barlow.variable} antialiased`}>
+      <body className={`${manrope.variable} ${shoulders.variable} antialiased`}>
         {children}
         <FloatingThemeToggle />
         <Analytics />

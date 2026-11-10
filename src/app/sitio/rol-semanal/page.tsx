@@ -31,7 +31,7 @@ export default async function RolSemanalPage() {
     <div className="space-y-8">
       <div className="rounded-2xl bg-gradient-to-br from-blue-950 via-gray-900 to-gray-950 border border-blue-900/30 p-5 sm:p-8">
         <p className="text-blue-400 text-xs font-bold tracking-widest uppercase mb-2">📅 Próximos partidos</p>
-        <h1 className="text-3xl font-black text-white sm:text-4xl">Rol semanal</h1>
+        <h1 className="t-titulo text-5xl text-white sm:text-6xl">Rol semanal</h1>
         <p className="text-gray-500 mt-1 text-sm">{partidos.length} partidos pendientes</p>
       </div>
 
@@ -45,7 +45,7 @@ export default async function RolSemanalPage() {
           {Object.entries(porJornada).map(([jornada, matches]) => (
             <div key={jornada} className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
               <div className="px-4 py-3 border-b border-gray-800 sm:px-6 sm:py-4">
-                <h2 className="text-white font-bold">{jornada}</h2>
+                <h2 className="t-titulo text-2xl text-white">{jornada}</h2>
               </div>
               <div className="divide-y divide-gray-800">
                 {matches.map((m) => (
