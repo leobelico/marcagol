@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Tlachtli">
+  <title>Tlachtli</title>
+  <rect width="512" height="512" rx="112" fill="#2638C9"/>
+      <path d="M160 144V368M352 144V368" stroke="#FFFFFF" stroke-width="44" stroke-linecap="round"/>
+      <circle cx="256" cy="196" r="44" fill="#C6EE3A"/>
+      <circle cx="232" cy="290" r="15" fill="#C6EE3A"/>
+      <circle cx="216" cy="346" r="9" fill="#C6EE3A"/>
+</svg>

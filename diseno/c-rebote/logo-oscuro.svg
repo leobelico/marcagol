@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 452.49 172" role="img" aria-label="Tlachtli">
+  <title>Tlachtli</title>
+  <rect width="100%" height="100%" rx="24" fill="#080C22"/>
+  <g transform="translate(36 36) scale(0.35) translate(-130 -114)">
+      <path d="M160 144V368M352 144V368" stroke="#EEF1FF" stroke-width="44" stroke-linecap="round"/>
+      <circle cx="256" cy="196" r="44" fill="#D4F54A"/>
+      <circle cx="232" cy="290" r="15" fill="#D4F54A"/>
+      <circle cx="216" cy="346" r="9" fill="#D4F54A"/>
+  </g>
+  <g transform="translate(150.73 45.81) scale(0.76)"><path d="M16 33V93M7 55H25M52.3 23V93M117.6 74A19 19 0 1 0 79.6 74A19 19 0 1 0 117.6 74M117.6 55V93M176.61 59.88A19 19 0 1 0 176.61 88.12M203.91 23V93M203.91 74A19 19 0 0 1 241.91 74V93M278.21 33V93M269.21 55H287.21M314.51 23V93M341.81 55V93" fill="none" stroke="#EEF1FF" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/><circle cx="341.81" cy="30.5" r="8.68" fill="#D4F54A"/></g>
+</svg>

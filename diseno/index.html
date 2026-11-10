@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tlachtli · Direcciones visuales</title>
+<meta name="description" content="Tres direcciones visuales para Tlachtli, de KoatlCyber, para elegir una.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Big+Shoulders+Display:wght@700;800;900&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --fondo: #F3F3F1; --superficie: #FFFFFF; --texto: #16181D; --suave: #555B66; --borde: #DADCE0; --acento: #16181D;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { color-scheme: dark; --fondo: #111317; --superficie: #1A1D22; --texto: #EDEEF0; --suave: #A4AAB4; --borde: #2C3038; --acento: #EDEEF0; }
+}
+:root[data-theme="dark"] { color-scheme: dark; --fondo: #111317; --superficie: #1A1D22; --texto: #EDEEF0; --suave: #A4AAB4; --borde: #2C3038; --acento: #EDEEF0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--fondo); color: var(--texto); font-family: "Manrope", system-ui, sans-serif; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, p { margin: 0; }
+a { color: inherit; }
+img { display: block; max-width: 100%; }
+:focus-visible { outline: 3px solid var(--acento); outline-offset: 2px; }
+.eti { font-family: "JetBrains Mono", monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--suave); }
+.envoltura { max-width: 1440px; margin: 0 auto; padding: 0 24px; }
+header.cab { padding: 40px 0 28px; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+header.cab h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.02em; margin-top: 6px; }
+header.cab p.sub { margin-top: 6px; color: var(--suave); max-width: 720px; }
+.docs { display: flex; gap: 8px; flex-wrap: wrap; }
+.docs a, .modo { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--borde); background: var(--superficie); font-weight: 700; font-size: 14px; text-decoration: none; cursor: pointer; color: var(--texto); }
+.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; padding-bottom: 48px; }
+.dir { background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
+.dir__cab { padding: 22px 22px 18px; border-bottom: 1px solid var(--borde); }
+.dir__cab h2 { font-size: 28px; font-weight: 800; letter-spacing: -0.01em; margin-top: 4px; }
+.dir__cab .lema { color: var(--suave); font-size: 15px; }
+.bloque { padding: 18px 22px; border-bottom: 1px solid var(--borde); }
+.bloque > .eti { display: block; margin-bottom: 12px; }
+.logos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.logo { border-radius: 10px; border: 1px solid var(--borde); padding: 14px; display: grid; place-items: center; min-height: 86px; background: #fff; }
+.logo img { max-height: 44px; width: auto; }
+.logo--ancho { grid-column: 1 / -1; min-height: 104px; }
+.logo--ancho img { max-height: 56px; }
+.logo--oscuro { padding: 0; overflow: hidden; border: 0; }
+.logo--oscuro img { max-height: none; width: 100%; }
+.logo figcaption { font-size: 11px; color: #555B66; margin-top: 8px; font-family: "JetBrains Mono", monospace; }
+.iconos { display: flex; align-items: flex-end; gap: 14px; grid-column: 1 / -1; background: #fff; }
+.iconos img { height: auto; max-height: none; }
+.tipo { display: grid; gap: 4px; }
+.tipo .muestra { font-size: 34px; line-height: 1; }
+.tipo small { color: var(--suave); font-size: 13px; }
+.paleta { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.paleta h4 { margin: 0 0 6px; font-size: 12px; font-weight: 700; color: var(--suave); }
+.muestras { display: grid; gap: 4px; }
+.mu { display: grid; grid-template-columns: 26px 1fr; gap: 8px; align-items: center; font-size: 12px; }
+.mu span:first-child { width: 26px; height: 26px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.12); }
+.mu b { font-family: "JetBrains Mono", monospace; font-weight: 600; font-size: 11px; display: block; }
+.mu i { font-style: normal; color: var(--suave); font-size: 11px; display: block; line-height: 1.3; }
+details { margin-top: 12px; }
+summary { cursor: pointer; font-weight: 700; font-size: 13px; min-height: 32px; display: flex; align-items: center; }
+table.con { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
+table.con th, table.con td { padding: 4px 6px; text-align: left; border-top: 1px solid var(--borde); }
+table.con td.n { font-family: "JetBrains Mono", monospace; white-space: nowrap; }
+.pantallas { display: grid; gap: 12px; }
+.pant { display: grid; grid-template-columns: 112px 1fr; gap: 12px; align-items: center; }
+.pant img { width: 112px; height: 76px; object-fit: cover; object-position: top; border-radius: 8px; border: 1px solid var(--borde); }
+.pant h3 { font-size: 15px; font-weight: 700; }
+.pant p { font-size: 13px; color: var(--suave); }
+.pant p a { font-weight: 700; color: var(--texto); }
+.veredicto { padding: 18px 22px 22px; display: grid; gap: 10px; margin-top: auto; }
+.veredicto p { font-size: 14px; padding-left: 28px; position: relative; }
+.veredicto p::before { position: absolute; left: 0; top: 0; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800; }
+.si::before { content: "✓"; border: 1.5px solid currentColor; }
+.no::before { content: "×"; border: 1.5px dashed currentColor; }
+.veredicto b { display: block; font-size: 12px; font-family: "JetBrains Mono", monospace; letter-spacing: 0.08em; text-transform: uppercase; }
+footer.pie { padding: 0 0 40px; color: var(--suave); font-size: 13px; }
+@media (max-width: 1100px) { .cols { grid-template-columns: 1fr; max-width: 640px; margin: 0 auto; } }
+@media (max-width: 640px) { .envoltura { padding: 0 16px; } header.cab h1 { font-size: 28px; } .paleta { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="envoltura">
+  <header class="cab">
+    <div>
+      <p class="eti">KoatlCyber · Propuestas de identidad</p>
+      <h1>Tlachtli: tres direcciones para elegir</h1>
+      <p class="sub">Las tres usan la misma liga inventada (Liga Valle del Sol) para que compares el sistema y no el contenido. En las páginas de la liga mandan su escudo y sus colores; Tlachtli solo aparece en el pie. Talud tiene además <a href="talud-colores.html">tres paletas alternativas</a>.</p>
+    </div>
+    <div class="docs">
+      <a href="SUPUESTOS.md">Supuestos</a>
+      <a href="CONTRASTE.md">Contrastes verificados</a>
+      <button class="modo" type="button" id="modo" aria-pressed="false">Ver en modo oscuro</button>
+    </div>
+  </header>
+  <main class="cols" id="cols"></main>
+  <footer class="pie">Pantallas en HTML/CSS con datos inventados. Capturas en <code>capturas/</code> a 1280 y 390 px (escala 2×). Para regenerar todo: <code>node herramientas/construir.mjs</code>.</footer>
+</div>
+<script src="paletas.js"></script>
+<script>
+var DIRS = [
+  { id: "A", carpeta: "a-tlachco", letra: "a", idea: "La planta en I de la cancha, vista desde arriba, con la pelota al centro.",
+    muestra: "font-family:Archivo;font-variation-settings:'wdth' 112;font-weight:800",
+    si: "La más equilibrada: seria y deportiva a la vez, con una tabla densa que el organizador lee de un vistazo y un símbolo con historia propia.",
+    no: "Es la más sobria; sin buena fotografía y un tono con energía, la landing puede pasar por «otra herramienta de gestión»." },
+  { id: "B", carpeta: "b-talud", letra: "b", idea: "Los muros escalonados de la cancha en corte, con la pelota en el aire.",
+    muestra: "font-family:'Big Shoulders Display';font-weight:900;text-transform:uppercase",
+    si: "La más memorable y la que más se aleja de la plantilla SaaS: boletos y números grandes que se leen bien en el celular a pleno sol.",
+    no: "La letra condensada en mayúsculas cansa en textos largos, y el terracota choca con ligas cuyo color es rojo o naranja." },
+  { id: "C", carpeta: "c-rebote", letra: "c", idea: "La pelota rebotando entre los dos muros de la cancha.",
+    muestra: "font-family:'Space Grotesk';font-weight:700",
+    si: "La más cercana a la app actual y la más amigable para jugadores y afición; el calendario por horario y cancha resuelve muy bien la jornada.",
+    no: "Azul con verde lima es el territorio más común de las apps deportivas: es la que más riesgo corre de verse genérica." },
+];
+function lum(h) { return [1,3,5].map(function(i){ var c = parseInt(h.slice(i,i+2),16)/255; return c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); }).reduce(function(a,c,i){ return a + c*[0.2126,0.7152,0.0722][i]; }, 0); }
+function ratio(a, b) { var x = lum(a), y = lum(b); if (y > x) { var t = x; x = y; y = t; } return (x + 0.05) / (y + 0.05); }
+var html = "";
+DIRS.forEach(function (d) {
+  var p = PALETAS[d.id], c = d.carpeta, l = d.letra;
+  var sw = function (modo) {
+    return '<div><h4>' + (modo === "claro" ? "Modo claro" : "Modo oscuro") + '</h4><div class="muestras">' +
+      ["fondo","superficie","texto","suave","acento","realce","vivo","pierde"].map(function (k) {
+        return '<div class="mu"><span style="background:' + p[modo][k] + '"></span><span><b>' + p[modo][k] + '</b><i>' + k + ' · ' + p.usos[k] + '</i></span></div>';
+      }).join("") + '</div></div>';
+  };
+  var tabla = '<table class="con"><thead><tr><th scope="col">Texto / fondo</th><th scope="col">Claro</th><th scope="col">Oscuro</th></tr></thead><tbody>' +
+    PARES.map(function (pr) {
+      var a = ratio(p.claro[pr[0]], p.claro[pr[1]]), b = ratio(p.oscuro[pr[0]], p.oscuro[pr[1]]);
+      var f = function (v) { return v.toFixed(1) + ":1 " + (v >= 7 ? "AAA" : v >= 4.5 ? "AA" : "✗"); };
+      return '<tr><td>' + pr[0] + ' / ' + pr[1] + '</td><td class="n">' + f(a) + '</td><td class="n">' + f(b) + '</td></tr>';
+    }).join("") + '</tbody></table>';
+  var pant = function (archivo, titulo, ancho, extra) {
+    return '<div class="pant"><a href="' + c + '/' + archivo + '.html"><img src="capturas/' + l + '-' + archivo + '-' + ancho + '.png" alt="Captura de ' + titulo + ', dirección ' + d.id + '" loading="lazy"></a>' +
+      '<div><h3>' + titulo + '</h3><p><a href="' + c + '/' + archivo + '.html">Abrir HTML</a> · capturas: ' + extra + '</p></div></div>';
+  };
+  var cap = function (n) { return '<a href="capturas/' + l + '-' + n + '.png">' + n.replace(/^.*?-(\d+)/, "$1").replace("-oscuro", " oscuro") + '</a>'; };
+  html += '<article class="dir" aria-labelledby="t-' + l + '">' +
+    '<div class="dir__cab"><p class="eti">Dirección ' + d.id + '</p><h2 id="t-' + l + '">' + p.nombre + '</h2><p class="lema">' + p.lema + ' · ' + d.idea + '</p></div>' +
+    '<div class="bloque"><span class="eti">Logotipo</span><div class="logos">' +
+      '<figure class="logo logo--ancho" style="margin:0"><img src="' + c + '/logo-principal.svg" alt="Logotipo principal, dirección ' + d.id + '"><figcaption>principal</figcaption></figure>' +
+      '<figure class="logo" style="margin:0"><img src="' + c + '/logo-mono.svg" alt="Logotipo monocromo"><figcaption>monocromo</figcaption></figure>' +
+      '<figure class="logo logo--oscuro" style="margin:0"><img src="' + c + '/logo-oscuro.svg" alt="Logotipo sobre fondo oscuro"></figure>' +
+      '<div class="logo iconos" aria-label="Ícono cuadrado en 96, 48, 32 y 16 px"><img src="' + c + '/icono.svg" style="width:96px" alt="Ícono de app"><img src="' + c + '/icono.svg" style="width:48px" alt=""><img src="' + c + '/icono.svg" style="width:32px" alt=""><img src="' + c + '/icono.svg" style="width:16px" alt=""></div>' +
+    '</div></div>' +
+    '<div class="bloque"><span class="eti">Tipografía (Google Fonts)</span><div class="tipo"><span class="muestra" style="' + d.muestra + '">Jornada 9 · 2–1</span>' +
+      '<small>Títulos: ' + p.fuentes.display + ' · Texto: ' + p.fuentes.texto + ' · Datos: ' + p.fuentes.datos + ' (las dos últimas, de la familia KoatlCyber)</small></div></div>' +
+    '<div class="bloque"><span class="eti">Paleta</span><div class="paleta">' + sw("claro") + sw("oscuro") + '</div>' +
+      '<details><summary>Contraste WCAG de cada par de texto</summary>' + tabla + '</details></div>' +
+    '<div class="bloque"><span class="eti">Pantallas</span><div class="pantallas">' +
+      pant("landing", "Portada de la landing", 1280, cap("landing-1280") + " · " + cap("landing-390")) +
+      pant("tabla-jornada", "Tabla y jornada (escritorio)", 1280, cap("tabla-jornada-1280") + " · " + cap("tabla-jornada-390")) +
+      pant("liga-movil", "Página de la liga (celular)", 390, cap("liga-movil-390") + " · " + cap("liga-movil-390-oscuro")) +
+    '</div></div>' +
+    '<div class="veredicto"><p class="si"><b>Por qué sí</b>' + d.si + '</p><p class="no"><b>Por qué no</b>' + d.no + '</p></div>' +
+  '</article>';
+});
+document.getElementById("cols").innerHTML = html;
+var btn = document.getElementById("modo");
+btn.addEventListener("click", function () {
+  var oscuro = document.documentElement.getAttribute("data-theme") !== "dark";
+  document.documentElement.setAttribute("data-theme", oscuro ? "dark" : "light");
+  btn.setAttribute("aria-pressed", String(oscuro));
+  btn.textContent = oscuro ? "Ver en modo claro" : "Ver en modo oscuro";
+});
+</script>
+</body>
+</html>

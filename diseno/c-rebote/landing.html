@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tlachtli · Dirección C</title>
+<meta name="description" content="Portada de la landing, dirección C Rebote">
+<link rel="icon" href="icono.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="../compartido/familia.css">
+<link rel="stylesheet" href="tema.css">
+</head>
+<body class="landing">
+
+<div class="heroe">
+  <header class="contenedor barra">
+    <a href="#" class="barra__logo" aria-label="Tlachtli, inicio"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 388.49 108" role="img" aria-label="Tlachtli">
+  <title>Tlachtli</title>
+  <g transform="translate(4 4) scale(0.35) translate(-130 -114)">
+      <path d="M160 144V368M352 144V368" stroke="#EEF1FF" stroke-width="44" stroke-linecap="round"/>
+      <circle cx="256" cy="196" r="44" fill="#D4F54A"/>
+      <circle cx="232" cy="290" r="15" fill="#D4F54A"/>
+      <circle cx="216" cy="346" r="9" fill="#D4F54A"/>
+  </g>
+  <g transform="translate(118.73 13.81) scale(0.76)"><path d="M16 33V93M7 55H25M52.3 23V93M117.6 74A19 19 0 1 0 79.6 74A19 19 0 1 0 117.6 74M117.6 55V93M176.61 59.88A19 19 0 1 0 176.61 88.12M203.91 23V93M203.91 74A19 19 0 0 1 241.91 74V93M278.21 33V93M269.21 55H287.21M314.51 23V93M341.81 55V93" fill="none" stroke="#EEF1FF" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/><circle cx="341.81" cy="30.5" r="8.68" fill="#D4F54A"/></g>
+</svg>
+</a>
+    <nav class="barra__nav" aria-label="Principal"><a href="#">Funciones</a><a href="#">Para ligas</a><a href="#">Precio</a><a href="#">Entrar</a></nav>
+    <a href="#" class="btn btn--blanco">Agenda una demo</a>
+  </header>
+  <section class="contenedor heroe__in">
+    <p class="etiqueta heroe__eti">Gestión de ligas de fútbol amateur</p>
+    <h1>Cada gol cuenta. <mark>Y se cuenta solo.</mark></h1>
+    <p class="heroe__sub">El árbitro lo captura en la cancha y en ese momento cambian el marcador, la tabla y el goleo de tu liga.</p>
+    <div class="heroe__cta"><a href="#" class="btn btn--maiz">Agenda una demo <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a><a href="liga-movil.html" class="btn btn--linea">Ver una liga de ejemplo</a></div>
+  </section>
+  <svg class="heroe__rebote" viewBox="0 0 1280 160" preserveAspectRatio="none" aria-hidden="true"><path d="M-20 150 Q 200 -40 420 120 T 860 110 T 1300 40" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="2 12" stroke-linecap="round"/></svg>
+</div>
+<main>
+  <section class="contenedor marcadores" aria-label="Ejemplo de una jornada">
+    <article class="tp tp--vivo">
+    <div class="tp__cab"><span class="chip chip--vivo"><span class="chip__punto" aria-hidden="true"></span>En vivo · 63'</span><span class="tp__hora num">10:15 · Cancha 1</span></div>
+    <div class="tp__fila"><span class="escudo" style="background:#0F766E" aria-hidden="true">RT</span><span class="tp__eq">Real Tangamanga</span><b class="num">1</b></div>
+    <div class="tp__fila"><span class="escudo" style="background:#6D28D9" aria-hidden="true">CT</span><span class="tp__eq">Club Tequis</span><b class="num">2</b></div>
+    
+  </article><article class="tp tp--final">
+    <div class="tp__cab"><span class="chip chip--final"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg>Final</span><span class="tp__hora num">09:00 · Cancha 1</span></div>
+    <div class="tp__fila"><span class="escudo" style="background:#1F3A8A" aria-hidden="true">HF</span><span class="tp__eq">Halcones FC</span><b class="num">2</b></div>
+    <div class="tp__fila pierde-fila"><span class="escudo" style="background:#075985" aria-hidden="true">UP</span><span class="tp__eq">Unión Pozos</span><b class="num">1</b></div>
+    
+  </article><article class="tp tp--programado">
+    <div class="tp__cab"><span class="chip chip--prog"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.6V8l2.3 1.6"/></svg>Por jugar</span><span class="tp__hora num">10:15 · Cancha 2</span></div>
+    <div class="tp__fila"><span class="escudo" style="background:#9A4A07" aria-hidden="true">AS</span><span class="tp__eq">Atlético Saucito</span><b class="num"></b></div>
+    <div class="tp__fila"><span class="escudo" style="background:#111827" aria-hidden="true">LC</span><span class="tp__eq">Los Cuervos</span><b class="num"></b></div>
+    
+  </article>
+  </section>
+  <section class="contenedor roles" aria-labelledby="roles-t">
+    <h2 id="roles-t">Hecho para todos los que pisan la cancha</h2>
+    <ul class="roles__lista"><li><span class="roles__bola num" aria-hidden="true">1</span><h3>Organizadores</h3><p>Arma el calendario, publica resultados y cierra la tabla sin hojas de cálculo.</p></li><li><span class="roles__bola num" aria-hidden="true">2</span><h3>Árbitros</h3><p>Captura goles y tarjetas desde la cancha, aunque la señal sea mala.</p></li><li><span class="roles__bola num" aria-hidden="true">3</span><h3>Capitanes</h3><p>Registra a tu plantel y revisa sanciones antes del partido.</p></li><li><span class="roles__bola num" aria-hidden="true">4</span><h3>Afición</h3><p>Sigue el marcador, la tabla y el goleo desde el celular.</p></li></ul>
+  </section>
+  <section class="contenedor franja">
+    <div><h2>Tu liga, con su escudo y sus colores.</h2><p>Cada liga tiene su página pública con su identidad. Tlachtli solo firma al pie.</p></div>
+    <a href="tabla-jornada.html" class="btn btn--acento">Ver la página de una liga <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+  </section>
+</main>
+<footer class="pie contenedor">
+  <span class="pie__logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 388.49 108" role="img" aria-label="Tlachtli">
+  <title>Tlachtli</title>
+  <g transform="translate(4 4) scale(0.35) translate(-130 -114)">
+      <path d="M160 144V368M352 144V368" stroke="#0B1233" stroke-width="44" stroke-linecap="round"/>
+      <circle cx="256" cy="196" r="44" fill="#0B1233"/>
+      <circle cx="232" cy="290" r="15" fill="#0B1233"/>
+      <circle cx="216" cy="346" r="9" fill="#0B1233"/>
+  </g>
+  <g transform="translate(118.73 13.81) scale(0.76)"><path d="M16 33V93M7 55H25M52.3 23V93M117.6 74A19 19 0 1 0 79.6 74A19 19 0 1 0 117.6 74M117.6 55V93M176.61 59.88A19 19 0 1 0 176.61 88.12M203.91 23V93M203.91 74A19 19 0 0 1 241.91 74V93M278.21 33V93M269.21 55H287.21M314.51 23V93M341.81 55V93" fill="none" stroke="#0B1233" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/><circle cx="341.81" cy="30.5" r="8.68" fill="#0B1233"/></g>
+</svg>
+</span>
+  <p>Un producto de <b>KoatlCyber</b></p>
+  <nav aria-label="Pie"><a href="#">Privacidad</a><a href="#">Contacto</a></nav>
+</footer>
+</body>
+</html>

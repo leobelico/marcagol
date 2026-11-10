@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Tlachtli">
+  <title>Tlachtli</title>
+  <rect width="512" height="512" rx="112" fill="#161C26"/>
+      <path d="M104 392V152H156V236H208V392Z" fill="#F8F9FA"/>
+      <path d="M408 392V152H356V236H304V392Z" fill="#F8F9FA"/>
+      <circle cx="256" cy="200" r="38" fill="#FFB21E"/>
+</svg>

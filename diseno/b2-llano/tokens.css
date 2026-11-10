@@ -1,0 +1,101 @@
+/* Generado por herramientas/talud-colores.mjs. No editar a mano. */
+:root {
+  color-scheme: light;
+  --fondo: #EEF1EA;
+  --superficie: #FFFFFF;
+  --texto: #12261A;
+  --suave: #4B5A50;
+  --borde: #D3DACD;
+  --acento: #1C6B37;
+  --sobre-acento: #FFFFFF;
+  --realce: #FFD400;
+  --sobre-realce: #12261A;
+  --vivo: #12261A;
+  --sobre-vivo: #FFFFFF;
+  --cancelado: #7A5A00;
+  --pierde: #B3261E;
+  --escalon: #1C6B37;
+  --sombra: #FFD400;
+  --liga: #7C1D3A;
+  --liga-texto: #FFFFFF;
+  --liga-acento: #F2B705;
+  --liga-tinta: #7C1D3A;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --fondo: #0C1A11;
+    --superficie: #13251A;
+    --texto: #EDF3EC;
+    --suave: #A3B4A8;
+    --borde: #26392C;
+    --acento: #62D68D;
+    --sobre-acento: #0C1A11;
+    --realce: #FFD400;
+    --sobre-realce: #12261A;
+    --vivo: #EDF3EC;
+    --sobre-vivo: #0C1A11;
+    --cancelado: #E8C25A;
+    --pierde: #FF8F86;
+    --escalon: #62D68D;
+    --sombra: #FFD400;
+    --liga-tinta: #F4A7BD;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --fondo: #0C1A11;
+  --superficie: #13251A;
+  --texto: #EDF3EC;
+  --suave: #A3B4A8;
+  --borde: #26392C;
+  --acento: #62D68D;
+  --sobre-acento: #0C1A11;
+  --realce: #FFD400;
+  --sobre-realce: #12261A;
+  --vivo: #EDF3EC;
+  --sobre-vivo: #0C1A11;
+  --cancelado: #E8C25A;
+  --pierde: #FF8F86;
+  --escalon: #62D68D;
+  --sombra: #FFD400;
+  --liga-tinta: #F4A7BD;
+}
+.modo-oscuro {
+  color-scheme: dark;
+  --fondo: #0C1A11;
+  --superficie: #13251A;
+  --texto: #EDF3EC;
+  --suave: #A3B4A8;
+  --borde: #26392C;
+  --acento: #62D68D;
+  --sobre-acento: #0C1A11;
+  --realce: #FFD400;
+  --sobre-realce: #12261A;
+  --vivo: #EDF3EC;
+  --sobre-vivo: #0C1A11;
+  --cancelado: #E8C25A;
+  --pierde: #FF8F86;
+  --escalon: #62D68D;
+  --sombra: #FFD400;
+  --liga-tinta: #F4A7BD;
+}
+.modo-claro {
+  color-scheme: light;
+  --fondo: #EEF1EA;
+  --superficie: #FFFFFF;
+  --texto: #12261A;
+  --suave: #4B5A50;
+  --borde: #D3DACD;
+  --acento: #1C6B37;
+  --sobre-acento: #FFFFFF;
+  --realce: #FFD400;
+  --sobre-realce: #12261A;
+  --vivo: #12261A;
+  --sobre-vivo: #FFFFFF;
+  --cancelado: #7A5A00;
+  --pierde: #B3261E;
+  --escalon: #1C6B37;
+  --sombra: #FFD400;
+  --liga-tinta: #7C1D3A;
+}

@@ -1,0 +1,92 @@
+/* Generado desde paletas.js por herramientas/construir.mjs. No editar a mano. */
+:root {
+  color-scheme: light;
+  --fondo: #F2F4FA;
+  --superficie: #FFFFFF;
+  --texto: #0B1233;
+  --suave: #4A5378;
+  --borde: #D6DBEA;
+  --acento: #2638C9;
+  --sobre-acento: #FFFFFF;
+  --realce: #C6EE3A;
+  --sobre-realce: #0B1233;
+  --vivo: #C21F4A;
+  --sobre-vivo: #FFFFFF;
+  --cancelado: #8A4B00;
+  --pierde: #C21F4A;
+  --liga: #7C1D3A;
+  --liga-texto: #FFFFFF;
+  --liga-acento: #F2B705;
+  --liga-tinta: #7C1D3A;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --fondo: #080C22;
+    --superficie: #10173A;
+    --texto: #EEF1FF;
+    --suave: #A0A9CF;
+    --borde: #263063;
+    --acento: #8C99FF;
+    --sobre-acento: #0B1233;
+    --realce: #D4F54A;
+    --sobre-realce: #0B1233;
+    --vivo: #FF6F91;
+    --sobre-vivo: #2A0611;
+    --cancelado: #F0B060;
+    --pierde: #FF8FA8;
+    --liga-tinta: #F4A7BD;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --fondo: #080C22;
+  --superficie: #10173A;
+  --texto: #EEF1FF;
+  --suave: #A0A9CF;
+  --borde: #263063;
+  --acento: #8C99FF;
+  --sobre-acento: #0B1233;
+  --realce: #D4F54A;
+  --sobre-realce: #0B1233;
+  --vivo: #FF6F91;
+  --sobre-vivo: #2A0611;
+  --cancelado: #F0B060;
+  --pierde: #FF8FA8;
+  --liga-tinta: #F4A7BD;
+}
+/* Para fijar un modo dentro de una sección */
+.modo-oscuro {
+  color-scheme: dark;
+  --fondo: #080C22;
+  --superficie: #10173A;
+  --texto: #EEF1FF;
+  --suave: #A0A9CF;
+  --borde: #263063;
+  --acento: #8C99FF;
+  --sobre-acento: #0B1233;
+  --realce: #D4F54A;
+  --sobre-realce: #0B1233;
+  --vivo: #FF6F91;
+  --sobre-vivo: #2A0611;
+  --cancelado: #F0B060;
+  --pierde: #FF8FA8;
+  --liga-tinta: #F4A7BD;
+}
+.modo-claro {
+  color-scheme: light;
+  --fondo: #F2F4FA;
+  --superficie: #FFFFFF;
+  --texto: #0B1233;
+  --suave: #4A5378;
+  --borde: #D6DBEA;
+  --acento: #2638C9;
+  --sobre-acento: #FFFFFF;
+  --realce: #C6EE3A;
+  --sobre-realce: #0B1233;
+  --vivo: #C21F4A;
+  --sobre-vivo: #FFFFFF;
+  --cancelado: #8A4B00;
+  --pierde: #C21F4A;
+  --liga-tinta: #7C1D3A;
+}
